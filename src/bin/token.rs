@@ -18,7 +18,7 @@ async fn main() {
 
     let key: Hmac<Sha256> = Hmac::new_from_slice(token.as_bytes()).unwrap();
     let mut claims = BTreeMap::new();
-    claims.insert("passcode", passcode.trim().to_string());
+    claims.insert("name", passcode.trim().to_string());
     let token_str = claims.sign_with_key(&key).unwrap();
 
     println!("{}", token_str);

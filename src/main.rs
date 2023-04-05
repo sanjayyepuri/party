@@ -85,7 +85,7 @@ mod filters {
     fn with_token(
         party_key: party::PartyKey,
     ) -> impl Filter<Extract = (String,), Error = warp::Rejection> + Clone {
-        warp::header::header::<String>("auth-token")
+        warp::header::header::<String>("Authorization")
             .and(warp::any().map(move || party_key.clone()))
             .and_then(|token: String, party_key| async move {
                 let res: Result<BTreeMap<String, String>, Error> =
