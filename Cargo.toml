@@ -11,3 +11,4 @@ sha2 = "0.10.6"
 hmac = "0.12.1"
 tokio = { version = "1", features = ["full"] }
 warp = "0.3"
+serde = "1.0"

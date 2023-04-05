@@ -1,13 +1,21 @@
-use crate::db::{Guest, GuestDb, RsvpStatus};
+use crate::models::{Guest, GuestDb, RsvpStatus};
 
 use std::collections::HashMap;
+use std::sync::Arc;
+
+use hmac::{Hmac, Mac};
+use sha2::Sha256;
+
+pub type PartyKey = Hmac<Sha256>;
+
 
 pub struct Party {
     pub db: GuestDb,
+    pub party_key: PartyKey,
 }
 
 impl Party {
-    pub fn new() -> Party {
+    pub fn new(party_key: &String) -> Party {
         Party {
             db: HashMap::from([
                 (
@@ -27,6 +35,7 @@ impl Party {
                     },
                 ),
             ]),
+            party_key: PartyKey::new_from_slice(party_key.as_bytes()).unwrap()
         }
     }
 
@@ -36,3 +45,6 @@ impl Party {
     }
 
 }
+
+
+pub type PartyRc = Arc<Party>;
