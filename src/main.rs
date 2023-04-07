@@ -47,7 +47,7 @@ mod filters {
         warp::path!("hello")
             .and(warp::get())
             .and(with_party(party.clone()))
-            .and(with_token(party.party_key.clone()))
+            .and(with_token(party.key().clone()))
             .and_then(handlers::hello)
     }
 
@@ -57,8 +57,8 @@ mod filters {
         warp::path!("rsvp")
             .and(warp::get())
             .and(with_party(party.clone()))
-            .and(with_token(party.party_key.clone())) // TODO (sanjay) use dynamic signing key
-            .and_then(handlers::get_rsvp)
+            .and(with_token(party.key().clone())) // TODO (sanjay) use dynamic signing key
+            .and_then(handlers::get_guest)
     }
 
     pub fn auth(
@@ -92,8 +92,8 @@ mod filters {
                     token.verify_with_key(&party_key);
 
                 if let Ok(claims) = res {
-                    if let Some(userid) = claims.get("name") {
-                        Ok(userid.to_string())
+                    if let Some(guest) = claims.get("guest") {
+                        Ok(guest.to_string())
                     } else {
                         Err(reject::custom(errors::TokenVerificationError))
                     }

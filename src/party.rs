@@ -1,50 +1,64 @@
-use crate::models::{Guest, GuestDb, RsvpStatus};
+use crate::models::{Guest, RsvpStatus};
 
 use std::collections::HashMap;
 use std::sync::Arc;
 
 use hmac::{Hmac, Mac};
-use sha2::Sha256;
+use sha2::{Sha256, Digest};
+
 
 pub type PartyKey = Hmac<Sha256>;
 
-
 pub struct Party {
-    pub db: GuestDb,
-    pub party_key: PartyKey,
+    auth_map: HashMap<Vec<u8>, String>,
+    guest_map: HashMap<String, Guest>,
+    party_key: PartyKey,
 }
 
+// passcode hash -> userid
+// userid -> Guest
+
 impl Party {
-    pub fn new(party_key: &String) -> Party {
+    pub fn new(party_key: &str) -> Party {
         Party {
-            db: HashMap::from([
+            auth_map: HashMap::from([
+                (Sha256::digest("passcode1").to_vec(), "guest1".to_string()),
+                (Sha256::digest("passcode2").to_vec(), "guest2".to_string()),
+            ]),
+            guest_map: HashMap::from([
                 (
-                   "dumb1".to_string(),
+                    "guest1".to_string(),
                     Guest {
-                        name: "Sanjay".to_string(),
-                        passcode: "dumb1".to_string(),
+                        name: "name1".to_string(),
                         status: RsvpStatus::Pending,
+                        passcode: "passcode1".to_string(),
                     },
                 ),
                 (
-                    "dumb2".to_string(),
+                    "guest2".to_string(),
                     Guest {
-                        name: "Sanjana".to_string(),
-                        passcode: "dumb2".to_string(),
+                        name: "name2".to_string(),
                         status: RsvpStatus::Pending,
+                        passcode: "passcode2".to_string(),
                     },
                 ),
             ]),
-            party_key: PartyKey::new_from_slice(party_key.as_bytes()).unwrap()
+            party_key: PartyKey::new_from_slice(party_key.as_bytes()).unwrap(),
         }
     }
 
-
-    pub fn guest(&self, passcode: &String) -> Option<&Guest> {
-        self.db.get(passcode)
+    pub fn auth(&self, passcode: &str) -> Option<&String> {
+        let sha = Sha256::digest(passcode).to_vec();
+        self.auth_map.get(&sha)
     }
 
-}
+    pub fn guest(&self, guest: &str) -> Option<&Guest> {
+        self.guest_map.get(guest)
+    }
 
+    pub fn key(&self) -> &PartyKey {
+        &self.party_key
+    }
+}
 
 pub type PartyRc = Arc<Party>;

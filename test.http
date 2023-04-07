@@ -1,8 +1,35 @@
 GET http://localhost:8000/hello
 Content-Type: application/json
-Authorization: eyJhbGciOiJIUzI1NiJ9.eyJuYW1lIjoiZHVtYjEifQ.bsx7iRskkGIXAz0AALDSra8ih_m82J95ex9LCUH9Sww
+Authorization: eyJhbGciOiJIUzI1NiJ9.eyJndWVzdCI6Imd1ZXN0MSJ9.Nlodi9649pclgmClMN7B8P5e1jkY7nDI-iRYDAs3I8s
+
+###
+GET http://localhost:8000/hello
+Content-Type: application/json
+Authorization: eyJhbGciOiJIUzI1NiJ9.eyJndWVzdCI6Imd1ZXN0MiJ9.afMFs2OVPRQ5B9KEOv_BbRPBGHvD47CUpT5ApuwWI1M
+
+###
+POST http://localhost:8000/auth
+Content-Type: application/json
+
+{
+    "passcode": "passcode1"
+}
+
 
 ###
 GET http://localhost:8000/rsvp
 Content-Type: application/json
-Authorization: eyJhbGciOiJIUzI1NiJ9.eyJuYW1lIjoiZHVtYjEifQ.bsx7iRskkGIXAz0AALDSra8ih_m82J95ex9LCUH9Sww
+Authorization: eyJhbGciOiJIUzI1NiJ9.eyJndWVzdCI6Imd1ZXN0MSJ9.Nlodi9649pclgmClMN7B8P5e1jkY7nDI-iRYDAs3I8s
+
+
+###
+POST http://localhost:8000/auth
+Content-Type: application/json
+
+{
+    "passcode": "passcode3"
+}
+
+
+
+
