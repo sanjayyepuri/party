@@ -15,7 +15,6 @@ async fn main() {
     let mut passcode = String::new();
     io::stdin().read_line(&mut passcode).unwrap();
 
-
     let key: Hmac<Sha256> = Hmac::new_from_slice(token.as_bytes()).unwrap();
     let mut claims = BTreeMap::new();
     claims.insert("name", passcode.trim().to_string());

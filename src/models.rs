@@ -18,7 +18,8 @@ pub struct Guest {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AuthRequest {
-    pub password_hash: String
+    pub userid: String,
+    pub password: String
 }
 
 pub type GuestDb = HashMap<String, Guest>;

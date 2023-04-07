@@ -24,5 +24,5 @@ pub async fn auth(
     party: party::PartyRc,
     auth: models::AuthRequest,
 ) -> Result<impl Reply, Infallible> {
-    Ok("token".to_string())
+    Ok("hi")
 }
