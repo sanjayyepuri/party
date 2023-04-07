@@ -1,7 +1,6 @@
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub enum RsvpStatus {
     Pending,
     Going,
@@ -24,4 +23,9 @@ pub struct AuthRequest {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AuthReply {
     pub token: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct RsvpUpdate {
+    pub rsvp_status: RsvpStatus
 }

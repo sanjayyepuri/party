@@ -1,11 +1,9 @@
 use crate::models::{Guest, RsvpStatus};
 
-use std::collections::HashMap;
-use std::sync::Arc;
-
 use hmac::{Hmac, Mac};
 use sha2::{Sha256, Digest};
 
+use std::collections::HashMap;
 
 pub type PartyKey = Hmac<Sha256>;
 
@@ -59,6 +57,15 @@ impl Party {
     pub fn key(&self) -> &PartyKey {
         &self.party_key
     }
+
+    pub fn rsvp(&mut self, guest: &str, rsvp: RsvpStatus) -> Option<&Guest> {
+        if let Some(guest) = self.guest_map.get_mut(guest) {
+            guest.status = rsvp;
+            Some(guest)
+        } else {
+            None
+        }
+    }
+
 }
 
-pub type PartyRc = Arc<Party>;

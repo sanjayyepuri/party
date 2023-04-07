@@ -13,7 +13,7 @@ async fn main() {
         Err(_) => panic!("supply PARTY_KEY"),
     };
 
-    let party = Arc::new(party::Party::new(&party_key));
+    let party = Arc::new(tokio::sync::RwLock::new(party::Party::new(&party_key)));
 
     warp::serve(filters::party(party.clone()))
         .run(([127, 0, 0, 1], 8000))
@@ -21,20 +21,18 @@ async fn main() {
 }
 
 mod filters {
-    use super::handlers;
-    use super::party;
-
-    use std::collections::BTreeMap;
-    use std::sync::Arc;
-
-    use jwt::{Error, VerifyWithKey};
-    use warp::{self, reject, Filter};
-
     use crate::errors;
+    use crate::handlers::{self, PartyRc};
     use crate::models;
 
+    use jwt::{Error, VerifyWithKey};
+    use serde::de::DeserializeOwned;
+    use warp::{self, reject, Filter};
+
+    use std::collections::BTreeMap;
+
     pub fn party(
-        party: Arc<party::Party>,
+        party: PartyRc,
     ) -> impl Filter<Extract = (impl warp::Reply,), Error = warp::Rejection> + Clone {
         hello(party.clone())
             .or(rsvp(party.clone()))
@@ -42,54 +40,63 @@ mod filters {
     }
 
     pub fn hello(
-        party: party::PartyRc,
+        party: PartyRc,
     ) -> impl Filter<Extract = (impl warp::Reply,), Error = warp::Rejection> + Clone {
         warp::path!("hello")
             .and(warp::get())
             .and(with_party(party.clone()))
-            .and(with_token(party.key().clone()))
+            .and(with_token(party.clone()))
             .and_then(handlers::hello)
     }
 
     pub fn rsvp(
-        party: party::PartyRc,
+        party: PartyRc,
     ) -> impl Filter<Extract = (impl warp::Reply,), Error = warp::Rejection> + Clone {
-        warp::path!("rsvp")
+        let get = warp::path!("rsvp")
             .and(warp::get())
             .and(with_party(party.clone()))
-            .and(with_token(party.key().clone())) // TODO (sanjay) use dynamic signing key
-            .and_then(handlers::get_guest)
+            .and(with_token(party.clone())) // TODO (sanjay) use dynamic signing key
+            .and_then(handlers::get_guest);
+
+        let post = warp::path!("rsvp")
+            .and(warp::post())
+            .and(with_party(party.clone()))
+            .and(with_token(party.clone()))
+            .and(with_json::<models::RsvpUpdate>())
+            .and_then(handlers::update_rsvp);
+
+        get.or(post)
     }
 
     pub fn auth(
-        party: party::PartyRc,
+        party: PartyRc,
     ) -> impl Filter<Extract = (impl warp::Reply,), Error = warp::Rejection> + Clone {
         warp::path!("auth")
             .and(warp::post())
             .and(with_party(party.clone()))
-            .and(json_auth())
-            .and_then(handlers::auth)
+            .and(with_json::<models::AuthRequest>())
+            .and_then(handlers::authenticate)
     }
 
-    fn json_auth() -> impl Filter<Extract = (models::AuthRequest,), Error = warp::Rejection> + Clone
-    {
+    fn with_json<T: Send + DeserializeOwned>(
+    ) -> impl Filter<Extract = (T,), Error = warp::Rejection> + Clone {
         warp::body::content_length_limit(1024).and(warp::body::json())
     }
 
     fn with_party(
-        party: Arc<party::Party>,
-    ) -> impl Filter<Extract = (Arc<party::Party>,), Error = std::convert::Infallible> + Clone {
+        party: PartyRc,
+    ) -> impl Filter<Extract = (PartyRc,), Error = std::convert::Infallible> + Clone {
         warp::any().map(move || party.clone())
     }
 
     fn with_token(
-        party_key: party::PartyKey,
+        party_lock: PartyRc,
     ) -> impl Filter<Extract = (String,), Error = warp::Rejection> + Clone {
         warp::header::header::<String>("Authorization")
-            .and(warp::any().map(move || party_key.clone()))
-            .and_then(|token: String, party_key| async move {
+            .and(with_party(party_lock.clone()))
+            .and_then(|token: String, party_lock: PartyRc| async move {
                 let res: Result<BTreeMap<String, String>, Error> =
-                    token.verify_with_key(&party_key);
+                    token.verify_with_key(party_lock.read().await.key());
 
                 if let Ok(claims) = res {
                     if let Some(guest) = claims.get("guest") {
