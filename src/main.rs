@@ -6,6 +6,8 @@ mod party;
 use std::env;
 use std::sync::Arc;
 
+use warp::Filter;
+
 #[tokio::main]
 async fn main() {
     let party_key = match env::var("PARTY_KEY") {
@@ -13,11 +15,29 @@ async fn main() {
         Err(_) => panic!("supply PARTY_KEY"),
     };
 
+    if env::var_os("RUST_LOG").is_none() {
+        env::set_var("RUST_LOG", "party=info");
+    }
+    pretty_env_logger::init();
+
     let party = Arc::new(tokio::sync::RwLock::new(party::Party::new(&party_key)));
 
-    warp::serve(filters::party(party.clone()))
-        .run(([127, 0, 0, 1], 8000))
-        .await;
+    warp::serve(
+        filters::party(party.clone())
+            .with(
+                warp::cors()
+                    .allow_any_origin()
+                    .allow_headers(vec![
+                        "Content-Type",
+                        "Party-Token"
+                    ])
+                    .allow_methods(vec!["GET", "POST"])
+                    .allow_credentials(true),
+            )
+            .with(warp::log("party")),
+    )
+    .run(([127, 0, 0, 1], 8000))
+    .await;
 }
 
 mod filters {
@@ -92,7 +112,7 @@ mod filters {
     fn with_token(
         party_lock: PartyRc,
     ) -> impl Filter<Extract = (String,), Error = warp::Rejection> + Clone {
-        warp::header::header::<String>("Authorization")
+        warp::header::header::<String>("Party-Token")
             .and(with_party(party_lock.clone()))
             .and_then(|token: String, party_lock: PartyRc| async move {
                 let res: Result<BTreeMap<String, String>, Error> =

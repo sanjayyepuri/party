@@ -15,12 +15,19 @@ Content-Type: application/json
     "passcode": "passcode1"
 }
 
-
 ###
 GET http://localhost:8000/rsvp
 Content-Type: application/json
 Authorization: eyJhbGciOiJIUzI1NiJ9.eyJndWVzdCI6Imd1ZXN0MSJ9.Nlodi9649pclgmClMN7B8P5e1jkY7nDI-iRYDAs3I8s
 
+###
+POST http://localhost:8000/rsvp
+Content-Type: application/json
+Authorization: eyJhbGciOiJIUzI1NiJ9.eyJndWVzdCI6Imd1ZXN0MSJ9.Nlodi9649pclgmClMN7B8P5e1jkY7nDI-iRYDAs3I8s
+
+{
+    "rsvp_status": "Going"
+}
 
 ###
 POST http://localhost:8000/auth
@@ -29,7 +36,3 @@ Content-Type: application/json
 {
     "passcode": "passcode3"
 }
-
-
-
-

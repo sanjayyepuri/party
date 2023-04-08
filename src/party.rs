@@ -13,9 +13,6 @@ pub struct Party {
     party_key: PartyKey,
 }
 
-// passcode hash -> userid
-// userid -> Guest
-
 impl Party {
     pub fn new(party_key: &str) -> Party {
         Party {
@@ -27,7 +24,7 @@ impl Party {
                 (
                     "guest1".to_string(),
                     Guest {
-                        name: "name1".to_string(),
+                        name: "Steve".to_string(),
                         status: RsvpStatus::Pending,
                         passcode: "passcode1".to_string(),
                     },
@@ -35,7 +32,7 @@ impl Party {
                 (
                     "guest2".to_string(),
                     Guest {
-                        name: "name2".to_string(),
+                        name: "Stacy".to_string(),
                         status: RsvpStatus::Pending,
                         passcode: "passcode2".to_string(),
                     },
