@@ -1,28 +1,84 @@
 "use client";
 
-import Image from 'next/image'
-import { Inter } from 'next/font/google'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from "react"
+import { CSSTransition } from "react-transition-group"
 
-const intsser = Inter({ subsets: ['latin'] })
 
 function Guest({ guest }) {
   return (
-    <div className="max-w-sm aspect-square rounded overflow-hidden px-3 py-3  outline">
-      <h1 className="text-3xl font-semibold font-serif">Definitely Not a Cocktail Party</h1>
-      <div className="text-sm">
-        <p>123 Washington Street</p>
-        <p>Apt. 51D</p>
-        <p>8:00 PM</p>
-      </div>
+    <div>
+      <CSSTransition
+        classNames={{
+          appear: "origin-top-left scale-0",
+          appearActive: "origin-top-left transition duration-400 scale-100"
+        }}
+        appear={guest != null}
+        in={guest != null}
+        timeout={400}
+      >
+        <div>
+          <div className="rounded-lg overflow-hidden px-3 py-3 border-4 border-bg">
+            <h1 className="text-3xl font-semibold font-serif">Definitely Not a Cocktail Party</h1>
+            <div className="text-sm">
+              <p>8:00 PM</p>
+              <p>123 Washington Street</p>
+              <p>Apt. 51D</p>
+            </div>
 
-      <h1 className="py-4 text-lg font-bold">{guest.name} <span className="text-xs align-middle bg-slate-400 rounded px-1 py-1">{guest.status}</span></h1>
+            <div className="flex py-4" >
+              <h1 className="md:1/3 text-lg font-bold align-middle">{guest.name}</h1>
+              <div className="md:2/3 w-full align-middle">
+                <div className="w-fit float-right" role="group">
+                  <button className="p-2 rounded-l">Going</button>
+                  <button className="p-2">Maybe</button>
+                  <button className="p-2 rounded-r">Can't Go</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </CSSTransition>
+
+      <CSSTransition
+        classNames={{
+          appear: "transition opacity-0",
+          appearActive: "transition duration-400 opacity-100"
+        }}
+        appear={guest != null}
+        in={guest != null}
+        timeout={1500}
+      >
+        <div className="my-4 float-right font-serif">
+          <em>see you soon — sanjay</em>
+        </div>
+      </CSSTransition>
     </div>
+
   )
 }
 
-export default function Home() {
+function PasscodeForm({ onSubmit }) {
   let [passcode, setPasscode] = useState("");
+
+  function onPasscodeChange(e) {
+    setPasscode(e.target.value);
+  }
+
+  function submit() {
+    onSubmit(passcode);
+  }
+
+  return (
+    <div>
+      <div className="flex -m-2">
+        <input className="md:w-4/5 m-2 p-2 dark:bg-black rounded-lg border-4 border-bg" placeholder="Enter passphrase" onChange={onPasscodeChange} value={passcode} />
+        <button className="md:w-1/5 m-2 p-2 rounded-lg border-4 border-bg" onClick={submit} >Submit</button>
+      </div>
+    </div>
+  );
+}
+
+export default function Home() {
   let [authState, setAuthState] = useState("");
   let [guest, setGuest] = useState(null);
   let [token, setToken] = useState(null);
@@ -45,11 +101,7 @@ export default function Home() {
     }
   }, [token]);
 
-  function onPasscodeChange(e) {
-    setPasscode(e.target.value);
-  }
-
-  async function onSubmit() {
+  async function onSubmit(passcode) {
     setAuthState("pending")
     let res = await fetch("/api/auth", {
       method: "POST",
@@ -62,21 +114,14 @@ export default function Home() {
   }
 
   return (
-    <main className="container mx-auto px-4 py-4" >
+    <main className="container max-w-lg mx-auto px-4 py-4" >
       <div className="py-4">
-        <h1 className="text-2xl">Hi</h1>
         <p>So I started to walk into the water. I won't lie to you boys, I was terrified. But I pressed on, and as I made my way past the breakers a strange calm came over me. I don't know if it was divine intervention or the kinship of all living things but I tell you Jerry at that moment, I wanted to throw a party.</p>
       </div>
-      {!token && (
-        <div className="py-4">
-          <input placeholder="Enter passphrase" onChange={onPasscodeChange} className="rounded px-2 py-2 outline" value={passcode} />
-          <button onClick={onSubmit} className="rounded ml-3 px-2 py-2 outline bg-blue-200 hover:bg-blue-300">Submit</button>
-        </div>
-      )}
 
-      <div className="columns-2">
-        {guest && <Guest guest={guest} />}
-      </div>
+      {!token && <PasscodeForm onSubmit={onSubmit} />}
+
+      {guest && <Guest guest={guest} />}
     </main>
   )
 }
