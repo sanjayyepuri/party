@@ -4,7 +4,12 @@ import { useState, useEffect, useRef } from "react"
 import { CSSTransition } from "react-transition-group"
 
 
-function Guest({ guest }) {
+function Guest({ guest, updateRsvp }) {
+
+  function RsvpButton({ option, name }) {
+    return (<button className={`p-2 hover:underline ${guest.status == option ? "italic" : ""}`} onClick={() => updateRsvp(option)}>{name}</button>)
+  }
+
   return (
     <div>
       <CSSTransition
@@ -28,10 +33,10 @@ function Guest({ guest }) {
             <div className="flex py-4" >
               <h1 className="md:1/3 text-lg font-bold align-middle">{guest.name}</h1>
               <div className="md:2/3 w-full align-middle">
-                <div className="w-fit float-right" role="group">
-                  <button className="p-2 rounded-l">Going</button>
-                  <button className="p-2">Maybe</button>
-                  <button className="p-2 rounded-r">Can't Go</button>
+                <div className="w-fit float-right font-serif" role="group">
+                  <RsvpButton option="Going" name="Going" />
+                  <RsvpButton option="Maybe" name="Maybe" />
+                  <RsvpButton option="Declined" name="Can't Go" />
                 </div>
               </div>
             </div>
@@ -79,7 +84,6 @@ function PasscodeForm({ onSubmit }) {
 }
 
 export default function Home() {
-  let [authState, setAuthState] = useState("");
   let [guest, setGuest] = useState(null);
   let [token, setToken] = useState(null);
 
@@ -92,7 +96,6 @@ export default function Home() {
             "Content-Type": "application/json",
             "Party-Token": token,
           },
-          credentials: "include",
         });
         let g = await res.json();
         setGuest(g);
@@ -101,8 +104,7 @@ export default function Home() {
     }
   }, [token]);
 
-  async function onSubmit(passcode) {
-    setAuthState("pending")
+  async function onSubmit(passcode: string) {
     let res = await fetch("/api/auth", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -110,7 +112,20 @@ export default function Home() {
     });
     let token = await res.json();
     setToken(token.token);
-    setAuthState("done");
+  }
+
+  async function updateRsvp(rsvp: string) {
+    let res = await fetch("/api/rsvp", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Party-Token": token,
+      },
+      body: JSON.stringify({ "rsvp_status": rsvp })
+    });
+
+    let g = await res.json();
+    setGuest(g);
   }
 
   return (
@@ -121,7 +136,7 @@ export default function Home() {
 
       {!token && <PasscodeForm onSubmit={onSubmit} />}
 
-      {guest && <Guest guest={guest} />}
+      {guest && <Guest guest={guest} updateRsvp={updateRsvp} />}
     </main>
   )
 }
