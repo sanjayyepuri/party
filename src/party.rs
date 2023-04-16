@@ -1,68 +1,88 @@
 use crate::models::{Guest, RsvpStatus};
 
+use firestore::*;
 use hmac::{Hmac, Mac};
-use sha2::{Sha256, Digest};
-
+use sha2::Sha256;
 use std::collections::HashMap;
+
+use tracing::*;
 
 pub type PartyKey = Hmac<Sha256>;
 
 pub struct Party {
-    auth_map: HashMap<Vec<u8>, String>,
-    guest_map: HashMap<String, Guest>,
+    db: FirestoreDb,
     party_key: PartyKey,
 }
 
 impl Party {
-    pub fn new(party_key: &str) -> Party {
+    pub async fn new(project_id: &str, party_key: &str) -> Party {
         Party {
-            auth_map: HashMap::from([
-                (Sha256::digest("passcode1").to_vec(), "guest1".to_string()),
-                (Sha256::digest("passcode2").to_vec(), "guest2".to_string()),
-            ]),
-            guest_map: HashMap::from([
-                (
-                    "guest1".to_string(),
-                    Guest {
-                        name: "Steve".to_string(),
-                        status: RsvpStatus::Pending,
-                        passcode: "passcode1".to_string(),
-                    },
-                ),
-                (
-                    "guest2".to_string(),
-                    Guest {
-                        name: "Stacy".to_string(),
-                        status: RsvpStatus::Pending,
-                        passcode: "passcode2".to_string(),
-                    },
-                ),
-            ]),
+            db: FirestoreDb::new(project_id).await.unwrap(),
             party_key: PartyKey::new_from_slice(party_key.as_bytes()).unwrap(),
         }
     }
 
-    pub fn auth(&self, passcode: &str) -> Option<&String> {
-        let sha = Sha256::digest(passcode).to_vec();
-        self.auth_map.get(&sha)
+    pub async fn auth(&self, passcode: &str) -> Option<String> {
+        let query = self
+            .db
+            .fluent()
+            .select()
+            .fields(paths!(Guest::id))
+            .from("guests")
+            .filter(|q| q.for_any(q.field("passcode").eq(passcode)))
+            .obj()
+            .query()
+            .await;
+
+        let mut guests: Vec<HashMap<String, String>> = match query {
+            Ok(guests) => guests,
+            Err(_) => return None,
+        };
+
+        if guests.len() != 1 {
+            return None;
+        }
+        
+       guests[0].remove("_firestore_id")
     }
 
-    pub fn guest(&self, guest: &str) -> Option<&Guest> {
-        self.guest_map.get(guest)
+    pub async fn guest(&self, guest: &str) -> Option<Guest> {
+        let res = self
+            .db
+            .fluent()
+            .select()
+            .by_id_in("guests")
+            .obj()
+            .one(guest)
+            .await;
+
+        match res {
+            Ok(guest) => guest,
+            Err(_) => None,
+        }
     }
 
     pub fn key(&self) -> &PartyKey {
         &self.party_key
     }
 
-    pub fn rsvp(&mut self, guest: &str, rsvp: RsvpStatus) -> Option<&Guest> {
-        if let Some(guest) = self.guest_map.get_mut(guest) {
-            guest.status = rsvp;
-            Some(guest)
-        } else {
-            None
+    pub async fn rsvp(&mut self, guest: &str, rsvp: RsvpStatus) -> Option<Guest> {
+        let update = HashMap::from([("status".to_owned(), rsvp)]);
+
+        let res = self
+            .db
+            .fluent()
+            .update()
+            .fields(paths!(Guest::status))
+            .in_col("guests")
+            .document_id(guest)
+            .object(&update)
+            .execute()
+            .await;
+
+        match res {
+            Ok(guest) => guest,
+            Err(_) => None,
         }
     }
-
 }
-

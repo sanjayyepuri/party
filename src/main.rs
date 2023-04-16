@@ -8,6 +8,9 @@ use std::sync::Arc;
 
 use warp::Filter;
 
+use tracing_subscriber::fmt::format::FmtSpan;
+
+
 #[tokio::main]
 async fn main() {
     let party_key = match env::var("PARTY_KEY") {
@@ -15,12 +18,23 @@ async fn main() {
         Err(_) => panic!("supply PARTY_KEY"),
     };
 
+    let project_id = match env::var("PROJECT_ID") {
+        Ok(t) => t.trim_end().to_string(),
+        Err(_) => panic!("supply PROJECT_ID")
+    };
+
     if env::var_os("RUST_LOG").is_none() {
         env::set_var("RUST_LOG", "party=info");
     }
-    pretty_env_logger::init();
 
-    let party = Arc::new(tokio::sync::RwLock::new(party::Party::new(&party_key)));
+    tracing_subscriber::fmt()
+    // Record an event when each span closes. This can be used to time our
+    // routes' durations!
+    .with_span_events(FmtSpan::CLOSE)
+    .init();
+
+    let party = party::Party::new(&project_id, &party_key).await;
+    let party = Arc::new(tokio::sync::RwLock::new(party));
 
     warp::serve(
         filters::party(party.clone())
@@ -34,7 +48,7 @@ async fn main() {
                     .allow_methods(vec!["GET", "POST"])
                     .allow_credentials(true),
             )
-            .with(warp::log("party")),
+            .with(warp::trace::request()),
     )
     .run(([127, 0, 0, 1], 8000))
     .await;
@@ -96,6 +110,8 @@ mod filters {
             .and(with_party(party.clone()))
             .and(with_json::<models::AuthRequest>())
             .and_then(handlers::authenticate)
+            .with(warp::trace::named("auth"))
+
     }
 
     fn with_json<T: Send + DeserializeOwned>(

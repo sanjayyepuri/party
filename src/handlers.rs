@@ -13,7 +13,7 @@ pub type PartyRc = Arc<tokio::sync::RwLock<party::Party>>;
 
 pub async fn hello(party_lock: PartyRc, guest: String) -> Result<impl Reply, Rejection> {
     let party = party_lock.read().await;
-    if let Some(guest) = party.guest(&guest) {
+    if let Some(guest) = party.guest(&guest).await {
         // TODO (sanjay) upon first request to hello delete the passcode
         Ok(warp::reply::json(&guest))
     } else {
@@ -22,8 +22,8 @@ pub async fn hello(party_lock: PartyRc, guest: String) -> Result<impl Reply, Rej
 }
 
 pub async fn get_guest(party: PartyRc, guest: String) -> Result<impl Reply, Rejection> {
-    if let Some(guest) = party.read().await.guest(&guest) {
-        Ok(warp::reply::json(guest))
+    if let Some(guest) = party.read().await.guest(&guest).await {
+        Ok(warp::reply::json(&guest))
     } else {
         Err(reject::custom(GuestNotFoundError { guest }))
     }
@@ -34,7 +34,7 @@ pub async fn authenticate(
     auth: models::AuthRequest,
 ) -> Result<impl Reply, Rejection> {
     let party = party_lock.read().await;
-    if let Some(guest) = party.auth(&auth.passcode) {
+    if let Some(guest) = party.auth(&auth.passcode).await {
         let mut claims = BTreeMap::new();
         claims.insert("guest", guest);
 
@@ -54,7 +54,7 @@ pub async fn update_rsvp(
     rsvp: models::RsvpUpdate,
 ) -> Result<impl Reply, Rejection> {
     let mut party = party_lock.write().await;
-    if let Some(guest) = party.rsvp(&guest, rsvp.rsvp_status) {
+    if let Some(guest) = party.rsvp(&guest, rsvp.rsvp_status).await {
         return Ok(warp::reply::json(&guest));
     } else {
         Err(reject::custom(GuestNotFoundError { guest }))

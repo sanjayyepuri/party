@@ -10,6 +10,8 @@ pub enum RsvpStatus {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Guest {
+    #[serde(alias = "_firestore_id")]
+    pub id: Option<String>,
     pub name: String,
     pub status: RsvpStatus,
     pub passcode: String,

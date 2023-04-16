@@ -18,12 +18,12 @@ Content-Type: application/json
 ###
 GET http://localhost:8000/rsvp
 Content-Type: application/json
-Authorization: eyJhbGciOiJIUzI1NiJ9.eyJndWVzdCI6Imd1ZXN0MSJ9.Nlodi9649pclgmClMN7B8P5e1jkY7nDI-iRYDAs3I8s
+Party-Token: eyJhbGciOiJIUzI1NiJ9.eyJndWVzdCI6IjNYdVJrZlFITlEwMUhvWWFHV3I1In0.RvU-uYdYFY-PboJPA-wlm17r9a7-GU3vp5to6hEikuo
 
 ###
 POST http://localhost:8000/rsvp
 Content-Type: application/json
-Authorization: eyJhbGciOiJIUzI1NiJ9.eyJndWVzdCI6Imd1ZXN0MSJ9.Nlodi9649pclgmClMN7B8P5e1jkY7nDI-iRYDAs3I8s
+Party-Token: eyJhbGciOiJIUzI1NiJ9.eyJndWVzdCI6IjNYdVJrZlFITlEwMUhvWWFHV3I1In0.RvU-uYdYFY-PboJPA-wlm17r9a7-GU3vp5to6hEikuo
 
 {
     "rsvp_status": "Going"
