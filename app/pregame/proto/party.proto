@@ -1,0 +1,111 @@
+syntax = "proto3";
+
+package party;
+
+message Guest {
+    int32 id = 1;
+    string first_name = 2;
+    string last_name = 3;
+    string phone_number = 4;
+}
+
+message Party {
+    int32 id = 1;
+    string name = 2;
+    string location = 3;
+    string description = 4;
+    optional string date = 5;
+}
+
+message Invitation {
+    int32 id = 1;
+    int64 guest_id = 2;
+    int64 party_id = 3;
+    string status = 4;
+}
+
+message GetRequest {
+    int32 id = 1;
+}
+
+message CreateGuestRequest {
+    string first_name = 1;
+    string last_name = 2;
+    string phone_number = 3;
+}
+
+message UpdateGuestRequest {
+    int32 id = 1;
+    string first_name = 2;
+    string last_name = 3;
+    string phone_number = 4;
+}
+
+message DeleteRequest {
+    int32 id = 1;
+}
+
+message Empty {}
+
+message CreatePartyRequest {
+    string name = 1;
+    string location = 2;
+    string description = 3;
+    optional string date = 4;
+}
+
+message UpdatePartyRequest {
+    int32 id = 1;
+    string name = 2;
+    string location = 3;
+    string description = 4;
+    optional string date = 5;
+}
+
+message CreateInvitationRequest {
+    int64 guest_id = 1;
+    int64 party_id = 2;
+    string status = 3;
+}
+
+message UpdateInvitationRequest {
+    int32 id = 1;
+    int64 guest_id = 2;
+    int64 party_id = 3;
+    string status = 4;
+}
+
+message ListGuestsResponse {
+    repeated Guest guests = 1;
+}
+
+message ListPartiesResponse {
+    repeated Party parties = 1;
+}
+
+message ListInvitationsResponse {
+    repeated Invitation invitations = 1;
+}
+
+service PartyService {
+    // Guest operations
+    rpc CreateGuest(CreateGuestRequest) returns (Guest);
+    rpc GetGuest(GetRequest) returns (Guest);
+    rpc UpdateGuest(UpdateGuestRequest) returns (Guest);
+    rpc DeleteGuest(DeleteRequest) returns (Empty);
+    rpc ListGuests(Empty) returns (ListGuestsResponse);
+    
+    // Party operations
+    rpc CreateParty(CreatePartyRequest) returns (Party);
+    rpc GetParty(GetRequest) returns (Party);
+    rpc UpdateParty(UpdatePartyRequest) returns (Party);
+    rpc DeleteParty(DeleteRequest) returns (Empty);
+    rpc ListParties(Empty) returns (ListPartiesResponse);
+    
+    // Invitation operations
+    rpc CreateInvitation(CreateInvitationRequest) returns (Invitation);
+    rpc GetInvitation(GetRequest) returns (Invitation);
+    rpc UpdateInvitation(UpdateInvitationRequest) returns (Invitation);
+    rpc DeleteInvitation(DeleteRequest) returns (Empty);
+    rpc ListInvitations(Empty) returns (ListInvitationsResponse);
+}
