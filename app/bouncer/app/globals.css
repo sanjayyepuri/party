@@ -4,18 +4,91 @@
 
 :root {
   --background: #fdfbf7;
-  --foreground: #3d2817;
-  --warm-cream: #fdfbf7;
-  --fall-orange: #d97706;
-  --fall-rust: #c2410c;
-  --fall-brown: #78350f;
+  --foreground: #1a1a1a;
+  
+  /* Vibrant tie-dye colors */
+  --tiedye-purple: #b794f6;
+  --tiedye-pink: #f472b6;
+  --tiedye-orange: #fb923c;
+  --tiedye-yellow: #fbbf24;
+  --tiedye-cyan: #67e8f9;
+  --tiedye-blue: #60a5fa;
+  --tiedye-lime: #a3e635;
+  --tiedye-rose: #fb7185;
 }
 
 body {
   color: var(--foreground);
-  background: var(--background);
+  font-family: var(--font-eb-garamond), serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  position: relative;
+  min-height: 100vh;
+}
+
+/* Vibrant asymmetric tie-dye gradient */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
+  
+  /* Layered radial gradients for tie-dye effect */
+  background: 
+    radial-gradient(circle at 15% 25%, var(--tiedye-purple) 0%, transparent 35%),
+    radial-gradient(circle at 75% 15%, var(--tiedye-pink) 0%, transparent 30%),
+    radial-gradient(ellipse at 85% 65%, var(--tiedye-orange) 0%, transparent 40%),
+    radial-gradient(circle at 25% 75%, var(--tiedye-cyan) 0%, transparent 38%),
+    radial-gradient(ellipse at 60% 45%, var(--tiedye-yellow) 0%, transparent 25%),
+    radial-gradient(circle at 40% 20%, var(--tiedye-blue) 0%, transparent 28%),
+    radial-gradient(ellipse at 10% 80%, var(--tiedye-lime) 0%, transparent 33%),
+    radial-gradient(circle at 90% 85%, var(--tiedye-rose) 0%, transparent 30%),
+    radial-gradient(ellipse at 50% 90%, var(--tiedye-purple) 0%, transparent 25%),
+    linear-gradient(135deg, #fef3c7 0%, #fce7f3 50%, #ddd6fe 100%);
+  
+  background-size: 120% 120%;
+  animation: tiedye-drift 25s ease-in-out infinite alternate;
+}
+
+/* Film grain overlay using SVG noise */
+body::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
+  opacity: 0.5;
+  pointer-events: none;
+  
+  /* SVG noise for authentic film grain */
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 250px 250px;
+  mix-blend-mode: overlay;
+  
+  /* Add subtle vignette effect */
+  box-shadow: inset 0 0 200px rgba(0, 0, 0, 0.05);
+}
+
+/* Subtle tie-dye drift animation */
+@keyframes tiedye-drift {
+  0% {
+    background-position: 0% 0%;
+    transform: scale(1);
+  }
+  50% {
+    background-position: 100% 100%;
+    transform: scale(1.05);
+  }
+  100% {
+    background-position: 0% 0%;
+    transform: scale(1);
+  }
 }
 
 /* Dot grid background */
@@ -48,8 +121,14 @@ body {
 }
 
 @keyframes gradient-shift {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
+  0%, 100% { 
+    background-position: 0% 50%; 
+    filter: hue-rotate(0deg);
+  }
+  50% { 
+    background-position: 100% 50%; 
+    filter: hue-rotate(5deg);
+  }
 }
 
 @keyframes flicker {
@@ -120,4 +199,109 @@ body {
       font-size: 14px;
     }
   }
+}
+
+/* Ory Elements Custom Styling */
+/* Override Ory component styles to match our design */
+
+/* Reset Ory card styling */
+.ory-card {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  padding: 0 !important;
+}
+
+/* Input fields */
+.ory-input,
+input[type="email"],
+input[type="text"],
+input[type="password"] {
+  background-color: transparent !important;
+  border: 0 !important;
+  border-bottom: 2px solid currentColor !important;
+  border-radius: 0 !important;
+  outline: none !important;
+  padding: 0.25rem !important;
+  padding-bottom: 0.25rem !important;
+  color: inherit !important;
+  font-family: var(--font-eb-garamond), serif !important;
+}
+
+input::placeholder {
+  color: #000 !important;
+  opacity: 1 !important;
+}
+
+/* Buttons */
+.ory-button,
+button[type="submit"] {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  color: inherit !important;
+  font-family: var(--font-eb-garamond), serif !important;
+  font-size: inherit !important;
+  text-decoration: none !important;
+  transition: all 0.2s ease !important;
+  cursor: pointer !important;
+}
+
+button[type="submit"]:hover {
+  text-decoration: underline !important;
+}
+
+button[type="submit"]:disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+}
+
+/* Error messages */
+.ory-message,
+.ory-error {
+  color: #dc2626 !important;
+  font-size: 0.875rem !important;
+  margin-top: 0.5rem !important;
+}
+
+/* Labels */
+.ory-label,
+label {
+  color: inherit !important;
+  font-family: var(--font-eb-garamond), serif !important;
+  font-size: 0.875rem !important;
+  opacity: 0.8 !important;
+}
+
+/* Form groups */
+.ory-form-group {
+  margin-bottom: 1rem !important;
+}
+
+/* Links */
+.ory-link,
+a {
+  color: inherit !important;
+  text-decoration: underline !important;
+  opacity: 0.8 !important;
+  transition: opacity 0.2s ease !important;
+}
+
+.ory-link:hover,
+a:hover {
+  opacity: 1 !important;
+}
+
+/* Hide Ory branding/logos if present */
+.ory-logo,
+.ory-branding {
+  display: none !important;
+}
+
+/* Passkey button specific styling */
+button[name="method"][value="passkey"],
+button[name="method"][value="webauthn"] {
+  display: inline-block !important;
+  margin-top: 0.75rem !important;
 }
