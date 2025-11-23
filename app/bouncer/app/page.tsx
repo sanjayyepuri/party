@@ -1,22 +1,52 @@
-'use client';
+import { redirect } from "next/navigation";
+import { getServerSession, getLogoutFlow } from "@ory/nextjs/app";
+import config from "@/ory.config";
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 
-export default function HomePage() {
-  const router = useRouter();
+async function LogoutLink() {
+  const flow = await getLogoutFlow()
+  return (
+    <a className="inline-block hover:underline transition-all opacity-60 hover:opacity-100" href={flow.logout_url}>
+      sign out
+    </a>
+  )
+}
 
-  useEffect(() => {
-    // Redirect to the hardcoded party
-    router.replace('/example-party');
-  }, [router]);
+export default async function HomePage() {
+  // Check if user is authenticated
+  const session = await getServerSession();
+
+  // If no session, redirect to welcome page
+  if (!session) {
+    redirect("/auth/login");
+  }
+
+  // User is authenticated, show welcome message
+  const userEmail = session.identity?.traits?.email || "there";
 
   return (
-    <div className="min-h-screen bg-[#fdfbf7] flex items-center justify-center">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mx-auto mb-4"></div>
-        <p className="text-amber-950">Redirecting to party invitation...</p>
+    <div className="h-screen flex flex-col xl:p-40 lg:p-40 md:p-10 p-5 overflow-y-auto">
+      <div className="flex-1">
+        <h1 className="text-4xl mb-6">hey {userEmail}.</h1>
+        <p className="text-lg opacity-80 mb-8">welcome to the party.</p>
+
+        <div className="space-y-4">
+          <a
+            href="/settings"
+            className="inline-block hover:underline transition-all"
+          >
+            manage your account →
+          </a>
+
+          <br />
+
+          <LogoutLink />
+        </div>
       </div>
+
+      <footer className="py-4 text-center text-sm opacity-60">
+        built by sanjay for his friends
+      </footer>
     </div>
   );
 }

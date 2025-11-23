@@ -4,18 +4,91 @@
 
 :root {
   --background: #fdfbf7;
-  --foreground: #3d2817;
-  --warm-cream: #fdfbf7;
-  --fall-orange: #d97706;
-  --fall-rust: #c2410c;
-  --fall-brown: #78350f;
+  --foreground: #1a1a1a;
+  
+  /* Vibrant tie-dye colors */
+  --tiedye-purple: #b794f6;
+  --tiedye-pink: #f472b6;
+  --tiedye-orange: #fb923c;
+  --tiedye-yellow: #fbbf24;
+  --tiedye-cyan: #67e8f9;
+  --tiedye-blue: #60a5fa;
+  --tiedye-lime: #a3e635;
+  --tiedye-rose: #fb7185;
 }
 
 body {
   color: var(--foreground);
-  background: var(--background);
+  font-family: var(--font-eb-garamond), serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  position: relative;
+  min-height: 100vh;
+}
+
+/* Vibrant asymmetric tie-dye gradient */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
+  
+  /* Layered radial gradients for tie-dye effect */
+  background: 
+    radial-gradient(circle at 15% 25%, var(--tiedye-purple) 0%, transparent 35%),
+    radial-gradient(circle at 75% 15%, var(--tiedye-pink) 0%, transparent 30%),
+    radial-gradient(ellipse at 85% 65%, var(--tiedye-orange) 0%, transparent 40%),
+    radial-gradient(circle at 25% 75%, var(--tiedye-cyan) 0%, transparent 38%),
+    radial-gradient(ellipse at 60% 45%, var(--tiedye-yellow) 0%, transparent 25%),
+    radial-gradient(circle at 40% 20%, var(--tiedye-blue) 0%, transparent 28%),
+    radial-gradient(ellipse at 10% 80%, var(--tiedye-lime) 0%, transparent 33%),
+    radial-gradient(circle at 90% 85%, var(--tiedye-rose) 0%, transparent 30%),
+    radial-gradient(ellipse at 50% 90%, var(--tiedye-purple) 0%, transparent 25%),
+    linear-gradient(135deg, #fef3c7 0%, #fce7f3 50%, #ddd6fe 100%);
+  
+  background-size: 120% 120%;
+  animation: tiedye-drift 25s ease-in-out infinite alternate;
+}
+
+/* Film grain overlay using SVG noise */
+body::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
+  opacity: 0.5;
+  pointer-events: none;
+  
+  /* SVG noise for authentic film grain */
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 250px 250px;
+  mix-blend-mode: overlay;
+  
+  /* Add subtle vignette effect */
+  box-shadow: inset 0 0 200px rgba(0, 0, 0, 0.05);
+}
+
+/* Subtle tie-dye drift animation */
+@keyframes tiedye-drift {
+  0% {
+    background-position: 0% 0%;
+    transform: scale(1);
+  }
+  50% {
+    background-position: 100% 100%;
+    transform: scale(1.05);
+  }
+  100% {
+    background-position: 0% 0%;
+    transform: scale(1);
+  }
 }
 
 /* Dot grid background */
@@ -48,8 +121,14 @@ body {
 }
 
 @keyframes gradient-shift {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
+  0%, 100% { 
+    background-position: 0% 50%; 
+    filter: hue-rotate(0deg);
+  }
+  50% { 
+    background-position: 100% 50%; 
+    filter: hue-rotate(5deg);
+  }
 }
 
 @keyframes flicker {
@@ -121,3 +200,7 @@ body {
     }
   }
 }
+
+/* Ory Elements Custom Styling - REMOVED to allow custom components to style themselves */
+/* The previous overrides were forcing transparent backgrounds and removing borders,
+   which conflicted with the new Premium UI components. */
