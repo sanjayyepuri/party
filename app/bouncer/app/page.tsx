@@ -14,7 +14,7 @@ async function LogoutLink() {
 
 export default async function HomePage() {
   // Check if user is authenticated
-  const session = await getServerSession(config);
+  const session = await getServerSession();
 
   // If no session, redirect to welcome page
   if (!session) {
