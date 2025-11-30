@@ -27,11 +27,6 @@ jobs:
           npm ci
           npx next build
 
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: ./app/bouncer/out
-
   # build-pregame:
   #   runs-on: "ubuntu-latest"
   #   env:
