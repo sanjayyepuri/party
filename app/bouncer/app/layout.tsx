@@ -1,3 +1,5 @@
+import "@ory/elements-react/theme/styles.css"
+import "./globals.css";
 import localFont from 'next/font/local'
 
 const departureMono = localFont({
@@ -10,9 +12,6 @@ const departureMono = localFont({
   ],
   variable: '--font-departure-mono',
 })
-
-import "@ory/elements-react/theme/styles.css"
-import "./globals.css";
 
 export default function RootLayout({
   children,
