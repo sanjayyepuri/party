@@ -1,6 +1,6 @@
 
 import { getLoginFlow, OryPageParams } from "@ory/nextjs/app";
-import CustomLogin from "@/components/CustomLogin";
+import { Login } from "@ory/elements-react/theme";
 
 import config from "@/ory.config";
 
@@ -13,7 +13,10 @@ export default async function LoginPage(props: OryPageParams) {
 
   return (
     <div className="">
-      <CustomLogin flow={flow} config={config} />
+      <Login
+        flow={flow}
+        config={config}
+      />
     </div>
   );
 }
