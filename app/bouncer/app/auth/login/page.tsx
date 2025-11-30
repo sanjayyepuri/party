@@ -12,7 +12,7 @@ export default async function LoginPage(props: OryPageParams) {
   }
 
   return (
-    <div className="">
+    <div>
       <Login
         flow={flow}
         config={config}
