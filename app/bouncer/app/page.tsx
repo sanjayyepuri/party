@@ -6,7 +6,6 @@ export default async function HomePage() {
       <h1 className="tracking-tighter uppercase font-semibold text-4xl mb-3">
         a space for my friends to stay in touch.
       </h1>
-      <p className="text-xl mb-10"></p>
       <p className="mb-5">
         My friend list on social media has become heavily diluted. This means
         there are many people that I have never spent time with -- folks I had

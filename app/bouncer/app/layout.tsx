@@ -1,5 +1,7 @@
 
 import localFont from 'next/font/local'
+import "@ory/elements-react/theme/styles.css"
+import "./globals.css";
 import { Navbar } from "./components/navbar";
 import Footer from "./components/footer";
 
@@ -13,10 +15,6 @@ const departureMono = localFont({
   ],
   variable: "--font-departure-mono",
 });
-
-
-import "@ory/elements-react/theme/styles.css"
-import "./globals.css";
 
 
 export default function RootLayout({
