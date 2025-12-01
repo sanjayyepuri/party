@@ -2,6 +2,17 @@
 
 @theme {
   --font-family-sans: var(--font-departure-mono), monospace;
+  
+  /* Departure Mono text sizes - increments of 11px */
+  --font-size-xs: 11px;
+  --font-size-sm: 11px;
+  --font-size-base: 11px;
+  --font-size-lg: 22px;
+  --font-size-xl: 33px;
+  --font-size-2xl: 44px;
+  --font-size-3xl: 55px;
+  --font-size-4xl: 66px;
+  --font-size-5xl: 77px;
 }
 
 :root {
@@ -106,10 +117,6 @@ body::after {
   background-position: 0 0;
 }
 
-/* Fall texture overlay */
-.fall-texture {
-  /* Texture removed for cleaner look */
-}
 
 /* Ambient animations */
 @keyframes float {
@@ -203,12 +210,22 @@ body::after {
   }
 }
 
+.writing-mode-vertical {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+
 /* Ory Elements Custom Styling */
 /* Override Ory elements to use transparent backgrounds and Departure Mono font */
 
 /* Override the font class that Ory uses */
 .ory-elements .font-sans-default {
   font-family: var(--font-departure-mono), monospace;
+}
+
+/* Remove padding from card elements */
+.ory-elements > div > div {
+  padding: 0 !important;
 }
 
 /* Typography sizing for Departure Mono - use increments of 11px for pixel-perfect rendering */

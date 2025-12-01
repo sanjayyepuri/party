@@ -1,52 +1,33 @@
-import { redirect } from "next/navigation";
-import { getServerSession, getLogoutFlow } from "@ory/nextjs/app";
-import config from "@/ory.config";
-
-
-async function LogoutLink() {
-  const flow = await getLogoutFlow()
-  return (
-    <a className="inline-block hover:underline transition-all opacity-60 hover:opacity-100" href={flow.logout_url}>
-      sign out
-    </a>
-  )
-}
 
 export default async function HomePage() {
-  // Check if user is authenticated
-  const session = await getServerSession();
-
-  // If no session, redirect to welcome page
-  if (!session) {
-    redirect("/auth/login");
-  }
-
-  // User is authenticated, show welcome message
-  const userEmail = session.identity?.traits?.email || "there";
 
   return (
-    <div className="h-screen flex flex-col xl:p-40 lg:p-40 md:p-10 p-5 overflow-y-auto">
-      <div className="flex-1">
-        <h1 className="text-4xl mb-6">hey {userEmail}.</h1>
-        <p className="text-lg opacity-80 mb-8">welcome to the party.</p>
-
-        <div className="space-y-4">
-          <a
-            href="/settings"
-            className="inline-block hover:underline transition-all"
-          >
-            manage your account →
-          </a>
-
-          <br />
-
-          <LogoutLink />
-        </div>
+    <div className="">
+      <h1 className="tracking-tighter uppercase font-semibold text-4xl mb-3">
+        a space for my friends to stay in touch.
+      </h1>
+      <p className="mb-5">
+        My friend list on social media has become heavily diluted. This means
+        there are many people that I have never spent time with -- folks I had
+        met once and never had the time or opportunity to reach out again.
+      </p>
+      <p className="mb-5">
+        This huge group of people has faded from memory. But I have an amazing
+        community of friends who I do spend a meaningful amount of time with.
+        It's these people I want to create a space for -- a place where the
+        noise of media and all of its distractions disappears that focuses on
+        facilitating real community interaction.
+      </p>
+      <p className="mb-5">
+        This community will be open, but the entry will be backwards. It's not
+        an invitation to reach out. It's an automatic invitation to events I
+        will host.
+      </p>
+      <div className="mt-8">
+        <p className="mt-3 text-sm text-gray-600">
+          🚧 Currently under construction
+        </p>
       </div>
-
-      <footer className="py-4 text-center text-sm opacity-60">
-        built by sanjay for his friends
-      </footer>
     </div>
   );
 }
