@@ -1,8 +1,6 @@
 
 import { redirect } from "next/navigation";
 import { getServerSession, getLogoutFlow } from "@ory/nextjs/app";
-import config from "@/ory.config";
-
 
 async function LogoutLink() {
   const flow = await getLogoutFlow()
@@ -13,7 +11,7 @@ async function LogoutLink() {
   )
 }
 
-export default async function HomePage() {
+export default async function InvitationsPage() {
   // Check if user is authenticated
   const session = await getServerSession();
 
