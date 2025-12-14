@@ -1,5 +1,6 @@
 .DS_Store
 node_modules
+.next
 
 # env files (can opt-in for committing if needed)
 .env*
