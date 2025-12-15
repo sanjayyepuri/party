@@ -13,7 +13,7 @@ export default async function HomePage() {
         I have an amazing community of friends who I do spend a meaningful
         amount of time with. It&apos;s these people I want to create a space for
         -- a place where the noise of media and all of its distractions
-        disappear.
+        disappears.
       </p>
       <p className="mb-5">
         This community will be open, but the entry will be backwards. It&apos;s
