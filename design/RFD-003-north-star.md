@@ -1,11 +1,10 @@
+---
+author: Sanjay Yepuri
+state: Draft
+discussion: TBD
+---
+
 # RFD 003: North Star
-
-
-## Metadata
-- **Authors**: Sanjay
-- **State**: Draft
-- **Discussion**: TBD
-
 
 ## Problem Statement
 
