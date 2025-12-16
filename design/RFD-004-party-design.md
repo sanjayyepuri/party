@@ -14,7 +14,7 @@ The party creation flow involves the host creating a party and then the applicat
 
 ## Guest Flow
 
-The user will be able to login into the application. This will use Ory today (this is something we should reconsider after the inital MVP). This means that we will need to join the user identifier provided by Ory with our own database. 
+The user will be able to login into the application. This will use Ory today (this is something we should reconsider after the initial MVP). This means that we will need to join the user identifier provided by Ory with our own database. 
 
 - During account creation, we should create entries in own database?
 - Alternatively, we could use the user information stored in Ory's database and render that to the page. That way we only store the party information. 
