@@ -1,21 +1,13 @@
 use axum::http::Uri;
-use axum::{extract::Json, response::IntoResponse, routing::get, Router};
-use serde::{Deserialize, Serialize};
+use axum::{response::IntoResponse, routing::get, Json, Router};
 use tower::ServiceBuilder;
 use vercel_runtime::axum::VercelLayer;
 use vercel_runtime::Error;
 
-#[derive(Serialize, Deserialize)]
-struct Party {
-    name: String,
-    description: String,
-}
+use pregame::hello_party;
 
 async fn hello_world() -> impl IntoResponse {
-    Json(Party {
-        name: "Hello World".to_string(),
-        description: "A simple greeting".to_string(),
-    })
+    Json(hello_party())
 }
 
 async fn fallback(uri: Uri) -> impl IntoResponse {
