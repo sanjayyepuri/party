@@ -2,8 +2,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 pub struct Party {
-    name: String,
-    description: String,
+    pub name: String,
+    pub description: String,
 }
 
 pub fn hello_party() -> Party {
