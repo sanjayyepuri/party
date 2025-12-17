@@ -2,7 +2,7 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
     {
-      "source": "/api/bouncer/:path*",
+      "source": "/api/bouncer/(.*)",
       "destination": "/api/bouncer"
     }
   ]
