@@ -1,5 +1,5 @@
 use crate::auth::ory::{OryConfig, extract_cookie_access_token, validate_token};
-use axum::{Json, extract::State, http::HeaderMap, http::Uri, response::IntoResponse};
+use axum::{Json, extract::State, http::{HeaderMap, StatusCode}, http::Uri, response::IntoResponse};
 use std::sync::Arc;
 
 pub struct ApiState {
@@ -15,12 +15,15 @@ pub async fn hello_world(
 
     let (cookie, access_token) = match extract_cookie_access_token(&headers) {
         Some(token) => token,
-        None => return Json("Unauthorized"),
+        None => return (StatusCode::UNAUTHORIZED, Json("Unauthorized")).into_response(),
     };
 
     match validate_token(ory_config, &cookie, &access_token).await {
-        Ok(_) => Json("Hello, world!"),
-        Err(_) => return Json("Unauthorized"),
+        Ok(_) => (StatusCode::OK, Json("Hello, world!")).into_response(),
+        Err(err) => {
+            eprintln!("Token validation failed: {:?}", err);
+            (StatusCode::UNAUTHORIZED, Json("Unauthorized")).into_response()
+        }
     }
 }
 

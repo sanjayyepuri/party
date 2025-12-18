@@ -1,4 +1,5 @@
 use axum::{routing::get, Router};
+use reqwest::Client;
 use std::sync::Arc;
 use tower::ServiceBuilder;
 use tower_http::trace::TraceLayer;
@@ -15,17 +16,38 @@ async fn main() -> Result<(), Error> {
     dotenvy::dotenv().ok();
 
     tracing_subscriber::registry()
-        // .with(
-        //     tracing_subscriber::EnvFilter::try_from_default_env()
-        //         .unwrap_or_else(|_| "ory_api_test=debug,tower_http=debug,hyper_util=trace".into()),
-        // )
         .with(tracing_subscriber::fmt::layer())
         .init();
 
-    let ory_sdk_url =
-        std::env::var("NEXT_PUBLIC_ORY_SDK_URL").expect("NEXT_PUBLIC_ORY_SDK_URL must be set");
-    let ory_sdk_url = Url::parse(&ory_sdk_url).expect("Invalid Ory SDK URL");
-    let ory_config = OryConfig { ory_sdk_url };
+    let ory_sdk_url = match std::env::var("NEXT_PUBLIC_ORY_SDK_URL") {
+        Ok(value) => value,
+        Err(e) => {
+            tracing::error!(
+                "Environment variable NEXT_PUBLIC_ORY_SDK_URL must be set: {}",
+                e
+            );
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                format!("NEXT_PUBLIC_ORY_SDK_URL must be set: {}", e),
+            )
+            .into());
+        }
+    };
+    let ory_sdk_url = match Url::parse(&ory_sdk_url) {
+        Ok(url) => url,
+        Err(e) => {
+            tracing::error!("Invalid Ory SDK URL in NEXT_PUBLIC_ORY_SDK_URL: {}", e);
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                format!("Invalid Ory SDK URL: {}", e),
+            )
+            .into());
+        }
+    };
+    let ory_config = OryConfig {
+        ory_sdk_url,
+        client: Client::new(),
+    };
 
     let api_state = Arc::new(ApiState { ory_config });
 

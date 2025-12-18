@@ -3,24 +3,51 @@
 // implement the oauth2 flow to determine if an access token is valid.
 //
 // https://www.ory.com/docs/reference/api#tag/oAuth2/operation/introspectOAuth2Token
-// Is document for the endpoint that introspect an access token.
+// This is the documentation for the endpoint that introspects an access token.
 
 use axum::http::HeaderMap;
 use reqwest::Client;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use url::Url;
 
-/// Contains the configuration for Ory.
+/// Configuration required for talking to the Ory (Hydra) API from this module.
+///
+/// This struct is intended to be created once at application startup (for example,
+/// from environment variables or a configuration file) and then shared or injected
+/// wherever Ory-backed authentication is needed. It is a lightweight wrapper
+/// around the base URL of the Ory SDK / API.
+///
+/// # URL format
+///
+/// `ory_sdk_url` must be a fully-qualified base URL (including scheme and host),
+/// such as `https://ory-hydra.example.com/`. It should *not* include endpoint-
+/// specific paths; this module appends paths like [`ORY_SESSION_ENDPOINT`] using
+/// [`Url::join`]. A trailing slash on the base URL is allowed but not required.
 pub struct OryConfig {
-    /// The API Endpoint to access the Ory Hydra API
+    /// Base URL of the Ory Hydra API used by this service (scheme + host, optional port).
+    /// The URL must be suitable for `ory_sdk_url.join(ORY_SESSION_ENDPOINT)`.
     pub ory_sdk_url: Url,
+    /// Reusable HTTP client that maintains a connection pool for efficiency.
+    pub client: Client,
 }
 
 static ORY_SESSION_ENDPOINT: &str = "/sessions/whoami";
 
+/// Represents the subset of an Ory `/sessions/whoami` response that this
+/// service cares about when validating a user's session.
+///
+/// An `AuthSession` is returned by [`validate_token`] after forwarding the
+/// user's Ory session cookie to Hydra. The `active` flag is then used to
+/// decide whether the request should be treated as authenticated.
 #[derive(Deserialize)]
 pub struct AuthSession {
+    /// Indicates whether Ory considers this session currently active/valid.
+    ///
+    /// When `false`, the session is treated as unauthorized by
+    /// [`validate_token`], and an [`AuthError::Unauthorized`] is returned.
     pub active: bool,
+    /// The unique identifier of the Ory session associated with the
+    /// authenticated user.
     pub id: String,
 }
 
@@ -76,12 +103,19 @@ pub async fn validate_token(
 ) -> Result<AuthSession, AuthError> {
     let url = config.ory_sdk_url.join(ORY_SESSION_ENDPOINT)?;
 
-    let client = Client::new();
-    let response = client
+    let response = config
+        .client
         .get(url)
         .header("Cookie", format!("{}={}", cookie_name, session_token))
         .send()
         .await?;
+
+    if !response.status().is_success() {
+        return Err(AuthError::InternalServerError(format!(
+            "Ory service returned error status: {}",
+            response.status()
+        )));
+    }
 
     let result = response.json::<AuthSession>().await?;
     if result.active {
