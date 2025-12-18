@@ -21,7 +21,7 @@ pub async fn hello_world(
     match validate_token(ory_config, &cookie, &access_token).await {
         Ok(_) => (StatusCode::OK, Json("Hello, world!")).into_response(),
         Err(err) => {
-            eprintln!("Token validation failed: {:?}", err);
+            tracing::error!("Token validation failed: {:?}", err);
             (StatusCode::UNAUTHORIZED, Json("Unauthorized")).into_response()
         }
     }
