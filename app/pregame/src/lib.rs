@@ -1,5 +1,8 @@
 use serde::{Deserialize, Serialize};
 
+pub mod api;
+pub mod auth;
+
 #[derive(Serialize, Deserialize)]
 pub struct Party {
     pub name: String,
