@@ -9,7 +9,7 @@ use vercel_runtime::axum::VercelLayer;
 use vercel_runtime::Error;
 
 use pregame::api::{fallback, hello_world, ApiState};
-use pregame::auth::ory::OryConfig;
+use pregame::auth::ory::OryState;
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
@@ -44,7 +44,7 @@ async fn main() -> Result<(), Error> {
             .into());
         }
     };
-    let ory_config = OryConfig {
+    let ory_config = OryState {
         ory_sdk_url,
         client: Client::new(),
     };

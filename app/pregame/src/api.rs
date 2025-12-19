@@ -1,9 +1,9 @@
-use crate::auth::ory::{OryConfig, extract_cookie_access_token, validate_token};
+use crate::auth::ory::{OryState, extract_cookie_access_token, validate_token};
 use axum::{Json, extract::State, http::{HeaderMap, StatusCode}, http::Uri, response::IntoResponse};
 use std::sync::Arc;
 
 pub struct ApiState {
-    pub ory_config: OryConfig,
+    pub ory_config: OryState,
 }
 
 /// Temporary testing endpoint to ensure cookie and access token are extracted correctly

@@ -10,12 +10,12 @@ use reqwest::Client;
 use serde::Deserialize;
 use url::Url;
 
-/// Configuration required for talking to the Ory (Hydra) API from this module.
+/// Runtime state required for talking to the Ory (Hydra) API from this module.
 ///
 /// This struct is intended to be created once at application startup (for example,
 /// from environment variables or a configuration file) and then shared or injected
-/// wherever Ory-backed authentication is needed. It is a lightweight wrapper
-/// around the base URL of the Ory SDK / API.
+/// wherever Ory-backed authentication is needed. It contains both configuration
+/// (the base URL of the Ory SDK / API) and runtime state (the HTTP client).
 ///
 /// # URL format
 ///
@@ -23,7 +23,7 @@ use url::Url;
 /// such as `https://ory-hydra.example.com/`. It should *not* include endpoint-
 /// specific paths; this module appends paths like [`ORY_SESSION_ENDPOINT`] using
 /// [`Url::join`]. A trailing slash on the base URL is allowed but not required.
-pub struct OryConfig {
+pub struct OryState {
     /// Base URL of the Ory Hydra API used by this service (scheme + host, optional port).
     /// The URL must be suitable for `ory_sdk_url.join(ORY_SESSION_ENDPOINT)`.
     pub ory_sdk_url: Url,
@@ -97,7 +97,7 @@ pub fn extract_cookie_access_token(headers: &HeaderMap) -> Option<(String, Strin
 
 /// Forwards the cookie to ory's session endpoint
 pub async fn validate_token(
-    config: &OryConfig,
+    config: &OryState,
     cookie_name: &str,
     session_token: &str,
 ) -> Result<AuthSession, AuthError> {
