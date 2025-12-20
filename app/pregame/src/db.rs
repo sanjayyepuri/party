@@ -77,9 +77,11 @@ impl DbState {
 
 impl Drop for DbState {
     fn drop(&mut self) {
-        // Try to abort the connection task when DbState is dropped
-        // This ensures cleanup happens even if shutdown() is not explicitly called
-        // Use try_lock to avoid potential deadlocks with async tasks
+        // Try to abort the connection task when DbState is dropped.
+        // This is a best-effort cleanup that ensures some cleanup happens even if
+        // shutdown() is not explicitly called. The try_lock may fail if the mutex
+        // is held by an async task, which is acceptable as Drop is synchronous.
+        // For guaranteed cleanup, call shutdown() explicitly before dropping.
         if let Ok(guard) = self.connection_task.try_lock() {
             if let Some(task) = guard.as_ref() {
                 if !task.is_finished() {
