@@ -1,14 +1,14 @@
 use axum::{
     extract::State,
-    http::{HeaderMap, StatusCode, Method, header},
+    http::{header, HeaderMap, Method, StatusCode},
     response::Json,
     routing::{get, post},
     Router,
 };
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
+use tower_http::cors::{Any, CorsLayer};
 use tower_http::trace::TraceLayer;
-use tower_http::cors::{CorsLayer, Any};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 #[derive(Clone)]
@@ -45,8 +45,8 @@ async fn main() {
     // Load environment variables
     dotenvy::dotenv().ok();
 
-    let ory_sdk_url = std::env::var("NEXT_PUBLIC_ORY_SDK_URL")
-        .expect("NEXT_PUBLIC_ORY_SDK_URL must be set");
+    let ory_sdk_url =
+        std::env::var("NEXT_PUBLIC_ORY_SDK_URL").expect("NEXT_PUBLIC_ORY_SDK_URL must be set");
 
     let state = Arc::new(AppState {
         ory_sdk_url,
@@ -80,9 +80,7 @@ async fn main() {
         .with_state(state);
 
     // Run the server
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3001")
-        .await
-        .unwrap();
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:3001").await.unwrap();
 
     tracing::info!("listening on {}", listener.local_addr().unwrap());
 
@@ -117,12 +115,22 @@ async fn validate_token(
     }
 
     let (cookie_name, token) = token_info.unwrap();
-    tracing::info!("Extracted token from '{}' (first 10 chars): {}...", cookie_name, &token.chars().take(10).collect::<String>());
+    tracing::info!(
+        "Extracted token from '{}' (first 10 chars): {}...",
+        cookie_name,
+        &token.chars().take(10).collect::<String>()
+    );
 
     // Validate the session with Ory Kratos
     match validate_session_with_kratos(&state, &cookie_name, &token).await {
         Ok(session) => {
-            tracing::info!("Session validation successful for identity: {}", session.identity.get("id").unwrap_or(&serde_json::Value::String("unknown".to_string())));
+            tracing::info!(
+                "Session validation successful for identity: {}",
+                session
+                    .identity
+                    .get("id")
+                    .unwrap_or(&serde_json::Value::String("unknown".to_string()))
+            );
             if session.active {
                 (
                     StatusCode::OK,
@@ -157,6 +165,7 @@ async fn validate_token(
     }
 }
 
+/// Extracts the token from the headers.
 fn extract_token(headers: &HeaderMap) -> Option<(String, String)> {
     // Try Authorization header first (Bearer token)
     if let Some(auth_header) = headers.get("authorization") {
@@ -213,7 +222,10 @@ async fn validate_session_with_kratos(
     tracing::info!("Kratos response status: {}", status);
 
     if !status.is_success() {
-        let error_body = response.text().await.unwrap_or_else(|_| "Unable to read error body".to_string());
+        let error_body = response
+            .text()
+            .await
+            .unwrap_or_else(|_| "Unable to read error body".to_string());
         tracing::error!("Kratos error response: {}", error_body);
         return Err(format!("Kratos returned status {}: {}", status, error_body).into());
     }
