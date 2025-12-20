@@ -175,7 +175,11 @@ impl Rsvp {
         Self::from_row(&row)
     }
 
-    pub async fn update_rsvp(client: &Client, id: i32, status: RsvpStatus) -> Result<Self, tokio_postgres::Error> {
+    pub async fn update_rsvp(
+        client: &Client,
+        id: i32,
+        status: RsvpStatus,
+    ) -> Result<Self, tokio_postgres::Error> {
         let status_value: i32 = match status {
             RsvpStatus::Pending => 0,
             RsvpStatus::Accepted => 1,
@@ -192,3 +196,4 @@ impl Rsvp {
 
         Self::from_row(&row)
     }
+}

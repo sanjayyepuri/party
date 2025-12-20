@@ -1,4 +1,10 @@
+import { getServerSession } from "@ory/nextjs/app";
+import Link from "next/link";
+
 export default async function HomePage() {
+  const session = await getServerSession();
+  const isAuthenticated = !!session;
+
   return (
     <div className="">
       <h1 className="tracking-tighter uppercase font-semibold text-4xl mb-3">
@@ -21,9 +27,12 @@ export default async function HomePage() {
         events I host.
       </p>
       <div className="mt-8">
-        <p className="mt-3 text-sm text-gray-600">
-          🚧 Currently under construction
-        </p>
+        <Link
+          href={isAuthenticated ? "/parties" : "/auth/login"}
+          className="inline-block px-6 py-3 bg-black text-white uppercase tracking-wider font-semibold hover:bg-gray-800 transition-colors"
+        >
+          Enter
+        </Link>
       </div>
     </div>
   );

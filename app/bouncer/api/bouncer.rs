@@ -1,4 +1,7 @@
-use axum::{routing::get, Router};
+use axum::{
+    routing::{get, put},
+    Router,
+};
 use reqwest::Client;
 use std::sync::Arc;
 use tower::ServiceBuilder;
@@ -8,7 +11,10 @@ use url::Url;
 use vercel_runtime::axum::VercelLayer;
 use vercel_runtime::Error;
 
-use pregame::api::{fallback, hello_world, ApiState};
+use pregame::api::{
+    fallback, get_guest, get_party, get_party_rsvps, get_rsvp, get_rsvp_by_guest_party,
+    hello_world, update_guest, update_rsvp, ApiState,
+};
 use pregame::auth::{AuthLayer, OryState};
 use pregame::db::DbState;
 
@@ -90,6 +96,17 @@ async fn main() -> Result<(), Error> {
         .route("/", get(hello_world))
         .route("/hello", get(hello_world))
         .route("/api/bouncer/hello", get(hello_world))
+        // Guest endpoints
+        .route("/api/bouncer/guests/:id", get(get_guest).put(update_guest))
+        // Party endpoints
+        .route("/api/bouncer/parties/:id", get(get_party))
+        .route("/api/bouncer/parties/:party_id/rsvps", get(get_party_rsvps))
+        // RSVP endpoints
+        .route("/api/bouncer/rsvps/:id", get(get_rsvp).put(update_rsvp))
+        .route(
+            "/api/bouncer/rsvps/guest/:guest_id/party/:party_id",
+            get(get_rsvp_by_guest_party),
+        )
         .fallback(fallback)
         .layer(AuthLayer::new(Arc::new(
             api_state.as_ref().ory_state.clone(),
