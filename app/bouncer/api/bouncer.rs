@@ -92,8 +92,24 @@ async fn main() -> Result<(), Error> {
         .route("/api/bouncer/hello", get(hello_world))
         .fallback(fallback)
         .layer(TraceLayer::new_for_http())
-        .with_state(api_state);
+        .with_state(api_state.clone());
 
     let app = ServiceBuilder::new().layer(VercelLayer::new()).service(app);
-    vercel_runtime::run(app).await
+    
+    // Run the Vercel runtime and handle the result
+    let result = vercel_runtime::run(app).await;
+    
+    // Gracefully shutdown the database connection
+    // Try to extract the db_state from Arc and call shutdown
+    // This will attempt explicit cleanup before relying on Drop
+    if let Ok(api_state_inner) = Arc::try_unwrap(api_state) {
+        if let Err(e) = api_state_inner.db_state.shutdown().await {
+            tracing::warn!("Error during database shutdown: {}", e);
+        }
+    } else {
+        // Arc still has multiple references, rely on Drop for cleanup
+        tracing::debug!("Multiple references to ApiState, relying on Drop for cleanup");
+    }
+    
+    result
 }
