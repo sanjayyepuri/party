@@ -73,7 +73,8 @@ impl Drop for DbState {
     fn drop(&mut self) {
         // Try to abort the connection task when DbState is dropped
         // This ensures cleanup happens even if shutdown() is not explicitly called
-        if let Some(task) = self.connection_task.blocking_lock().as_ref() {
+        let guard = self.connection_task.blocking_lock();
+        if let Some(task) = guard.as_ref() {
             if !task.is_finished() {
                 tracing::debug!("Aborting database connection task in Drop");
                 task.abort();
