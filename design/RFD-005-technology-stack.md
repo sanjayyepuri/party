@@ -30,7 +30,7 @@ The initial prototype I wrote used NextJS, so I ended up selecting Vercel Fluid 
 
 Vercel's offering seemed to have the least vendor lock-in and my usage should fall within the free tier. Both Cloudflare and Vercel had just released a Rust runtime for their serverless product. Based on my reading of the documentation, Vercel supports using Axum. Cloudflare Workers seemed to require the code to be compile down to WebAssembly. This meant I could only use the APIs and libraries they provided. 
 
-Moreover, I was sold on the simplicity of the developer experience. My past experiences with serverless compute required setting up quite a bit more boiler plate.
+Moreover, I was sold on the simplicity of the developer experience. My past experiences with serverless compute required setting up quite a bit more boilerplate.
 
 ## Database
 
