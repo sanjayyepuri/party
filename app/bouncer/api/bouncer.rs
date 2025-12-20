@@ -9,7 +9,7 @@ use vercel_runtime::axum::VercelLayer;
 use vercel_runtime::Error;
 
 use pregame::api::{fallback, hello_world, ApiState};
-use pregame::auth::OryState;
+use pregame::auth::{AuthLayer, OryState};
 use pregame::db::DbState;
 
 #[tokio::main]
@@ -91,6 +91,9 @@ async fn main() -> Result<(), Error> {
         .route("/hello", get(hello_world))
         .route("/api/bouncer/hello", get(hello_world))
         .fallback(fallback)
+        .layer(AuthLayer::new(Arc::new(
+            api_state.as_ref().ory_state.clone(),
+        )))
         .layer(TraceLayer::new_for_http())
         .with_state(api_state);
 

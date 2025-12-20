@@ -124,3 +124,100 @@ pub async fn validate_token(
         Err(AuthError::Unauthorized)
     }
 }
+
+// Tower middleware layer for authentication
+
+use axum::{
+    body::Body,
+    extract::Request,
+    http::StatusCode,
+    response::{IntoResponse, Response},
+};
+use std::sync::Arc;
+use tower::{Layer, Service};
+
+/// Tower layer that enforces authentication on all requests.
+///
+/// This layer wraps a service and checks for a valid Ory session cookie
+/// before allowing the request to proceed. If authentication fails, it
+/// returns a 401 Unauthorized response.
+#[derive(Clone)]
+pub struct AuthLayer {
+    pub ory_state: Arc<OryState>,
+}
+
+impl AuthLayer {
+    pub fn new(ory_state: Arc<OryState>) -> Self {
+        Self { ory_state }
+    }
+}
+
+impl<S> Layer<S> for AuthLayer {
+    type Service = AuthMiddleware<S>;
+
+    fn layer(&self, inner: S) -> Self::Service {
+        AuthMiddleware {
+            inner,
+            ory_state: self.ory_state.clone(),
+        }
+    }
+}
+
+/// The middleware service that performs the actual authentication check.
+#[derive(Clone)]
+pub struct AuthMiddleware<S> {
+    inner: S,
+    ory_state: Arc<OryState>,
+}
+
+impl<S> Service<Request> for AuthMiddleware<S>
+where
+    S: Service<Request, Response = Response> + Clone + Send + 'static,
+    S::Future: Send + 'static,
+{
+    type Response = Response;
+    type Error = S::Error;
+    type Future = std::pin::Pin<
+        Box<dyn std::future::Future<Output = Result<Self::Response, Self::Error>> + Send>,
+    >;
+
+    fn poll_ready(
+        &mut self,
+        cx: &mut std::task::Context<'_>,
+    ) -> std::task::Poll<Result<(), Self::Error>> {
+        self.inner.poll_ready(cx)
+    }
+
+    fn call(&mut self, req: Request) -> Self::Future {
+        let ory_state = self.ory_state.clone();
+        let mut inner = self.inner.clone();
+
+        Box::pin(async move {
+            // Extract the Ory session cookie from headers
+            let (cookie_name, session_token) = match extract_cookie_access_token(req.headers()) {
+                Some(cookie) => cookie,
+                None => {
+                    return Ok((StatusCode::UNAUTHORIZED, "Unauthorized").into_response());
+                }
+            };
+
+            // Validate the token with Ory
+            match validate_token(&ory_state, &cookie_name, &session_token).await {
+                Ok(_session) => {
+                    // Authentication successful, proceed with the request
+                    inner.call(req).await
+                }
+                Err(AuthError::Unauthorized) => {
+                    Ok((StatusCode::UNAUTHORIZED, "Unauthorized").into_response())
+                }
+                Err(AuthError::InternalServerError(msg)) => {
+                    tracing::error!("Authentication error: {}", msg);
+                    Ok(
+                        (StatusCode::INTERNAL_SERVER_ERROR, "Internal Server Error")
+                            .into_response(),
+                    )
+                }
+            }
+        })
+    }
+}
