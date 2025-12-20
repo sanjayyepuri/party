@@ -1,9 +1,15 @@
 use crate::auth::ory::{OryState, extract_cookie_access_token, validate_token};
-use axum::{Json, extract::State, http::{HeaderMap, StatusCode}, http::Uri, response::IntoResponse};
+use axum::{
+    Json,
+    extract::State,
+    http::Uri,
+    http::{HeaderMap, StatusCode},
+    response::IntoResponse,
+};
 use std::sync::Arc;
 
 pub struct ApiState {
-    pub ory_config: OryState,
+    pub ory_state: OryState,
 }
 
 /// Temporary testing endpoint to ensure cookie and access token are extracted correctly
@@ -11,7 +17,7 @@ pub async fn hello_world(
     State(api_state): State<Arc<ApiState>>,
     headers: HeaderMap,
 ) -> impl IntoResponse {
-    let ory_config = &api_state.ory_config;
+    let ory_config = &api_state.ory_state;
 
     let (cookie, access_token) = match extract_cookie_access_token(&headers) {
         Some(token) => token,

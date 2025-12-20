@@ -44,17 +44,18 @@ async fn main() -> Result<(), Error> {
             .into());
         }
     };
-    let ory_config = OryState {
+
+    let ory_state = OryState {
         ory_sdk_url,
         client: Client::new(),
     };
 
-    let api_state = Arc::new(ApiState { ory_config });
+    let api_state = Arc::new(ApiState { ory_state });
 
     tracing::info!("Starting server");
     tracing::info!(
         "Ory SDK configured at: {:?}",
-        api_state.as_ref().ory_config.ory_sdk_url
+        api_state.as_ref().ory_state.ory_sdk_url
     );
 
     let app = Router::new()
@@ -66,6 +67,5 @@ async fn main() -> Result<(), Error> {
         .with_state(api_state);
 
     let app = ServiceBuilder::new().layer(VercelLayer::new()).service(app);
-
     vercel_runtime::run(app).await
 }
