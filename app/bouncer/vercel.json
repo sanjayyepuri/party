@@ -5,5 +5,10 @@
       "source": "/api/bouncer/(.*)",
       "destination": "/api/bouncer"
     }
-  ]
+  ],
+  "git": {
+    "deploymentEnabled": {
+      "copilot*": false
+    }
+  }
 }
