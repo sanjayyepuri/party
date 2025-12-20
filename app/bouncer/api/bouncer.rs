@@ -9,7 +9,8 @@ use vercel_runtime::axum::VercelLayer;
 use vercel_runtime::Error;
 
 use pregame::api::{fallback, hello_world, ApiState};
-use pregame::auth::ory::OryState;
+use pregame::auth::OryState;
+use pregame::db::DbState;
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
@@ -45,12 +46,39 @@ async fn main() -> Result<(), Error> {
         }
     };
 
+    let postgres_connection_string = match std::env::var("NEON_POSTGRES_URL") {
+        Ok(value) => value,
+        Err(e) => {
+            tracing::error!("Environment variable NEON_POSTGRES_URL must be set: {}", e);
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                format!("NEON_POSTGRES_URL must be set: {}", e),
+            )
+            .into());
+        }
+    };
+
     let ory_state = OryState {
         ory_sdk_url,
         client: Client::new(),
     };
 
-    let api_state = Arc::new(ApiState { ory_state });
+    let db_state = match DbState::new(postgres_connection_string).await {
+        Ok(state) => state,
+        Err(e) => {
+            tracing::error!("Failed to initialize database state: {}", e);
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                format!("Failed to initialize database state: {}", e),
+            )
+            .into());
+        }
+    };
+
+    let api_state = Arc::new(ApiState {
+        ory_state,
+        db_state,
+    });
 
     tracing::info!("Starting server");
     tracing::info!(
