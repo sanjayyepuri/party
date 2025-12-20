@@ -39,6 +39,12 @@ impl DbState {
         let mut task_guard = self.connection_task.lock().await;
         
         if let Some(task) = task_guard.take() {
+            // Check if the task is already finished before aborting
+            if task.is_finished() {
+                tracing::info!("Database connection task already finished");
+                return Ok(());
+            }
+            
             // Abort the connection task to signal shutdown
             task.abort();
             
@@ -73,12 +79,16 @@ impl Drop for DbState {
     fn drop(&mut self) {
         // Try to abort the connection task when DbState is dropped
         // This ensures cleanup happens even if shutdown() is not explicitly called
-        let guard = self.connection_task.blocking_lock();
-        if let Some(task) = guard.as_ref() {
-            if !task.is_finished() {
-                tracing::debug!("Aborting database connection task in Drop");
-                task.abort();
+        // Use try_lock to avoid potential deadlocks with async tasks
+        if let Ok(guard) = self.connection_task.try_lock() {
+            if let Some(task) = guard.as_ref() {
+                if !task.is_finished() {
+                    tracing::debug!("Aborting database connection task in Drop");
+                    task.abort();
+                }
             }
+        } else {
+            tracing::warn!("Could not acquire lock to abort connection task in Drop");
         }
     }
 }
