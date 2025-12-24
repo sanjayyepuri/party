@@ -4,7 +4,7 @@ state: Draft
 discussion: TBD
 ---
 
-# Party Schema and Design
+# Party Design
 
 The party application is designed to simplify the guest list and management of parties I host. The party itself should have basic details of when and where as well as maybe special data bespoke to the party. Additionally, it should track the RSVPs for each guest. 
 
