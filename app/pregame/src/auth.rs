@@ -39,7 +39,7 @@ static ORY_SESSION_ENDPOINT: &str = "/sessions/whoami";
 /// An `AuthSession` is returned by [`validate_token`] after forwarding the
 /// user's Ory session cookie to Hydra. The `active` flag is then used to
 /// decide whether the request should be treated as authenticated.
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 pub struct AuthSession {
     /// Indicates whether Ory considers this session currently active/valid.
     ///
