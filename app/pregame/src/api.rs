@@ -1,6 +1,6 @@
 use axum::{
     Json,
-    extract::{Request, State},
+    extract::{Path, Request, State},
     http::{HeaderMap, StatusCode, Uri},
     middleware::Next,
     response::IntoResponse,
@@ -9,7 +9,7 @@ use std::sync::Arc;
 
 use crate::auth::{AuthError, AuthSession, OryState, extract_cookie_access_token, validate_token};
 use crate::db::DbState;
-use crate::model::Book;
+use crate::model::{Book, Party};
 
 pub struct ApiState {
     pub ory_state: OryState,
@@ -21,6 +21,10 @@ pub struct ApiState {
 /// This function extracts the access token from the request headers and authenticates it.
 /// If successful, the session is stored in the request extension, otherwise and error
 /// response is returned.
+///
+/// https://docs.rs/axum/latest/axum/middleware/index.html
+/// This is the simplest way to implemenet middleware in axum. It would be a good exercise, to
+/// implement using the `tower::Layer` trait.
 pub async fn auth_middleware(
     State(api_state): State<Arc<ApiState>>,
     headers: HeaderMap,
@@ -96,4 +100,87 @@ async fn hello_world_impl(api_state: Arc<ApiState>) -> Result<Vec<Book>, axum::r
 
 pub async fn fallback(uri: Uri) -> impl IntoResponse {
     format!("Axum fallback for path {}", uri.path())
+}
+
+pub async fn list_parties(State(api_state): State<Arc<ApiState>>) -> impl IntoResponse {
+    match list_parties_impl(api_state).await {
+        Ok(parties) => (StatusCode::OK, Json(parties)).into_response(),
+        Err(response) => response,
+    }
+}
+
+async fn list_parties_impl(
+    api_state: Arc<ApiState>,
+) -> Result<Vec<Party>, axum::response::Response> {
+    let rows = api_state
+        .db_state
+        .client
+        .query("SELECT party_id, name, time, location, description, slug, created_at, updated_at, deleted_at FROM party WHERE deleted_at IS NULL ORDER BY time ASC;", &[])
+        .await
+        .map_err(|err| {
+            tracing::error!("Database query failed: {:?}", err);
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json("Internal Server Error"),
+            )
+                .into_response()
+        })?;
+
+    rows.into_iter()
+        .map(|row| Party::from_row(&row))
+        .collect::<Result<Vec<Party>, _>>()
+        .map_err(|err| {
+            tracing::error!("Failed to parse party from row: {:?}", err);
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json("Internal Server Error"),
+            )
+                .into_response()
+        })
+}
+
+pub async fn get_party(
+    State(api_state): State<Arc<ApiState>>,
+    Path(slug): Path<String>,
+) -> impl IntoResponse {
+    match get_party_impl(api_state, slug).await {
+        Ok(Some(party)) => (StatusCode::OK, Json(party)).into_response(),
+        Ok(None) => (StatusCode::NOT_FOUND, Json("Party not found")).into_response(),
+        Err(response) => response,
+    }
+}
+
+async fn get_party_impl(
+    api_state: Arc<ApiState>,
+    slug: String,
+) -> Result<Option<Party>, axum::response::Response> {
+    let rows = api_state
+        .db_state
+        .client
+        .query(
+            "SELECT party_id, name, time, location, description, slug, created_at, updated_at, deleted_at FROM party WHERE slug = $1 AND deleted_at IS NULL;",
+            &[&slug],
+        )
+        .await
+        .map_err(|err| {
+            tracing::error!("Database query failed: {:?}", err);
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json("Internal Server Error"),
+            )
+                .into_response()
+        })?;
+
+    if rows.is_empty() {
+        return Ok(None);
+    }
+
+    Party::from_row(&rows[0]).map(Some).map_err(|err| {
+        tracing::error!("Failed to parse party from row: {:?}", err);
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json("Internal Server Error"),
+        )
+            .into_response()
+    })
 }

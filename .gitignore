@@ -7,4 +7,4 @@ node_modules
 .vercel
 .env*.local
 
-/target
+target
