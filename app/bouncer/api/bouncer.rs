@@ -92,7 +92,7 @@ async fn main() -> Result<(), Error> {
         .route("/hello", get(hello_world))
         .route("/api/bouncer/hello", get(hello_world))
         .route("/api/bouncer/parties", get(list_parties))
-        .route("/api/bouncer/parties/:slug", get(get_party))
+        .route("/api/bouncer/parties/{slug}", get(get_party))
         .route_layer(middleware::from_fn_with_state(
             api_state.clone(),
             auth_middleware,
