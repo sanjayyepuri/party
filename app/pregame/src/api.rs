@@ -16,6 +16,11 @@ pub struct ApiState {
     pub db_state: DbState,
 }
 
+/// Middleware to authenticate requests using Ory's session management.
+///
+/// This function extracts the access token from the request headers and authenticates it.
+/// If successful, the session is stored in the request extension, otherwise and error
+/// response is returned.
 pub async fn auth_middleware(
     State(api_state): State<Arc<ApiState>>,
     headers: HeaderMap,
