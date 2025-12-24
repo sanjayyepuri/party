@@ -10,7 +10,7 @@ These are the set of entities that make up a party. We will have a Party, Guest,
 
 ## Party Table
 
-The party table stores information regarding each party. Every field should be self explanatory. The slug is a going to be a generated url slug for the party. This will enable the name to have no restriction on the test used.
+The party table stores information regarding each party. Every field should be self explanatory. The slug is a going to be a generated url slug for the party. This will enable the name to have no restriction on the text used.
 
 
 | Column Name | Data Type | Description |
