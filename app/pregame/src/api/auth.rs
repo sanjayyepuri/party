@@ -97,10 +97,21 @@ async fn get_or_create_guest(
         Err(err_response) => {
             // Handle potential race condition: another request may have created the guest
             // after our initial check but before this create call.
-            if let Some(guest) = get_guest(db_state, ory_identity_id).await? {
-                Ok(guest)
-            } else {
-                Err(err_response)
+            // Only retry the lookup if the error could be from a constraint violation.
+            match get_guest(db_state, ory_identity_id).await {
+                Ok(Some(guest)) => {
+                    tracing::info!("Guest was created by concurrent request, using existing guest");
+                    Ok(guest)
+                }
+                Ok(None) => {
+                    // Guest still doesn't exist, return the original error
+                    Err(err_response)
+                }
+                Err(_) => {
+                    // Failed to check for existing guest, return the original error
+                    tracing::error!("Failed to check for existing guest after creation error");
+                    Err(err_response)
+                }
             }
         }
     }
