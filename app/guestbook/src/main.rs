@@ -95,6 +95,9 @@ enum Commands {
         #[arg(long)]
         confirm: String,
     },
+
+    /// Add ory_identity_id column to guest table for identity integration
+    MigrateAddIdentity,
 }
 
 async fn connect_db() -> Result<Client> {
@@ -446,6 +449,60 @@ async fn clear_table(client: &Client, confirm: String) -> Result<()> {
     Ok(())
 }
 
+async fn migrate_add_identity(client: &Client) -> Result<()> {
+    println!("Running migration: Add ory_identity_id to guest table");
+    println!("{}", "=".repeat(80));
+
+    // Check if column already exists
+    let check_query = "
+        SELECT column_name
+        FROM information_schema.columns
+        WHERE table_name = 'guest' AND column_name = 'ory_identity_id'
+    ";
+
+    let rows = client.query(check_query, &[]).await?;
+
+    if !rows.is_empty() {
+        println!("⚠ Column ory_identity_id already exists. Skipping migration.");
+        return Ok(());
+    }
+
+    // Add the column
+    client
+        .execute("ALTER TABLE guest ADD COLUMN ory_identity_id TEXT", &[])
+        .await
+        .context("Failed to add ory_identity_id column")?;
+
+    println!("✓ Added ory_identity_id column to guest table");
+
+    // Add unique constraint
+    client
+        .execute(
+            "ALTER TABLE guest ADD CONSTRAINT guest_ory_identity_unique UNIQUE (ory_identity_id)",
+            &[],
+        )
+        .await
+        .context("Failed to add unique constraint")?;
+
+    println!("✓ Added unique constraint on ory_identity_id");
+
+    // Add index for fast lookups
+    client
+        .execute(
+            "CREATE INDEX idx_guest_ory_identity ON guest(ory_identity_id)",
+            &[],
+        )
+        .await
+        .context("Failed to create index")?;
+
+    println!("✓ Created index on ory_identity_id for fast lookups");
+
+    println!("{}", "=".repeat(80));
+    println!("✓ Migration completed successfully");
+
+    Ok(())
+}
+
 #[tokio::main]
 async fn main() -> Result<()> {
     // Load environment variables from .env file
@@ -482,6 +539,8 @@ async fn main() -> Result<()> {
         Commands::CreateTable => create_table(&client).await?,
 
         Commands::ClearTable { confirm } => clear_table(&client, confirm).await?,
+
+        Commands::MigrateAddIdentity => migrate_add_identity(&client).await?,
     }
 
     Ok(())

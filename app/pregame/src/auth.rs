@@ -49,6 +49,37 @@ pub struct AuthSession {
     /// The unique identifier of the Ory session associated with the
     /// authenticated user.
     pub id: String,
+    /// The identity associated with this session.
+    /// Contains the unique identity ID and user traits from Ory.
+    pub identity: Option<OryIdentity>,
+}
+
+/// Represents the Ory identity associated with an authenticated session.
+///
+/// This struct contains the identity ID (which we'll store in our guest table)
+/// and the user's traits (email, phone, name) that can be synced to our database.
+#[derive(Deserialize, Clone)]
+pub struct OryIdentity {
+    /// Unique identifier for this identity in Ory's system.
+    /// This is what we store in the guest.ory_identity_id column.
+    pub id: String,
+    /// User traits/attributes configured in Ory's identity schema.
+    pub traits: IdentityTraits,
+}
+
+/// User traits/attributes from Ory's identity schema.
+///
+/// These fields represent the user's profile information that can be
+/// synced to our guest table. All fields are optional as the Ory
+/// identity schema may not require them.
+#[derive(Deserialize, Clone)]
+pub struct IdentityTraits {
+    /// User's email address
+    pub email: Option<String>,
+    /// User's phone number
+    pub phone: Option<String>,
+    /// User's display name
+    pub name: Option<String>,
 }
 
 #[derive(Debug)]
