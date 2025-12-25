@@ -34,14 +34,10 @@ async function getParties(): Promise<Party[]> {
 
     const cookieString = cookieStore.toString();
 
-    // Debug: Log what cookies we're sending
-    console.log("Cookies being sent:", cookieString);
-
     // Extract just the ory_session cookie
     const oryCookies = cookieStore
       .getAll()
       .filter((c) => c.name.startsWith("ory_session_"));
-    console.log("Ory cookies found:", oryCookies);
 
     const response = await fetch(`${baseUrl}/api/bouncer/parties`, {
       cache: "no-store",
