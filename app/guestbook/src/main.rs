@@ -377,6 +377,60 @@ async fn create_table(client: &Client) -> Result<()> {
 
     println!("✓ Created indexes on slug, time, and deleted_at");
 
+    // Create guest table
+    client
+        .execute(
+            "CREATE TABLE IF NOT EXISTS guest (
+                guest_id TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                email TEXT NOT NULL,
+                phone TEXT NOT NULL,
+                created_at TIMESTAMPTZ NOT NULL,
+                updated_at TIMESTAMPTZ NOT NULL,
+                deleted_at TIMESTAMPTZ
+            )",
+            &[],
+        )
+        .await?;
+
+    println!("✓ Created guest table (or already exists)");
+
+    // Create RSVP table with unique constraint
+    client
+        .execute(
+            "CREATE TABLE IF NOT EXISTS rsvp (
+                rsvp_id TEXT PRIMARY KEY,
+                party_id TEXT NOT NULL REFERENCES party(party_id) ON DELETE CASCADE,
+                guest_id TEXT NOT NULL REFERENCES guest(guest_id) ON DELETE CASCADE,
+                status TEXT NOT NULL,
+                created_at TIMESTAMPTZ NOT NULL,
+                updated_at TIMESTAMPTZ NOT NULL,
+                deleted_at TIMESTAMPTZ,
+                UNIQUE(party_id, guest_id)
+            )",
+            &[],
+        )
+        .await?;
+
+    println!("✓ Created rsvp table with unique constraint (or already exists)");
+
+    // Create indexes for RSVP table
+    client
+        .execute(
+            "CREATE INDEX IF NOT EXISTS idx_rsvp_party_id ON rsvp(party_id)",
+            &[],
+        )
+        .await?;
+
+    client
+        .execute(
+            "CREATE INDEX IF NOT EXISTS idx_rsvp_guest_id ON rsvp(guest_id)",
+            &[],
+        )
+        .await?;
+
+    println!("✓ Created indexes on rsvp table");
+
     Ok(())
 }
 
