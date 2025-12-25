@@ -33,6 +33,7 @@ The guest table stores information regarding each guest.
 | Column Name | Data Type | Description |
 |-------------|-----------|-------------|
 | guest_id    | UUID      | Unique identifier for the guest |
+| ory_identity_id | String | This is the Ory Identity ID associated with the guest. |
 | name        | String    | Human readable unique name for the guest |
 | email       | String    | Email of the guest |
 | phone       | String    | Phone number of the guest |
