@@ -79,14 +79,18 @@ async fn get_rsvp_impl(
     let now = chrono::Utc::now();
     let default_status = "pending";
 
-    // Single query: insert if not exists, then select the RSVP
+    // Single query: validate party exists, insert if not exists, then select the RSVP
     let row = api_state
         .db_state
         .client
         .query_opt(
-            "WITH inserted AS (
+            "WITH party_check AS (
+                 SELECT party_id FROM party WHERE party_id = $2 AND deleted_at IS NULL
+             ),
+             inserted AS (
                  INSERT INTO rsvp (rsvp_id, party_id, guest_id, status, created_at, updated_at)
-                 VALUES ($1, $2, $3, $4, $5, $6)
+                 SELECT $1, $2, $3, $4, $5, $6
+                 FROM party_check
                  ON CONFLICT (party_id, guest_id) DO NOTHING
                  RETURNING rsvp_id, party_id, guest_id, status, created_at, updated_at, deleted_at
              )
@@ -94,6 +98,7 @@ async fn get_rsvp_impl(
              UNION ALL
              SELECT r.rsvp_id, r.party_id, r.guest_id, r.status, r.created_at, r.updated_at, r.deleted_at
              FROM rsvp r
+             JOIN party_check pc ON r.party_id = pc.party_id
              WHERE r.party_id = $2 AND r.guest_id = $3 AND r.deleted_at IS NULL
              AND NOT EXISTS (SELECT 1 FROM inserted)
              LIMIT 1;",
@@ -109,6 +114,18 @@ async fn get_rsvp_impl(
         .await
         .map_err(|err| {
             tracing::error!("Database query failed: {:?}", err);
+
+            // Check if it's a foreign key constraint violation for guest_id
+            if let Some(db_err) = err.as_db_error() {
+                if db_err.code() == &tokio_postgres::error::SqlState::FOREIGN_KEY_VIOLATION {
+                    if let Some(constraint) = db_err.constraint() {
+                        if constraint.contains("guest") {
+                            return (StatusCode::NOT_FOUND, Json("Guest not found")).into_response();
+                        }
+                    }
+                }
+            }
+
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json("Internal Server Error"),
@@ -125,7 +142,7 @@ async fn get_rsvp_impl(
             )
                 .into_response()
         }),
-        None => Err((StatusCode::NOT_FOUND, Json("Party not found")).into_response()),
+        None => Err((StatusCode::NOT_FOUND, Json("RSVP not found")).into_response()),
     }
 }
 
