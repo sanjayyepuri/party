@@ -68,7 +68,7 @@ pub struct OryIdentity {
     /// This is what we store in the guest.ory_identity_id column.
     pub id: String,
     /// User traits/attributes configured in Ory's identity schema.
-    /// Let this be an arbitrary json
+    /// Contains JSON data representing user traits from Ory's identity schema.
     pub traits: IdentityTraits,
 }
 
@@ -99,7 +99,7 @@ pub struct IdentityName {
 
 impl IdentityName {
     /// Converts the identity name into a single string representation.
-    pub fn to_string(&self) -> String {
+    pub fn full_name(&self) -> String {
         match (&self.first, &self.last) {
             (Some(first), Some(last)) => format!("{} {}", first, last),
             (Some(first), None) => first.clone(),

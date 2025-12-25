@@ -382,7 +382,7 @@ async fn create_table(client: &Client) -> Result<()> {
         .execute(
             "CREATE TABLE IF NOT EXISTS guest (
                 guest_id TEXT PRIMARY KEY,
-                ory_identity_id TEXT NOT NULL,
+                ory_identity_id TEXT NOT NULL UNIQUE,
                 name TEXT NOT NULL,
                 email TEXT NOT NULL,
                 phone TEXT NOT NULL,
