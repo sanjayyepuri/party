@@ -145,7 +145,7 @@ pub fn extract_cookie_access_token(headers: &HeaderMap) -> Option<(String, Strin
                 if cookie.starts_with("ory_session_") {
                     if let Some((name, value)) = cookie.split_once('=') {
                         // URL-decode the cookie value
-                        // TODO (sanjay) I am not convince that we should be url decoding the token on the server side
+                        // TODO (sanjay) I am not convinced that we should be url decoding the token on the server side
                         // Need to determine why nextjs server url encodes the token.
                         let decoded_value =
                             percent_decode_str(value).decode_utf8().ok()?.into_owned();
