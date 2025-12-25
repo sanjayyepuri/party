@@ -176,7 +176,6 @@ pub async fn validate_token(
     }
 
     let result = response.json::<AuthSession>().await?;
-    tracing::debug!("AuthSession: {:?}", result);
     if result.active {
         Ok(result)
     } else {

@@ -77,10 +77,11 @@ async fn get_or_create_guest(
         Some(identity) => &identity.id,
         None => {
             tracing::error!("AuthSession has no identity for an authenticated request");
-            return Err(
-                (StatusCode::INTERNAL_SERVER_ERROR, Json("Internal Server Error"))
-                    .into_response(),
-            );
+            return Err((
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json("Internal Server Error"),
+            )
+                .into_response());
         }
     };
 
@@ -88,33 +89,14 @@ async fn get_or_create_guest(
     if let Some(guest) = get_guest(db_state, ory_identity_id).await? {
         return Ok(guest);
     }
-    tracing::info!("Guest not found, creating new guest");
 
     // Guest doesn't exist, create a new one.
     // This branch should only occur when the user is first created, so should be rare.
-    match create_guest(db_state, session).await {
-        Ok(guest) => Ok(guest),
-        Err(err_response) => {
-            // Handle potential race condition: another request may have created the guest
-            // after our initial check but before this create call.
-            // Only retry the lookup if the error could be from a constraint violation.
-            match get_guest(db_state, ory_identity_id).await {
-                Ok(Some(guest)) => {
-                    tracing::info!("Guest was created by concurrent request, using existing guest");
-                    Ok(guest)
-                }
-                Ok(None) => {
-                    // Guest still doesn't exist, return the original error
-                    Err(err_response)
-                }
-                Err(_) => {
-                    // Failed to check for existing guest, return the original error
-                    tracing::error!("Failed to check for existing guest after creation error");
-                    Err(err_response)
-                }
-            }
-        }
-    }
+    tracing::info!(
+        "Guest not found, creating new guest for ory_identity_id: {}",
+        ory_identity_id
+    );
+    create_guest(db_state, session).await
 }
 
 async fn get_guest(
@@ -175,11 +157,15 @@ async fn create_guest(
         }
     })?;
 
-    db_state
+    // Use INSERT ... ON CONFLICT DO NOTHING to handle race conditions.
+    // If another concurrent request already created a guest with the same ory_identity_id,
+    // this will not insert and we'll query for the existing guest instead.
+    let rows_affected = db_state
         .client
         .execute(
             "INSERT INTO guest (guest_id, ory_identity_id, name, email, phone, created_at, updated_at, deleted_at)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+             ON CONFLICT (ory_identity_id) DO NOTHING",
             &[
                 &new_guest.guest_id,
                 &new_guest.ory_identity_id,
@@ -201,7 +187,23 @@ async fn create_guest(
                 .into_response()
         })?;
 
-    Ok(new_guest)
+    if rows_affected == 0 {
+        // Another concurrent request created the guest, fetch and return it
+        tracing::info!("Guest already exists due to concurrent request, fetching existing guest");
+        get_guest(db_state, &new_guest.ory_identity_id)
+            .await?
+            .ok_or_else(|| {
+                tracing::error!("Guest should exist but was not found after conflict");
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Json("Internal Server Error"),
+                )
+                    .into_response()
+            })
+    } else {
+        // Successfully inserted the new guest
+        Ok(new_guest)
+    }
 }
 
 impl AuthSession {
@@ -211,13 +213,14 @@ impl AuthSession {
         match &self.identity {
             Some(identity) => {
                 // Extract and validate name
-                let raw_name = identity
-                    .traits
-                    .name
-                    .as_ref()
-                    .ok_or(AuthError::InternalServerError(
-                        "Unable to parse identity name".to_string(),
-                    ))?;
+                let raw_name =
+                    identity
+                        .traits
+                        .name
+                        .as_ref()
+                        .ok_or(AuthError::InternalServerError(
+                            "Unable to parse identity name".to_string(),
+                        ))?;
                 let full_name = raw_name.full_name();
                 let trimmed_name = full_name.trim();
                 if trimmed_name.is_empty() {
@@ -227,13 +230,14 @@ impl AuthSession {
                 }
 
                 // Extract and validate email
-                let raw_email = identity
-                    .traits
-                    .email
-                    .as_ref()
-                    .ok_or(AuthError::InternalServerError(
-                        "Unable to parse identity email".to_string(),
-                    ))?;
+                let raw_email =
+                    identity
+                        .traits
+                        .email
+                        .as_ref()
+                        .ok_or(AuthError::InternalServerError(
+                            "Unable to parse identity email".to_string(),
+                        ))?;
                 let trimmed_email = raw_email.trim();
                 if trimmed_email.is_empty() || !trimmed_email.contains('@') {
                     return Err(AuthError::InternalServerError(
@@ -246,12 +250,7 @@ impl AuthSession {
                     ory_identity_id: identity.id.clone(),
                     name: trimmed_name.to_string(),
                     email: trimmed_email.to_string(),
-                    // TODO (sanjay) Should we enforce that phone number is provided?
-                    phone: identity
-                        .traits
-                        .phone
-                        .clone()
-                        .unwrap_or_default(),
+                    phone: identity.traits.phone.clone(),
                     created_at: now,
                     updated_at: now,
                     deleted_at: None,

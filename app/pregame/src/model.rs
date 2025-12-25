@@ -37,7 +37,7 @@ pub struct Guest {
     pub ory_identity_id: String,
     pub name: String,
     pub email: String,
-    pub phone: String,
+    pub phone: Option<String>,
     pub created_at: chrono::DateTime<chrono::Utc>,
     pub updated_at: chrono::DateTime<chrono::Utc>,
     pub deleted_at: Option<chrono::DateTime<chrono::Utc>>,

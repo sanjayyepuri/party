@@ -385,7 +385,7 @@ async fn create_table(client: &Client) -> Result<()> {
                 ory_identity_id TEXT NOT NULL UNIQUE,
                 name TEXT NOT NULL,
                 email TEXT NOT NULL,
-                phone TEXT NOT NULL,
+                phone TEXT,
                 created_at TIMESTAMPTZ NOT NULL,
                 updated_at TIMESTAMPTZ NOT NULL,
                 deleted_at TIMESTAMPTZ
