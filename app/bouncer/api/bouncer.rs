@@ -1,5 +1,8 @@
 use axum::middleware;
-use axum::{routing::get, Router};
+use axum::{
+    routing::{get, post, put},
+    Router,
+};
 use reqwest::Client;
 use std::sync::Arc;
 use tower::ServiceBuilder;
@@ -9,7 +12,7 @@ use url::Url;
 use vercel_runtime::axum::VercelLayer;
 use vercel_runtime::Error;
 
-use pregame::api::{auth_middleware, fallback, get_party, hello_world, list_parties, ApiState};
+use pregame::api::{auth, error, party, rsvp, ApiState};
 use pregame::auth::OryState;
 use pregame::db::DbState;
 
@@ -87,17 +90,23 @@ async fn main() -> Result<(), Error> {
         api_state.as_ref().ory_state.ory_sdk_url
     );
 
-    let app = Router::new()
-        .route("/", get(hello_world))
-        .route("/hello", get(hello_world))
-        .route("/api/bouncer/hello", get(hello_world))
-        .route("/api/bouncer/parties", get(list_parties))
-        .route("/api/bouncer/parties/{slug}", get(get_party))
+    let api_routes = Router::new()
+        .route("/parties", get(party::list_parties))
+        .route("/parties/{party_id}", get(party::get_party))
+        .route("/parties/{party_id}/rsvps", get(rsvp::get_party_rsvps))
+        .route(
+            "/parties/{party_id}/rsvps/{guest_id}",
+            post(rsvp::get_rsvp).delete(rsvp::delete_rsvp),
+        )
+        .route("/rsvps", put(rsvp::update_rsvp))
         .route_layer(middleware::from_fn_with_state(
             api_state.clone(),
-            auth_middleware,
-        ))
-        .fallback(fallback)
+            auth::auth_middleware,
+        ));
+
+    let app = Router::new()
+        .nest("/api/bouncer", api_routes)
+        .fallback(error::fallback)
         .layer(TraceLayer::new_for_http())
         .with_state(api_state);
 
