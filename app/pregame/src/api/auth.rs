@@ -17,7 +17,7 @@ use crate::auth::{AuthError, AuthSession, extract_cookie_access_token, validate_
 /// response is returned.
 ///
 /// https://docs.rs/axum/latest/axum/middleware/index.html
-/// This is the simplest way to implemenet middleware in axum. It would be a good exercise, to
+/// This is the simplest way to implement middleware in axum. It would be a good exercise, to
 /// implement using the `tower::Layer` trait.
 pub async fn auth_middleware(
     State(api_state): State<Arc<ApiState>>,

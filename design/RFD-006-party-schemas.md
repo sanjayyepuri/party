@@ -28,7 +28,7 @@ The party table stores information regarding each party. Every field should be s
 
 ## Guest Table
 
-The guest table stores information regarding each guest. It also contains a foreign key to the user table used for authentication. This is important to be able to retrieve only the guest belonging to the current user.
+The guest table stores information regarding each guest.
 
 | Column Name | Data Type | Description |
 |-------------|-----------|-------------|
@@ -53,4 +53,4 @@ The RSVP table stores the state of each guest's RSVP for a particular party.
 | status      | String    | Status of the rsvp |
 | created_at  | Timestamp | Timestamp when the rsvp was created |
 | updated_at  | Timestamp | Timestamp when the rsvp was last updated |
-| deleted_at  | Timestamp | Timestamp when the rsvp was soft deleted (null if not deleted) |q
+| deleted_at  | Timestamp | Timestamp when the rsvp was soft deleted (null if not deleted) |
