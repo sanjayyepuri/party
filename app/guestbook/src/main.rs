@@ -382,6 +382,7 @@ async fn create_table(client: &Client) -> Result<()> {
         .execute(
             "CREATE TABLE IF NOT EXISTS guest (
                 guest_id TEXT PRIMARY KEY,
+                ory_identity_id TEXT NOT NULL,
                 name TEXT NOT NULL,
                 email TEXT NOT NULL,
                 phone TEXT NOT NULL,
@@ -394,6 +395,16 @@ async fn create_table(client: &Client) -> Result<()> {
         .await?;
 
     println!("✓ Created guest table (or already exists)");
+
+    // Create index on ory_identity_id for faster lookups during authentication
+    client
+        .execute(
+            "CREATE INDEX IF NOT EXISTS idx_guest_ory_identity_id ON guest(ory_identity_id)",
+            &[],
+        )
+        .await?;
+
+    println!("✓ Created index on ory_identity_id");
 
     // Create RSVP table with unique constraint
     client

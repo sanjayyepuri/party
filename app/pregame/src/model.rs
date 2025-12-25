@@ -2,25 +2,6 @@ use serde::{Deserialize, Serialize};
 use tokio_postgres::Row;
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct Book {
-    pub id: i32,
-    pub title: String,
-    pub author: String,
-    pub year: i32,
-}
-
-impl Book {
-    pub fn from_row(row: &Row) -> Result<Self, tokio_postgres::Error> {
-        Ok(Book {
-            id: row.try_get("id")?,
-            title: row.try_get("title")?,
-            author: row.try_get("author")?,
-            year: row.try_get("publication_year")?,
-        })
-    }
-}
-
-#[derive(Debug, Serialize, Deserialize)]
 pub struct Party {
     pub party_id: String,
     pub name: String,
@@ -49,9 +30,11 @@ impl Party {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Guest {
     pub guest_id: String,
+    /// This is the Ory Identity ID associated with the guest.
+    pub ory_identity_id: String,
     pub name: String,
     pub email: String,
     pub phone: String,
@@ -64,6 +47,7 @@ impl Guest {
     pub fn from_row(row: &Row) -> Result<Self, tokio_postgres::Error> {
         Ok(Guest {
             guest_id: row.try_get("guest_id")?,
+            ory_identity_id: row.try_get("ory_identity_id")?,
             name: row.try_get("name")?,
             email: row.try_get("email")?,
             phone: row.try_get("phone")?,
