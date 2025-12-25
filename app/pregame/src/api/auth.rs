@@ -15,7 +15,7 @@ use crate::{api::ApiState, db::DbState};
 /// Middleware to authenticate requests using Ory's session management.
 ///
 /// This function extracts the access token from the request headers and authenticates it.
-/// If successful, the session is stored in the request extension, otherwise and error
+/// If successful, the session is stored in the request extension, otherwise an error
 /// response is returned.
 ///
 /// If there is a token, then we query the application database to retrieve the guest
@@ -76,7 +76,11 @@ async fn get_or_create_guest(
     let ory_identity_id = match &session.identity {
         Some(identity) => &identity.id,
         None => {
-            return Err((StatusCode::UNAUTHORIZED, Json("No identity in session")).into_response());
+            tracing::error!("AuthSession has no identity for an authenticated request");
+            return Err(
+                (StatusCode::INTERNAL_SERVER_ERROR, Json("Internal Server Error"))
+                    .into_response(),
+            );
         }
     };
 
@@ -86,9 +90,20 @@ async fn get_or_create_guest(
     }
     tracing::info!("Guest not found, creating new guest");
 
-    // Guest doesn't exist, create a new one
+    // Guest doesn't exist, create a new one.
     // This branch should only occur when the user is first created, so should be rare.
-    create_guest(db_state, session).await
+    match create_guest(db_state, session).await {
+        Ok(guest) => Ok(guest),
+        Err(err_response) => {
+            // Handle potential race condition: another request may have created the guest
+            // after our initial check but before this create call.
+            if let Some(guest) = get_guest(db_state, ory_identity_id).await? {
+                Ok(guest)
+            } else {
+                Err(err_response)
+            }
+        }
+    }
 }
 
 async fn get_guest(
@@ -183,37 +198,57 @@ impl AuthSession {
         let now = chrono::Utc::now();
 
         match &self.identity {
-            Some(identity) => Ok(Guest {
-                guest_id: Uuid::new_v4().to_string(),
-                ory_identity_id: identity.id.clone(),
-                name: identity
+            Some(identity) => {
+                // Extract and validate name
+                let raw_name = identity
                     .traits
                     .name
                     .as_ref()
                     .ok_or(AuthError::InternalServerError(
                         "Unable to parse identity name".to_string(),
-                    ))?
-                    .to_string(),
-                email: identity
+                    ))?;
+                let full_name = raw_name.full_name();
+                let trimmed_name = full_name.trim();
+                if trimmed_name.is_empty() {
+                    return Err(AuthError::InternalServerError(
+                        "Identity name cannot be empty".to_string(),
+                    ));
+                }
+
+                // Extract and validate email
+                let raw_email = identity
                     .traits
                     .email
                     .as_ref()
                     .ok_or(AuthError::InternalServerError(
                         "Unable to parse identity email".to_string(),
-                    ))?
-                    .clone(),
-                // TODO (sanjay) Should we enforce that phone number is provided?
-                phone: identity
-                    .traits
-                    .phone
-                    .as_ref()
-                    .map_or("", |phone| phone)
-                    .to_string(),
-                created_at: now,
-                updated_at: now,
-                deleted_at: None,
-            }),
-            None => Err(AuthError::Unauthorized),
+                    ))?;
+                let trimmed_email = raw_email.trim();
+                if trimmed_email.is_empty() || !trimmed_email.contains('@') {
+                    return Err(AuthError::InternalServerError(
+                        "Identity email is invalid".to_string(),
+                    ));
+                }
+
+                Ok(Guest {
+                    guest_id: Uuid::new_v4().to_string(),
+                    ory_identity_id: identity.id.clone(),
+                    name: trimmed_name.to_string(),
+                    email: trimmed_email.to_string(),
+                    // TODO (sanjay) Should we enforce that phone number is provided?
+                    phone: identity
+                        .traits
+                        .phone
+                        .clone()
+                        .unwrap_or_default(),
+                    created_at: now,
+                    updated_at: now,
+                    deleted_at: None,
+                })
+            }
+            None => Err(AuthError::InternalServerError(
+                "Session has no associated identity".to_string(),
+            )),
         }
     }
 }
