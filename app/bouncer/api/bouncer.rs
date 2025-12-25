@@ -94,12 +94,16 @@ async fn main() -> Result<(), Error> {
         .route("/api/bouncer/parties", get(party::list_parties))
         .route("/api/bouncer/parties/{slug}", get(party::get_party))
         .route(
-            "/api/bouncer/parties/{slug}/rsvps",
+            "/api/bouncer/parties/{party_id}/rsvps",
             get(rsvp::get_party_rsvps),
         )
-        .route("/api/bouncer/rsvps", post(rsvp::upsert_rsvp))
         .route(
-            "/api/bouncer/parties/{slug}/rsvps/{guest_id}",
+            "/api/bouncer/parties/{party_id}/rsvps/{guest_id}",
+            get(rsvp::get_rsvp),
+        )
+        .route("/api/bouncer/rsvps", post(rsvp::update_rsvp))
+        .route(
+            "/api/bouncer/parties/{party_id}/rsvps/{guest_id}",
             delete(rsvp::delete_rsvp),
         )
         .route_layer(middleware::from_fn_with_state(
