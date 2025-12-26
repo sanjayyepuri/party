@@ -40,7 +40,9 @@ impl From<tokio_postgres::Error> for AuthError {
 /// Extracts the Better Auth session token from request headers.
 ///
 /// Better Auth uses a cookie named "better-auth.session_token" by default.
-/// This function looks for that cookie in the Cookie header.
+/// The cookie value is signed using HMAC in the format: "value.signature"
+/// This function extracts the unsigned token value (before the dot) since
+/// the database stores only the unsigned token.
 pub fn extract_session_token(headers: &HeaderMap) -> Option<String> {
     // Try Cookie header (looking for better-auth.session_token)
     if let Some(cookie_header) = headers.get("cookie") {
@@ -52,7 +54,18 @@ pub fn extract_session_token(headers: &HeaderMap) -> Option<String> {
                         // URL-decode the cookie value
                         let decoded_value =
                             percent_decode_str(value).decode_utf8().ok()?.into_owned();
-                        return Some(decoded_value);
+
+                        // Better Auth uses signed cookies in format: "value.signature"
+                        // The database stores only the unsigned value (before the dot)
+                        // Extract just the token value, ignoring the signature
+                        let token_value = if let Some((token, _signature)) = decoded_value.split_once('.') {
+                            token.to_string()
+                        } else {
+                            // Fallback: if no signature found, use full value
+                            decoded_value
+                        };
+
+                        return Some(token_value);
                     }
                 }
             }
