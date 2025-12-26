@@ -29,9 +29,6 @@ export default async function InvitationsPage() {
   // User is authenticated, show welcome message
   const userEmail = session.user.email || "there";
 
-  // Fetch parties
-  const parties = await getParties();
-
   return (
     <div className="">
       <div className="flex-1">
@@ -42,57 +39,17 @@ export default async function InvitationsPage() {
         <div className="mb-12">
           <h2 className="text-2xl mb-4">your invitations</h2>
 
-          {parties.length === 0 ? (
-            <p className="opacity-60">no parties found. check back later!</p>
-          ) : (
-            <div className="space-y-6">
-              {parties.map((party) => {
-                const partyDate = new Date(party.time);
-                const formattedDate = partyDate.toLocaleDateString("en-US", {
-                  weekday: "long",
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                });
-                const formattedTime = partyDate.toLocaleTimeString("en-US", {
-                  hour: "numeric",
-                  minute: "2-digit",
-                  hour12: true,
-                });
+          <div className="space-y-4 pt-6 border-t border-white/20">
+            <a
+              href="/settings"
+              className="inline-block hover:underline transition-all"
+            >
+              manage your account →
+            </a>
+            <br />
 
-                return (
-                  <div
-                    key={party.party_id}
-                    className="border border-white/20 rounded-lg p-6 hover:border-white/40 transition-all"
-                  >
-                    <h3 className="text-2xl mb-2">{party.name}</h3>
-                    <div className="space-y-1 opacity-80">
-                      <p>
-                        📅 {formattedDate} at {formattedTime}
-                      </p>
-                      <p>📍 {party.location}</p>
-                      {party.description && (
-                        <p className="mt-3">{party.description}</p>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        <div className="space-y-4 pt-6 border-t border-white/20">
-          <a
-            href="/settings"
-            className="inline-block hover:underline transition-all"
-          >
-            manage your account →
-          </a>
-
-          <br />
-
-          <LogoutLink />
+            <LogoutLink />
+          </div>
         </div>
       </div>
     </div>
