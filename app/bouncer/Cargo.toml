@@ -28,6 +28,10 @@ reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"
 name = "bouncer"
 path = "api/bouncer.rs"
 
+[[bin]]
+name = "test"
+path = "api/test.rs"
+
 [profile.release]
 codegen-units = 1
 lto = "fat"
