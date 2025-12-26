@@ -19,18 +19,32 @@ export async function middleware(request: NextRequest) {
   // Check for Better Auth session cookie
   // In production (HTTPS), the cookie name is prefixed with __Secure-
   const sessionCookie =
-    request.cookies.get("__Secure-better-auth.session_token") ||
-    request.cookies.get("better-auth.session_token");
+  // Lightweight check for presence of a Better Auth session cookie.
+  // NOTE:
+  // - This middleware does NOT validate the session token (e.g. signature, expiry).
+  // - An expired/invalid token will still pass this check and reach the route handler.
+  // - Actual session validation and authorization MUST happen server-side
+  //   in page components / API routes before any sensitive data is returned.
+  //
+  // This is an intentional design to keep middleware fast and avoid duplicating
+  // session logic in multiple places. The trade-off is that users with invalid
+  // sessions may only be redirected *after* the page handler runs.
+  //
+  // If you require stronger guarantees at the middleware layer (e.g. to
+  // redirect users with expired sessions before hitting the page handler),
+  // add a proper session validation step here (such as calling an internal
+  // auth endpoint or decoding/verifying the session token).
+  const sessionCookie = request.cookies.get("better-auth.session_token");
 
   if (!sessionCookie) {
-    // Redirect to login if no session
+    // Redirect to login if no session cookie is present at all
     const loginUrl = new URL("/auth/login", request.url);
     loginUrl.searchParams.set("redirect", pathname);
     return NextResponse.redirect(loginUrl);
   }
 
-  // Session exists, allow the request to proceed
-  // Actual session validation happens server-side in page components
+  // Cookie is present; allow the request to proceed to server-side handlers,
+  // where full session validation and authorization are performed.
   return NextResponse.next();
 }
 

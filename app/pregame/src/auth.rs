@@ -123,7 +123,6 @@ pub async fn validate_session_token(
         .await?
         .ok_or(AuthError::Unauthorized)?;
 
-    tracing::debug!("row: {:?}", row);
 
     // Check if session has expired
     let expires_at: chrono::DateTime<chrono::Utc> = row.get("expires_at");
