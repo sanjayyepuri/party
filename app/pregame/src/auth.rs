@@ -6,6 +6,7 @@
 // This is the documentation for the endpoint that introspects an access token.
 
 use axum::http::HeaderMap;
+use percent_encoding::percent_decode_str;
 use reqwest::Client;
 use serde::Deserialize;
 use url::Url;
@@ -143,7 +144,12 @@ pub fn extract_cookie_access_token(headers: &HeaderMap) -> Option<(String, Strin
                 let cookie = cookie.trim();
                 if cookie.starts_with("ory_session_") {
                     if let Some((name, value)) = cookie.split_once('=') {
-                        return Some((name.to_string(), value.to_string()));
+                        // URL-decode the cookie value
+                        // TODO (sanjay) I am not convinced that we should be url decoding the token on the server side
+                        // Need to determine why nextjs server url encodes the token.
+                        let decoded_value =
+                            percent_decode_str(value).decode_utf8().ok()?.into_owned();
+                        return Some((name.to_string(), decoded_value));
                     }
                 }
             }
