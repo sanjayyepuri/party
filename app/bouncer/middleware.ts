@@ -16,9 +16,6 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Check for Better Auth session cookie
-  // In production (HTTPS), the cookie name is prefixed with __Secure-
-  const sessionCookie =
   // Lightweight check for presence of a Better Auth session cookie.
   // NOTE:
   // - This middleware does NOT validate the session token (e.g. signature, expiry).
