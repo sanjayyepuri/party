@@ -17,20 +17,35 @@ export function LoginForm() {
     setLoading(true);
 
     try {
-      const result = await signIn.email({
-        email,
-        password,
-      });
+      const result = await signIn.email(
+        {
+          email,
+          password,
+          callbackURL: "/invitations",
+        },
+        {
+          onRequest: () => {
+            // Request started
+          },
+          onSuccess: () => {
+            // Success - redirect will be handled by callbackURL
+            // But we can also manually redirect to be sure
+            window.location.href = "/invitations";
+          },
+          onError: (ctx) => {
+            setError(ctx.error.message || "Failed to sign in");
+            setLoading(false);
+          },
+        }
+      );
 
-      if (result.error) {
+      // Fallback error handling
+      if (result?.error) {
         setError(result.error.message || "Failed to sign in");
         setLoading(false);
-        return;
       }
-
-      router.push("/invitations");
-      router.refresh();
     } catch (err) {
+      console.error("Login error:", err);
       setError("An unexpected error occurred");
       setLoading(false);
     }
