@@ -1,0 +1,14 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    {
+      "source": "/api/bouncer/(.*)",
+      "destination": "/api/bouncer"
+    }
+  ],
+  "git": {
+    "deploymentEnabled": {
+      "copilot*": false
+    }
+  }
+}
