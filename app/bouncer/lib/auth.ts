@@ -43,6 +43,7 @@ export const auth = betterAuth({
     },
   },
   baseURL: getBaseURL(),
+  basePath: "/handlers/auth",
   trustedOrigins: [getBaseURL()],
 });
 
