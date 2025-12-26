@@ -1,19 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-
-async function LogoutLink() {
-  return (
-    <form action="/api/auth/sign-out" method="POST">
-      <button
-        type="submit"
-        className="inline-block hover:underline transition-all opacity-60 hover:opacity-100 bg-transparent border-none cursor-pointer p-0 text-inherit font-inherit"
-      >
-        sign out
-      </button>
-    </form>
-  );
-}
+import { LogoutButton } from "@/components/auth/logout-button";
 
 export default async function InvitationsPage() {
   // Check if user is authenticated
@@ -48,7 +36,7 @@ export default async function InvitationsPage() {
             </a>
             <br />
 
-            <LogoutLink />
+            <LogoutButton />
           </div>
         </div>
       </div>
