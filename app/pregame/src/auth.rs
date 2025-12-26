@@ -39,17 +39,25 @@ impl From<tokio_postgres::Error> for AuthError {
 
 /// Extracts the Better Auth session token from request headers.
 ///
-/// Better Auth uses a cookie named "better-auth.session_token" by default.
+/// Better Auth uses different cookie names based on the security context:
+/// - Local (HTTP): "better-auth.session_token"
+/// - Production (HTTPS): "__Secure-better-auth.session_token"
+///
 /// The cookie value is signed using HMAC in the format: "value.signature"
 /// This function extracts the unsigned token value (before the dot) since
 /// the database stores only the unsigned token.
 pub fn extract_session_token(headers: &HeaderMap) -> Option<String> {
-    // Try Cookie header (looking for better-auth.session_token)
+    // Try Cookie header
     if let Some(cookie_header) = headers.get("cookie") {
         if let Ok(cookie_str) = cookie_header.to_str() {
             for cookie in cookie_str.split(';') {
                 let cookie = cookie.trim();
-                if cookie.starts_with("better-auth.session_token=") {
+
+                // Check for both production (__Secure-) and local cookie names
+                let is_session_cookie = cookie.starts_with("__Secure-better-auth.session_token=")
+                    || cookie.starts_with("better-auth.session_token=");
+
+                if is_session_cookie {
                     if let Some((_, value)) = cookie.split_once('=') {
                         // URL-decode the cookie value
                         let decoded_value =
@@ -58,12 +66,13 @@ pub fn extract_session_token(headers: &HeaderMap) -> Option<String> {
                         // Better Auth uses signed cookies in format: "value.signature"
                         // The database stores only the unsigned value (before the dot)
                         // Extract just the token value, ignoring the signature
-                        let token_value = if let Some((token, _signature)) = decoded_value.split_once('.') {
-                            token.to_string()
-                        } else {
-                            // Fallback: if no signature found, use full value
-                            decoded_value
-                        };
+                        let token_value =
+                            if let Some((token, _signature)) = decoded_value.split_once('.') {
+                                token.to_string()
+                            } else {
+                                // Fallback: if no signature found, use full value
+                                decoded_value
+                            };
 
                         return Some(token_value);
                     }

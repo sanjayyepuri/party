@@ -9,7 +9,7 @@ export async function middleware(request: NextRequest) {
 
   // Check if the current route is protected
   const isProtectedRoute = protectedRoutes.some((route) =>
-    pathname.startsWith(route)
+    pathname.startsWith(route),
   );
 
   if (!isProtectedRoute) {
@@ -17,7 +17,10 @@ export async function middleware(request: NextRequest) {
   }
 
   // Check for Better Auth session cookie
-  const sessionCookie = request.cookies.get("better-auth.session_token");
+  // In production (HTTPS), the cookie name is prefixed with __Secure-
+  const sessionCookie =
+    request.cookies.get("__Secure-better-auth.session_token") ||
+    request.cookies.get("better-auth.session_token");
 
   if (!sessionCookie) {
     // Redirect to login if no session
