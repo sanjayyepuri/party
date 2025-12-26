@@ -6,6 +6,17 @@ if (!process.env.NEON_POSTGRES_URL) {
   throw new Error("NEON_POSTGRES_URL environment variable is not set");
 }
 
+// Automatically detect base URL from Vercel or use localhost
+const getBaseURL = () => {
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    return process.env.NEXT_PUBLIC_APP_URL;
+  }
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+  return "http://localhost:3000";
+};
+
 export const auth = betterAuth({
   database: new Pool({
     connectionString: process.env.NEON_POSTGRES_URL,
@@ -31,7 +42,8 @@ export const auth = betterAuth({
       maxAge: 5 * 60, // 5 minutes - cache user data in cookie
     },
   },
-  trustedOrigins: [process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"],
+  baseURL: getBaseURL(),
+  trustedOrigins: [getBaseURL()],
 });
 
 export type Session = typeof auth.$Infer.Session;
