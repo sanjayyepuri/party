@@ -6,24 +6,18 @@ use axum::{
     response::IntoResponse,
 };
 use std::sync::Arc;
-use uuid::Uuid;
 
-use crate::auth::{AuthError, AuthSession, extract_cookie_access_token, validate_token};
-use crate::model::Guest;
-use crate::{api::ApiState, db::DbState};
+use crate::api::ApiState;
+use crate::auth::{AuthError, BetterAuthSession, extract_session_token, validate_session_token};
 
-/// Middleware to authenticate requests using Ory's session management.
+/// Middleware to authenticate requests using Better Auth's session management.
 ///
-/// This function extracts the access token from the request headers and authenticates it.
-/// If successful, the session is stored in the request extension, otherwise an error
-/// response is returned.
+/// This function extracts the session token from the request headers and validates it
+/// against the database. If successful, the session is stored in the request extension,
+/// otherwise an error response is returned.
 ///
-/// If there is a token, then we query the application database to retrieve the guest
-/// information. If the guest does not exist, we create a new one.
-///
-/// https://docs.rs/axum/latest/axum/middleware/index.html
-/// This is the simplest way to implement middleware in axum. It would be a good exercise, to
-/// implement using the `tower::Layer` trait.
+/// The session contains all user information from the Better Auth user table,
+/// so we no longer need a separate guest table.
 pub async fn auth_middleware(
     State(api_state): State<Arc<ApiState>>,
     headers: HeaderMap,
@@ -31,9 +25,8 @@ pub async fn auth_middleware(
     next: Next,
 ) -> impl IntoResponse {
     match auth_middleware_impl(api_state.clone(), &headers).await {
-        Ok((session, guest)) => {
+        Ok(session) => {
             request.extensions_mut().insert(session);
-            request.extensions_mut().insert(guest);
             next.run(request).await
         }
         Err(response) => response,
@@ -43,11 +36,11 @@ pub async fn auth_middleware(
 async fn auth_middleware_impl(
     api_state: Arc<ApiState>,
     headers: &HeaderMap,
-) -> Result<(AuthSession, Guest), axum::response::Response> {
-    let (cookie, access_token) = extract_cookie_access_token(&headers)
+) -> Result<BetterAuthSession, axum::response::Response> {
+    let session_token = extract_session_token(&headers)
         .ok_or_else(|| (StatusCode::UNAUTHORIZED, Json("Unauthorized")).into_response())?;
 
-    let session = match validate_token(&api_state.ory_state, &cookie, &access_token).await {
+    let session = match validate_session_token(&api_state.db_state.client, &session_token).await {
         Ok(session) => session,
         Err(AuthError::InternalServerError(message)) => {
             tracing::error!("Internal server error: {}", message);
@@ -62,203 +55,5 @@ async fn auth_middleware_impl(
         }
     };
 
-    // Get or create the guest from the session
-    let guest = get_or_create_guest(&api_state.db_state, &session).await?;
-
-    Ok((session, guest))
-}
-
-async fn get_or_create_guest(
-    db_state: &DbState,
-    session: &AuthSession,
-) -> Result<Guest, axum::response::Response> {
-    // Extract the ory_identity_id from the session.
-    let ory_identity_id = match &session.identity {
-        Some(identity) => &identity.id,
-        None => {
-            tracing::error!("AuthSession has no identity for an authenticated request");
-            return Err((
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json("Internal Server Error"),
-            )
-                .into_response());
-        }
-    };
-
-    // Try to get existing guest
-    if let Some(guest) = get_guest(db_state, ory_identity_id).await? {
-        return Ok(guest);
-    }
-
-    // Guest doesn't exist, create a new one.
-    // This branch should only occur when the user is first created, so should be rare.
-    tracing::info!(
-        "Guest not found, creating new guest for ory_identity_id: {}",
-        ory_identity_id
-    );
-    create_guest(db_state, session).await
-}
-
-async fn get_guest(
-    db_state: &DbState,
-    ory_identity_id: &str,
-) -> Result<Option<Guest>, axum::response::Response> {
-    let existing_guest = db_state
-        .client
-        .query_opt(
-            "SELECT guest_id, ory_identity_id, name, email, phone, created_at, updated_at, deleted_at
-             FROM guest
-             WHERE ory_identity_id = $1 AND deleted_at IS NULL",
-            &[&ory_identity_id],
-        )
-        .await
-        .map_err(|e| {
-            tracing::error!("Database error when querying guest: {}", e);
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json("Internal Server Error"),
-            )
-                .into_response()
-        })?;
-
-    if let Some(row) = existing_guest {
-        let guest = Guest::from_row(&row).map_err(|e| {
-            tracing::error!("Failed to parse guest from database row: {}", e);
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json("Internal Server Error"),
-            )
-                .into_response()
-        })?;
-        Ok(Some(guest))
-    } else {
-        Ok(None)
-    }
-}
-
-async fn create_guest(
-    db_state: &DbState,
-    session: &AuthSession,
-) -> Result<Guest, axum::response::Response> {
-    let new_guest = session.to_guest().map_err(|e| {
-        tracing::error!("Failed to create guest from session: {:?}", e);
-        match e {
-            AuthError::Unauthorized => {
-                (StatusCode::UNAUTHORIZED, Json("Unauthorized")).into_response()
-            }
-            AuthError::InternalServerError(msg) => {
-                tracing::error!("Internal server error: {}", msg);
-                (
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    Json("Internal Server Error"),
-                )
-                    .into_response()
-            }
-        }
-    })?;
-
-    // Use INSERT ... ON CONFLICT DO NOTHING to handle race conditions.
-    // If another concurrent request already created a guest with the same ory_identity_id,
-    // this will not insert and we'll query for the existing guest instead.
-    let rows_affected = db_state
-        .client
-        .execute(
-            "INSERT INTO guest (guest_id, ory_identity_id, name, email, phone, created_at, updated_at, deleted_at)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-             ON CONFLICT (ory_identity_id) DO NOTHING",
-            &[
-                &new_guest.guest_id,
-                &new_guest.ory_identity_id,
-                &new_guest.name,
-                &new_guest.email,
-                &new_guest.phone,
-                &new_guest.created_at,
-                &new_guest.updated_at,
-                &new_guest.deleted_at,
-            ],
-        )
-        .await
-        .map_err(|e| {
-            tracing::error!("Database error when inserting guest: {}", e);
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json("Internal Server Error"),
-            )
-                .into_response()
-        })?;
-
-    if rows_affected == 0 {
-        // Another concurrent request created the guest, fetch and return it
-        tracing::info!("Guest already exists due to concurrent request, fetching existing guest");
-        get_guest(db_state, &new_guest.ory_identity_id)
-            .await?
-            .ok_or_else(|| {
-                tracing::error!("Guest should exist but was not found after conflict");
-                (
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    Json("Internal Server Error"),
-                )
-                    .into_response()
-            })
-    } else {
-        // Successfully inserted the new guest
-        Ok(new_guest)
-    }
-}
-
-impl AuthSession {
-    fn to_guest(&self) -> Result<Guest, AuthError> {
-        let now = chrono::Utc::now();
-
-        match &self.identity {
-            Some(identity) => {
-                // Extract and validate name
-                let raw_name =
-                    identity
-                        .traits
-                        .name
-                        .as_ref()
-                        .ok_or(AuthError::InternalServerError(
-                            "Unable to parse identity name".to_string(),
-                        ))?;
-                let full_name = raw_name.full_name();
-                let trimmed_name = full_name.trim();
-                if trimmed_name.is_empty() {
-                    return Err(AuthError::InternalServerError(
-                        "Identity name cannot be empty".to_string(),
-                    ));
-                }
-
-                // Extract and validate email
-                let raw_email =
-                    identity
-                        .traits
-                        .email
-                        .as_ref()
-                        .ok_or(AuthError::InternalServerError(
-                            "Unable to parse identity email".to_string(),
-                        ))?;
-                let trimmed_email = raw_email.trim();
-                if trimmed_email.is_empty() || !trimmed_email.contains('@') {
-                    return Err(AuthError::InternalServerError(
-                        "Identity email is invalid".to_string(),
-                    ));
-                }
-
-                Ok(Guest {
-                    guest_id: Uuid::new_v4().to_string(),
-                    ory_identity_id: identity.id.clone(),
-                    name: trimmed_name.to_string(),
-                    email: trimmed_email.to_string(),
-                    phone: identity.traits.phone.clone(),
-                    created_at: now,
-                    updated_at: now,
-                    deleted_at: None,
-                })
-            }
-            None => Err(AuthError::InternalServerError(
-                "Session has no associated identity".to_string(),
-            )),
-        }
-    }
+    Ok(session)
 }

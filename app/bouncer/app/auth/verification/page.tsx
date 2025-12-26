@@ -1,22 +1,18 @@
-import { Verification } from "@ory/elements-react/theme";
-import { getVerificationFlow, OryPageParams } from "@ory/nextjs/app";
-
-import config from "@/ory.config";
-
-export default async function VerificationPage(props: OryPageParams) {
-  const flow = await getVerificationFlow(config, props.searchParams);
-
-  if (!flow) {
-    return null;
-  }
-
+export default function VerificationPage() {
   return (
-    <Verification
-      flow={flow}
-      config={config}
-      components={{
-        Card: {},
-      }}
-    />
+    <div className="max-w-md mx-auto">
+      <h2 className="text-2xl font-semibold mb-6">Email Verification</h2>
+      <p className="text-gray-600">
+        Email verification is currently not enabled. You can log in directly with your email and password.
+      </p>
+      <div className="mt-6">
+        <a
+          href="/auth/login"
+          className="text-blue-600 hover:underline"
+        >
+          Go to Login
+        </a>
+      </div>
+    </div>
   );
 }

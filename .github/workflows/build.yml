@@ -6,38 +6,38 @@ on:
   pull_request:
 
 jobs:
-  build-bouncer:
-    runs-on: "ubuntu-latest"
-    env:
-      working-directory: app/bouncer
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22.0.0
-          cache: npm
-          cache-dependency-path: ${{env.working-directory}}
-
-      - name: Build
-        working-directory: ${{env.working-directory}}
-        run: |
-          npm ci
-          npx next build
-
-  # build-pregame:
+  # build-bouncer:
   #   runs-on: "ubuntu-latest"
   #   env:
-  #     working-directory: app/pregame
+  #     working-directory: app/bouncer
   #   steps:
   #     - name: Checkout
   #       uses: actions/checkout@v4
 
-  #     - name: Setup Rust
-  #       uses: dtolnay/rust-toolchain@stable
+  #     - name: Setup Node
+  #       uses: actions/setup-node@v4
+  #       with:
+  #         node-version: 22.0.0
+  #         cache: npm
+  #         cache-dependency-path: ${{env.working-directory}}
 
   #     - name: Build
   #       working-directory: ${{env.working-directory}}
-  #       run: cargo build
+  #       run: |
+  #         npm ci
+  #         npx next build
+
+  build-pregame:
+    runs-on: "ubuntu-latest"
+    env:
+      working-directory: app/pregame
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build
+        working-directory: ${{env.working-directory}}
+        run: cargo build
