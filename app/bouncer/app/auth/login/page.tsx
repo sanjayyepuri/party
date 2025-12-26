@@ -1,22 +1,9 @@
+import { LoginForm } from "@/components/auth/login-form";
 
-import { getLoginFlow, OryPageParams } from "@ory/nextjs/app";
-import { Login } from "@ory/elements-react/theme";
-
-import config from "@/ory.config";
-
-export default async function LoginPage(props: OryPageParams) {
-  const flow = await getLoginFlow(config, props.searchParams);
-
-  if (!flow) {
-    return null;
-  }
-
+export default function LoginPage() {
   return (
     <div>
-      <Login
-        flow={flow}
-        config={config}
-      />
+      <LoginForm />
     </div>
   );
 }
