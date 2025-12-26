@@ -31,7 +31,9 @@ export async function middleware(request: NextRequest) {
   // redirect users with expired sessions before hitting the page handler),
   // add a proper session validation step here (such as calling an internal
   // auth endpoint or decoding/verifying the session token).
-  const sessionCookie = request.cookies.get("better-auth.session_token");
+  const sessionCookie =
+    request.cookies.get("__Secure-better-auth.session_token") ||
+    request.cookies.get("better-auth.session_token");
 
   if (!sessionCookie) {
     // Redirect to login if no session cookie is present at all
