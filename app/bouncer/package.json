@@ -9,12 +9,14 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "better-auth": "^1.2.10",
+    "@better-auth/passkey": "^1.4.9",
+    "better-auth": "^1.4.9",
     "framer-motion": "^12.23.24",
     "next": "16.0.10",
     "pg": "^8.13.1",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "resend": "^4.1.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
