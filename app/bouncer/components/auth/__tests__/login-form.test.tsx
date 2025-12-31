@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { LoginForm } from '../login-form';
+import { signIn } from '@/lib/auth-client';
 
 // Mock next/navigation
 vi.mock('next/navigation', () => ({
@@ -12,14 +13,15 @@ vi.mock('next/navigation', () => ({
 }));
 
 // Mock auth-client
-const mockSignIn = vi.fn();
 vi.mock('@/lib/auth-client', () => ({
   signIn: {
-    email: mockSignIn,
+    email: vi.fn(),
   },
 }));
 
 describe('LoginForm', () => {
+  const mockSignIn = signIn.email as ReturnType<typeof vi.fn>;
+
   beforeEach(() => {
     vi.clearAllMocks();
     // Mock window.location
@@ -30,7 +32,7 @@ describe('LoginForm', () => {
   it('renders login form with email and password fields', () => {
     render(<LoginForm />);
     
-    expect(screen.getByText('Sign In')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /sign in/i })).toBeInTheDocument();
     expect(screen.getByLabelText('Email')).toBeInTheDocument();
     expect(screen.getByLabelText('Password')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument();
