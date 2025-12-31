@@ -4,7 +4,6 @@
 
 use axum::http::HeaderMap;
 use percent_encoding::percent_decode_str;
-use serde::Deserialize;
 use tokio_postgres::Client;
 
 /// Represents a validated Better Auth session with user information.
@@ -137,4 +136,93 @@ pub async fn validate_session_token(
         name: row.get("name"),
         phone: row.get("phone"),
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use axum::http::{HeaderMap, HeaderValue};
+
+    #[test]
+    fn test_extract_session_token_local_cookie() {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            "cookie",
+            HeaderValue::from_static("better-auth.session_token=token123.signature"),
+        );
+
+        let result = extract_session_token(&headers);
+        assert_eq!(result, Some("token123".to_string()));
+    }
+
+    #[test]
+    fn test_extract_session_token_production_cookie() {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            "cookie",
+            HeaderValue::from_static("__Secure-better-auth.session_token=token456.signature"),
+        );
+
+        let result = extract_session_token(&headers);
+        assert_eq!(result, Some("token456".to_string()));
+    }
+
+    #[test]
+    fn test_extract_session_token_without_signature() {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            "cookie",
+            HeaderValue::from_static("better-auth.session_token=token789"),
+        );
+
+        let result = extract_session_token(&headers);
+        assert_eq!(result, Some("token789".to_string()));
+    }
+
+    #[test]
+    fn test_extract_session_token_url_encoded() {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            "cookie",
+            HeaderValue::from_static("better-auth.session_token=token%20with%20spaces.signature"),
+        );
+
+        let result = extract_session_token(&headers);
+        assert_eq!(result, Some("token with spaces".to_string()));
+    }
+
+    #[test]
+    fn test_extract_session_token_multiple_cookies() {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            "cookie",
+            HeaderValue::from_static("other_cookie=value; better-auth.session_token=token123.signature; another=value"),
+        );
+
+        let result = extract_session_token(&headers);
+        assert_eq!(result, Some("token123".to_string()));
+    }
+
+    #[test]
+    fn test_extract_session_token_no_cookie() {
+        let headers = HeaderMap::new();
+        let result = extract_session_token(&headers);
+        assert_eq!(result, None);
+    }
+
+    #[test]
+    fn test_extract_session_token_wrong_cookie_name() {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            "cookie",
+            HeaderValue::from_static("session_token=token123.signature"),
+        );
+
+        let result = extract_session_token(&headers);
+        assert_eq!(result, None);
+    }
+
+    // Note: validate_session_token requires a database connection and cannot be
+    // easily unit tested without mocking or a test database. Integration tests
+    // should be added separately for full validation.
 }

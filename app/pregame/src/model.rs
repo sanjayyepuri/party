@@ -55,3 +55,96 @@ impl Rsvp {
         })
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_party_serialization() {
+        let party = Party {
+            party_id: "test-party-id".to_string(),
+            name: "Test Party".to_string(),
+            time: chrono::Utc::now(),
+            location: "Test Location".to_string(),
+            description: "Test Description".to_string(),
+            slug: "test-party".to_string(),
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            deleted_at: None,
+        };
+
+        let json = serde_json::to_string(&party).unwrap();
+        let deserialized: Party = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(party.party_id, deserialized.party_id);
+        assert_eq!(party.name, deserialized.name);
+        assert_eq!(party.location, deserialized.location);
+        assert_eq!(party.description, deserialized.description);
+        assert_eq!(party.slug, deserialized.slug);
+        assert_eq!(party.deleted_at, deserialized.deleted_at);
+    }
+
+    #[test]
+    fn test_party_with_deleted_at() {
+        let party = Party {
+            party_id: "test-party-id".to_string(),
+            name: "Test Party".to_string(),
+            time: chrono::Utc::now(),
+            location: "Test Location".to_string(),
+            description: "Test Description".to_string(),
+            slug: "test-party".to_string(),
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            deleted_at: Some(chrono::Utc::now()),
+        };
+
+        let json = serde_json::to_string(&party).unwrap();
+        let deserialized: Party = serde_json::from_str(&json).unwrap();
+
+        assert!(deserialized.deleted_at.is_some());
+    }
+
+    #[test]
+    fn test_rsvp_serialization() {
+        let rsvp = Rsvp {
+            rsvp_id: "test-rsvp-id".to_string(),
+            party_id: "test-party-id".to_string(),
+            user_id: "test-user-id".to_string(),
+            status: "confirmed".to_string(),
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            deleted_at: None,
+        };
+
+        let json = serde_json::to_string(&rsvp).unwrap();
+        let deserialized: Rsvp = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(rsvp.rsvp_id, deserialized.rsvp_id);
+        assert_eq!(rsvp.party_id, deserialized.party_id);
+        assert_eq!(rsvp.user_id, deserialized.user_id);
+        assert_eq!(rsvp.status, deserialized.status);
+        assert_eq!(rsvp.deleted_at, deserialized.deleted_at);
+    }
+
+    #[test]
+    fn test_rsvp_with_deleted_at() {
+        let rsvp = Rsvp {
+            rsvp_id: "test-rsvp-id".to_string(),
+            party_id: "test-party-id".to_string(),
+            user_id: "test-user-id".to_string(),
+            status: "pending".to_string(),
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            deleted_at: Some(chrono::Utc::now()),
+        };
+
+        let json = serde_json::to_string(&rsvp).unwrap();
+        let deserialized: Rsvp = serde_json::from_str(&json).unwrap();
+
+        assert!(deserialized.deleted_at.is_some());
+    }
+
+    // Note: from_row() methods require database Row objects and should be tested
+    // via integration tests with a real database connection or mocked Row objects.
+}
