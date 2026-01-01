@@ -4,34 +4,39 @@ import { useState } from "react";
 import { signIn } from "@/lib/auth-client";
 
 export function LoginForm() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handlePasskeySignIn = async () => {
     setError("");
     setLoading(true);
 
     try {
-      const result = await signIn.email(
+      const result = await (signIn as any).passkey(
         {
-          email,
-          password,
           callbackURL: "/invitations",
         },
         {
           onRequest: () => {
-            // Request started
+            // Request started - browser will show passkey prompt
           },
           onSuccess: () => {
             // Success - redirect will be handled by callbackURL
-            // But we can also manually redirect to be sure
             window.location.href = "/invitations";
           },
-          onError: (ctx) => {
-            setError(ctx.error.message || "Failed to sign in");
+          onError: (ctx: { error?: { message?: string } }) => {
+            const errorMessage = ctx.error?.message || "Failed to sign in with passkey";
+            
+            // Provide user-friendly error messages
+            if (errorMessage.includes("NotAllowedError") || errorMessage.includes("cancelled")) {
+              setError("Sign in was cancelled. Please try again.");
+            } else if (errorMessage.includes("NotSupportedError")) {
+              setError("Passkeys are not supported in this browser. Please use a modern browser that supports WebAuthn.");
+            } else if (errorMessage.includes("InvalidStateError")) {
+              setError("No passkey found. Please register first.");
+            } else {
+              setError(errorMessage);
+            }
             setLoading(false);
           },
         }
@@ -39,15 +44,24 @@ export function LoginForm() {
 
       // Fallback error handling
       if (result?.error) {
-        setError(result.error.message || "Failed to sign in");
+        const errorMessage = result.error.message || "Failed to sign in with passkey";
+        if (errorMessage.includes("NotAllowedError") || errorMessage.includes("cancelled")) {
+          setError("Sign in was cancelled. Please try again.");
+        } else {
+          setError(errorMessage);
+        }
         setLoading(false);
       }
     } catch (err) {
-      console.error("Login error:", err);
-      setError("An unexpected error occurred");
+      console.error("Passkey sign-in error:", err);
+      setError("An unexpected error occurred. Please try again.");
       setLoading(false);
     }
   };
+
+  // Check if passkeys are supported
+  const isPasskeySupported = typeof window !== "undefined" && 
+    typeof window.PublicKeyCredential !== "undefined";
 
   return (
     <div className="max-w-md mx-auto">
@@ -59,53 +73,38 @@ export function LoginForm() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium mb-1">
-            Email
-          </label>
-          <input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-            disabled={loading}
-          />
+      {!isPasskeySupported && (
+        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 text-yellow-700 rounded">
+          Your browser does not support passkeys. Please use a modern browser that supports WebAuthn.
         </div>
+      )}
 
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium mb-1">
-            Password
-          </label>
-          <input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-            disabled={loading}
-          />
-        </div>
-
+      <div className="space-y-4">
         <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-black text-white py-2 px-4 rounded hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed"
+          type="button"
+          onClick={handlePasskeySignIn}
+          disabled={loading || !isPasskeySupported}
+          className="w-full bg-black text-white py-3 px-4 rounded hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
-          {loading ? "Signing in..." : "Sign In"}
+          {loading ? (
+            <>
+              <span className="animate-spin">⏳</span>
+              <span>Signing in with passkey...</span>
+            </>
+          ) : (
+            <>
+              <span>🔐</span>
+              <span>Sign in with Passkey</span>
+            </>
+          )}
         </button>
-      </form>
 
-      <div className="mt-4 text-center text-sm">
-        <a href="/auth/recovery" className="text-blue-600 hover:underline">
-          Forgot password?
-        </a>
+        <p className="text-sm text-gray-600 text-center">
+          Use your device&apos;s biometric authentication, security key, or passkey to sign in.
+        </p>
       </div>
 
-      <div className="mt-4 text-center text-sm">
+      <div className="mt-6 text-center text-sm">
         Don&apos;t have an account?{" "}
         <a href="/auth/registration" className="text-blue-600 hover:underline">
           Sign up
