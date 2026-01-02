@@ -203,5 +203,23 @@ describe("email-service", () => {
       expect(callArgs.html).toContain("expire in 5 minutes");
       expect(callArgs.text).toContain("expire in 5 minutes");
     });
+
+    it("escapes HTML special characters in OTP and subject", async () => {
+      process.env.RESEND_API_KEY = "test-api-key";
+
+      await sendOTPEmail({
+        email: "[email protected]",
+        otp: "<script>alert('xss')</script>",
+        type: "sign-in",
+      });
+
+      const callArgs = mockResendInstance.emails.send.mock.calls[0][0];
+      // Verify HTML is escaped
+      expect(callArgs.html).toContain("&lt;script&gt;");
+      expect(callArgs.html).toContain("&lt;/script&gt;");
+      expect(callArgs.html).not.toContain("<script>");
+      // Plain text should contain the raw value
+      expect(callArgs.text).toContain("<script>alert('xss')</script>");
+    });
   });
 });

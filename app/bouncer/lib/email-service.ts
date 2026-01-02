@@ -20,6 +20,18 @@ interface SendOTPParams {
 }
 
 /**
+ * Safely escape text for inclusion in HTML
+ */
+const escapeHtml = (value: string): string => {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+};
+
+/**
  * Get the email subject based on OTP type
  * Handles Better Auth's emailOTP plugin types
  */
@@ -44,10 +56,10 @@ const getOTPSubject = (type: OTPType): string => {
 const generateOTPEmailHTML = (subject: string, otp: string): string => {
   return `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-      <h2 style="color: #333;">${subject}</h2>
+      <h2 style="color: #333;">${escapeHtml(subject)}</h2>
       <p>Your verification code is:</p>
       <div style="background-color: #f5f5f5; padding: 20px; text-align: center; font-size: 32px; font-weight: bold; letter-spacing: 4px; margin: 20px 0;">
-        ${otp}
+        ${escapeHtml(otp)}
       </div>
       <p style="color: #666; font-size: 14px;">This code will expire in 5 minutes.</p>
       <p style="color: #666; font-size: 14px;">If you didn't request this code, please ignore this email.</p>
