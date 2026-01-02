@@ -23,7 +23,7 @@ export function RegisterForm() {
     // Validate name and email before proceeding
     const trimmedName = name.trim();
     const trimmedEmail = email.trim();
-    
+
     if (!trimmedName) {
       setError("Name is required");
       return;
@@ -81,9 +81,15 @@ export function RegisterForm() {
       });
 
       if (signInResult.error) {
-        const errorMessage = signInResult.error.message || "Invalid verification code";
-        if (errorMessage.includes("expired") || errorMessage.includes("invalid")) {
-          setError("Invalid or expired verification code. Please request a new one.");
+        const errorMessage =
+          signInResult.error.message || "Invalid verification code";
+        if (
+          errorMessage.includes("expired") ||
+          errorMessage.includes("invalid")
+        ) {
+          setError(
+            "Invalid or expired verification code. Please request a new one."
+          );
         } else {
           setError(errorMessage);
         }
@@ -118,13 +124,19 @@ export function RegisterForm() {
       });
 
       if (passkeyResult.error) {
-        const errorMessage = passkeyResult.error.message || "Failed to create passkey";
-        
+        const errorMessage =
+          passkeyResult.error.message || "Failed to create passkey";
+
         // Provide user-friendly error messages
-        if (errorMessage.includes("NotAllowedError") || errorMessage.includes("cancelled")) {
+        if (
+          errorMessage.includes("NotAllowedError") ||
+          errorMessage.includes("cancelled")
+        ) {
           setError("Passkey creation was cancelled. Please try again.");
         } else if (errorMessage.includes("NotSupportedError")) {
-          setError("Passkeys are not supported in this browser. Please use a modern browser that supports WebAuthn.");
+          setError(
+            "Passkeys are not supported in this browser. Please use a modern browser that supports WebAuthn."
+          );
         } else if (errorMessage.includes("InvalidStateError")) {
           setError("A passkey already exists for this account.");
         } else {
@@ -156,7 +168,9 @@ export function RegisterForm() {
       });
 
       if (otpResult.error) {
-        setError(otpResult.error.message || "Failed to resend verification code");
+        setError(
+          otpResult.error.message || "Failed to resend verification code"
+        );
       } else {
         setError(""); // Clear any previous errors
         // Show success message (you could add a success state here)
@@ -172,8 +186,8 @@ export function RegisterForm() {
   // Check if passkeys are supported (client-side only to avoid hydration mismatch)
   useEffect(() => {
     setIsPasskeySupported(
-      typeof window !== "undefined" && 
-      typeof window.PublicKeyCredential !== "undefined"
+      typeof window !== "undefined" &&
+        typeof window.PublicKeyCredential !== "undefined"
     );
   }, []);
 
@@ -189,7 +203,8 @@ export function RegisterForm() {
 
       {!isPasskeySupported && step === "passkey" && (
         <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 text-yellow-700 rounded">
-          Your browser does not support passkeys. Please use a modern browser that supports WebAuthn.
+          Your browser does not support passkeys. Please use a modern browser
+          that supports WebAuthn.
         </div>
       )}
 
@@ -253,7 +268,8 @@ export function RegisterForm() {
         <form onSubmit={handleOtpSubmit} className="space-y-4">
           <div>
             <p className="text-sm text-gray-600 mb-4">
-              We&apos;ve sent a verification code to <strong>{email}</strong>. Please enter it below.
+              We&apos;ve sent a verification code to <strong>{email}</strong>.
+              Please enter it below.
             </p>
             <label htmlFor="otp" className="block text-sm font-medium mb-1">
               Verification Code
@@ -262,7 +278,9 @@ export function RegisterForm() {
               id="otp"
               type="text"
               value={otp}
-              onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+              onChange={(e) =>
+                setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))
+              }
               required
               maxLength={6}
               placeholder="000000"
@@ -307,7 +325,9 @@ export function RegisterForm() {
         <div className="space-y-4">
           <div className="p-4 bg-green-50 border border-green-200 text-green-700 rounded">
             <p className="font-medium">Email verified!</p>
-            <p className="text-sm mt-1">Now let&apos;s create a passkey for secure authentication.</p>
+            <p className="text-sm mt-1">
+              Now let&apos;s create a passkey for secure authentication.
+            </p>
           </div>
 
           <button
@@ -330,7 +350,8 @@ export function RegisterForm() {
           </button>
 
           <p className="text-sm text-gray-600 text-center">
-            You&apos;ll be prompted to create a passkey using your device&apos;s biometric authentication or security key.
+            You&apos;ll be prompted to create a passkey using your device&apos;s
+            biometric authentication or security key.
           </p>
         </div>
       )}

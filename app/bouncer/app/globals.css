@@ -2,7 +2,7 @@
 
 @theme {
   --font-family-sans: var(--font-departure-mono), monospace;
-  
+
   /* Departure Mono text sizes - increments of 11px */
   --font-size-xs: 11px;
   --font-size-sm: 11px;
@@ -41,7 +41,7 @@ body {
 
 /* Vibrant asymmetric tie-dye gradient */
 body::before {
-  content: '';
+  content: "";
   position: fixed;
   top: 0;
   left: 0;
@@ -51,15 +51,31 @@ body::before {
 
   /* Layered radial gradients for tie-dye effect */
   background:
-    radial-gradient(circle at 15% 25%, var(--tiedye-purple) 0%, transparent 35%),
+    radial-gradient(
+      circle at 15% 25%,
+      var(--tiedye-purple) 0%,
+      transparent 35%
+    ),
     radial-gradient(circle at 75% 15%, var(--tiedye-pink) 0%, transparent 30%),
-    radial-gradient(ellipse at 85% 65%, var(--tiedye-orange) 0%, transparent 40%),
+    radial-gradient(
+      ellipse at 85% 65%,
+      var(--tiedye-orange) 0%,
+      transparent 40%
+    ),
     radial-gradient(circle at 25% 75%, var(--tiedye-cyan) 0%, transparent 38%),
-    radial-gradient(ellipse at 60% 45%, var(--tiedye-yellow) 0%, transparent 25%),
+    radial-gradient(
+      ellipse at 60% 45%,
+      var(--tiedye-yellow) 0%,
+      transparent 25%
+    ),
     radial-gradient(circle at 40% 20%, var(--tiedye-blue) 0%, transparent 28%),
     radial-gradient(ellipse at 10% 80%, var(--tiedye-lime) 0%, transparent 33%),
     radial-gradient(circle at 90% 85%, var(--tiedye-rose) 0%, transparent 30%),
-    radial-gradient(ellipse at 50% 90%, var(--tiedye-purple) 0%, transparent 25%),
+    radial-gradient(
+      ellipse at 50% 90%,
+      var(--tiedye-purple) 0%,
+      transparent 25%
+    ),
     linear-gradient(135deg, #fef3c7 0%, #fce7f3 50%, #ddd6fe 100%);
 
   background-size: 120% 120%;
@@ -68,7 +84,7 @@ body::before {
 
 /* Film grain overlay using SVG noise */
 body::after {
-  content: '';
+  content: "";
   position: fixed;
   top: 0;
   left: 0;
@@ -117,20 +133,32 @@ body::after {
   background-position: 0 0;
 }
 
-
 /* Ambient animations */
 @keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-20px); }
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
 }
 
 @keyframes pulse-glow {
-  0%, 100% { opacity: 0.5; filter: blur(20px); }
-  50% { opacity: 0.8; filter: blur(30px); }
+  0%,
+  100% {
+    opacity: 0.5;
+    filter: blur(20px);
+  }
+  50% {
+    opacity: 0.8;
+    filter: blur(30px);
+  }
 }
 
 @keyframes gradient-shift {
-  0%, 100% {
+  0%,
+  100% {
     background-position: 0% 50%;
     filter: hue-rotate(0deg);
   }
@@ -141,23 +169,42 @@ body::after {
 }
 
 @keyframes flicker {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.8; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
 }
 
 @keyframes slide-horizontal {
-  0%, 100% { transform: translateX(0); }
-  50% { transform: translateX(40px); }
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(40px);
+  }
 }
 
 @keyframes slide-vertical {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-40px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-40px);
+  }
 }
 
 @keyframes rotate-slow {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .animate-float {
@@ -187,14 +234,16 @@ body::after {
 
 /* Glowing text effect */
 .text-glow {
-  text-shadow: 0 0 20px rgba(217, 119, 6, 0.3),
-               0 0 40px rgba(217, 119, 6, 0.2);
+  text-shadow:
+    0 0 20px rgba(217, 119, 6, 0.3),
+    0 0 40px rgba(217, 119, 6, 0.2);
 }
 
 .text-glow-strong {
-  text-shadow: 0 0 10px rgba(217, 119, 6, 0.5),
-               0 0 20px rgba(217, 119, 6, 0.3),
-               0 0 30px rgba(217, 119, 6, 0.2);
+  text-shadow:
+    0 0 10px rgba(217, 119, 6, 0.5),
+    0 0 20px rgba(217, 119, 6, 0.3),
+    0 0 30px rgba(217, 119, 6, 0.2);
 }
 
 /* Ensure text scales properly */

@@ -8,7 +8,7 @@ export default function Footer() {
         Built for my friends.
       </p>
       <p className="text-xs uppercase mt-2 text-neutral-500 dark:text-neutral-400">
-        Typeset in{' '}
+        Typeset in{" "}
         <a
           href="https://departuremono.com/"
           target="_blank"
@@ -16,9 +16,9 @@ export default function Footer() {
           className="hover:text-neutral-800 dark:hover:text-neutral-200 transition-all"
         >
           Departure Mono
-        </a>{' '}
+        </a>{" "}
         by Helena Zhang
       </p>
     </footer>
-  )
+  );
 }

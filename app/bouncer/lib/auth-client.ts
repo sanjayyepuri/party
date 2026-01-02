@@ -23,4 +23,12 @@ export const authClient = createAuthClient({
   plugins: [passkeyClient(), emailOTPClient()],
 });
 
-export const { signIn, signUp, signOut, useSession, getSession, passkey, emailOtp } = authClient;
+export const {
+  signIn,
+  signUp,
+  signOut,
+  useSession,
+  getSession,
+  passkey,
+  emailOtp,
+} = authClient;
