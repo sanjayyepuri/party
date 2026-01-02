@@ -8,3 +8,4 @@ node_modules
 .env*.local
 
 target
+app/bouncer/package-lock.json

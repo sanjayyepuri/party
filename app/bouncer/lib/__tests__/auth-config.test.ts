@@ -54,6 +54,27 @@ describe("auth-config", () => {
 
       expect(getBaseURL()).toBe("https://custom-domain.com");
     });
+
+    it("returns provided origin when passed as argument", () => {
+      delete process.env.NEXT_PUBLIC_APP_URL;
+      delete process.env.VERCEL_URL;
+
+      expect(getBaseURL("https://client-origin.com")).toBe("https://client-origin.com");
+    });
+
+    it("prioritizes NEXT_PUBLIC_APP_URL over provided origin", () => {
+      process.env.NEXT_PUBLIC_APP_URL = "https://env-url.com";
+      delete process.env.VERCEL_URL;
+
+      expect(getBaseURL("https://client-origin.com")).toBe("https://env-url.com");
+    });
+
+    it("uses origin when NEXT_PUBLIC_APP_URL is not set but VERCEL_URL is", () => {
+      delete process.env.NEXT_PUBLIC_APP_URL;
+      process.env.VERCEL_URL = "my-app.vercel.app";
+
+      expect(getBaseURL("https://client-origin.com")).toBe("https://client-origin.com");
+    });
   });
 
   describe("getRpID", () => {

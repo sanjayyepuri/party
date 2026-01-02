@@ -5,10 +5,16 @@
 
 /**
  * Automatically detect base URL from Vercel or use localhost
+ * @param origin - Optional origin (e.g., window.location.origin for client-side)
  */
-export const getBaseURL = (): string => {
+export const getBaseURL = (origin?: string): string => {
   if (process.env.NEXT_PUBLIC_APP_URL) {
     return process.env.NEXT_PUBLIC_APP_URL;
+  }
+
+  // Use provided origin (typically window.location.origin on client-side)
+  if (origin) {
+    return origin;
   }
 
   if (process.env.VERCEL_URL) {
