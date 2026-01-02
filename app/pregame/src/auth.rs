@@ -4,7 +4,6 @@
 
 use axum::http::HeaderMap;
 use percent_encoding::percent_decode_str;
-use serde::Deserialize;
 use tokio_postgres::Client;
 
 /// Represents a validated Better Auth session with user information.
@@ -122,7 +121,6 @@ pub async fn validate_session_token(
         .query_opt(query, &[&session_token])
         .await?
         .ok_or(AuthError::Unauthorized)?;
-
 
     // Check if session has expired
     let expires_at: chrono::DateTime<chrono::Utc> = row.get("expires_at");

@@ -73,6 +73,10 @@ All deployments consume the same backend API but render with completely differen
 
 - `NEXT_PUBLIC_API_URL`: Backend API URL (default: http://localhost:3000)
 - `NEXT_PUBLIC_USE_REAL_API`: Set to 'true' to use real API instead of mocks
+- `NEON_POSTGRES_URL`: PostgreSQL connection string for Better Auth (required)
+- `NEXT_PUBLIC_APP_URL`: Base URL of the application (auto-detected from Vercel or defaults to localhost)
+- `BETTER_AUTH_PASSKEY_RP_ID`: Relying Party ID for passkeys (optional, defaults to hostname from baseURL)
+- `BETTER_AUTH_PASSKEY_RP_NAME`: Human-readable name for passkeys (optional, defaults to "Party Platform")
 
 ## API Integration
 
