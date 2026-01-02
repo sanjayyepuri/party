@@ -21,7 +21,7 @@ export const getBaseURL = (origin?: string): string => {
     // VERCEL_URL does not include the protocol according to Vercel docs
     // https://vercel.com/docs/projects/environment-variables/system-environment-variables
     // However, we handle the case defensively in case it's already prefixed
-    const host = process.env.VERCEL_URL;
+    const host = process.env.VERCEL_URL; // Guaranteed to be defined by the if condition above
     
     // If the URL already includes a protocol, return it as-is
     if (host.startsWith("http://") || host.startsWith("https://")) {
