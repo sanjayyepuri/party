@@ -24,6 +24,3 @@ export const authClient = createAuthClient({
 });
 
 export const { signIn, signUp, signOut, useSession, getSession, passkey, emailOtp } = authClient;
-
-// Export authClient for advanced use cases (e.g., Conditional UI preloading)
-export { authClient };
