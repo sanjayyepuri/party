@@ -18,8 +18,17 @@ export const getBaseURL = (origin?: string): string => {
   }
 
   if (process.env.VERCEL_URL) {
-    // Check if it's localhost - use http:// for localhost, https:// for production
+    // VERCEL_URL does not include the protocol according to Vercel docs
+    // https://vercel.com/docs/projects/environment-variables/system-environment-variables
+    // However, we handle the case defensively in case it's already prefixed
     const host = process.env.VERCEL_URL;
+    
+    // If the URL already includes a protocol, return it as-is
+    if (host.startsWith("http://") || host.startsWith("https://")) {
+      return host;
+    }
+    
+    // Check if it's localhost - use http:// for localhost, https:// for production
     if (host.startsWith("localhost") || host.includes("localhost:")) {
       return `http://${host}`;
     }

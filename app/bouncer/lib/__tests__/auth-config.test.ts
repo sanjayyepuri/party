@@ -48,6 +48,20 @@ describe("auth-config", () => {
       expect(getBaseURL()).toBe("https://my-app.vercel.app");
     });
 
+    it("handles VERCEL_URL that already includes https:// protocol", () => {
+      delete process.env.NEXT_PUBLIC_APP_URL;
+      process.env.VERCEL_URL = "https://my-app.vercel.app";
+
+      expect(getBaseURL()).toBe("https://my-app.vercel.app");
+    });
+
+    it("handles VERCEL_URL that already includes http:// protocol", () => {
+      delete process.env.NEXT_PUBLIC_APP_URL;
+      process.env.VERCEL_URL = "http://localhost:3000";
+
+      expect(getBaseURL()).toBe("http://localhost:3000");
+    });
+
     it("prioritizes NEXT_PUBLIC_APP_URL over VERCEL_URL", () => {
       process.env.NEXT_PUBLIC_APP_URL = "https://custom-domain.com";
       process.env.VERCEL_URL = "my-app.vercel.app";
