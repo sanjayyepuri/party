@@ -137,22 +137,6 @@ describe("email-service", () => {
       );
     });
 
-    it("uses correct subject for forget-password type", async () => {
-      process.env.RESEND_API_KEY = "test-api-key";
-      process.env.RESEND_FROM_EMAIL = "Test <[email protected]>";
-
-      await sendOTPEmail({
-        email: "[email protected]",
-        otp: "123456",
-        type: "forget-password",
-      });
-
-      expect(mockResendInstance.emails.send).toHaveBeenCalledWith(
-        expect.objectContaining({
-          subject: "Reset your password",
-        })
-      );
-    });
 
     it("includes OTP in both HTML and text email content", async () => {
       process.env.RESEND_API_KEY = "test-api-key";

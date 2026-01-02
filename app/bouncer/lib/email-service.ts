@@ -5,12 +5,12 @@
 import { Resend } from "resend";
 
 // Better Auth emailOTP plugin types
-// The type can be "sign-up", "sign-in", "email-verification", "forget-password", or other strings
+// The type can be "sign-up", "sign-in", "email-verification", or other strings
+// Note: "forget-password" is not used since we use passwordless authentication (OTP + passkey)
 type OTPType =
   | "sign-up"
   | "sign-in"
   | "email-verification"
-  | "forget-password"
   | string;
 
 interface SendOTPParams {
@@ -43,8 +43,6 @@ const getOTPSubject = (type: OTPType): string => {
       return "Verify your email to create your account";
     case "email-verification":
       return "Verify your email address";
-    case "forget-password":
-      return "Reset your password";
     default:
       return "Your verification code";
   }
