@@ -23,6 +23,10 @@ fi
 
 echo "Running pre-commit checks..."
 
+# Check for uncommitted changes before formatting
+cd "$PROJECT_ROOT"
+UNCOMMITTED_BEFORE=$(git diff --name-only)
+
 # Format and lint TypeScript/JavaScript files
 cd "$PROJECT_ROOT/app/bouncer"
 echo "Formatting TypeScript/JavaScript files..."
@@ -53,6 +57,19 @@ if command -v cargo &> /dev/null; then
       (cd "$project_dir" && cargo fmt --all || true)
     fi
   done
+fi
+
+# Check if formatting changed any files
+cd "$PROJECT_ROOT"
+UNCOMMITTED_AFTER=$(git diff --name-only)
+FORMATTED_FILES=$(git diff --name-only)
+
+if [ -n "$FORMATTED_FILES" ]; then
+  echo "Error: The following files were reformatted and need to be staged:"
+  echo "$FORMATTED_FILES"
+  echo ""
+  echo "Please run 'git add' on these files and commit again."
+  exit 1
 fi
 
 echo "Pre-commit checks passed!"

@@ -6,7 +6,12 @@ import { Resend } from "resend";
 
 // Better Auth emailOTP plugin types
 // The type can be "sign-up", "sign-in", "email-verification", "forget-password", or other strings
-type OTPType = "sign-up" | "sign-in" | "email-verification" | "forget-password" | string;
+type OTPType =
+  | "sign-up"
+  | "sign-in"
+  | "email-verification"
+  | "forget-password"
+  | string;
 
 interface SendOTPParams {
   email: string;
@@ -112,4 +117,3 @@ export const sendOTPEmail = async ({
     throw error;
   }
 };
-

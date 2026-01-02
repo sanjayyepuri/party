@@ -12,28 +12,28 @@ use tokio_postgres::Client;
 /// against the database. Contains the user's ID, email, and name.
 #[derive(Debug, Clone)]
 pub struct BetterAuthSession {
-  /// Unique session identifier from Better Auth
-  pub session_id: String,
-  /// User ID from Better Auth (stored in guest.better_auth_user_id)
-  pub user_id: String,
-  /// User's email address
-  pub email: String,
-  /// User's display name
-  pub name: Option<String>,
-  /// User's phone number (optional)
-  pub phone: Option<String>,
+    /// Unique session identifier from Better Auth
+    pub session_id: String,
+    /// User ID from Better Auth (stored in guest.better_auth_user_id)
+    pub user_id: String,
+    /// User's email address
+    pub email: String,
+    /// User's display name
+    pub name: Option<String>,
+    /// User's phone number (optional)
+    pub phone: Option<String>,
 }
 
 #[derive(Debug)]
 pub enum AuthError {
-  InternalServerError(String),
-  Unauthorized,
+    InternalServerError(String),
+    Unauthorized,
 }
 
 impl From<tokio_postgres::Error> for AuthError {
-  fn from(err: tokio_postgres::Error) -> Self {
-    AuthError::InternalServerError(format!("Database error: {}", err))
-  }
+    fn from(err: tokio_postgres::Error) -> Self {
+        AuthError::InternalServerError(format!("Database error: {}", err))
+    }
 }
 
 /// Extracts the Better Auth session token from request headers.
@@ -46,39 +46,41 @@ impl From<tokio_postgres::Error> for AuthError {
 /// This function extracts the unsigned token value (before the dot) since
 /// the database stores only the unsigned token.
 pub fn extract_session_token(headers: &HeaderMap) -> Option<String> {
-  // Try Cookie header
-  if let Some(cookie_header) = headers.get("cookie") {
-    if let Ok(cookie_str) = cookie_header.to_str() {
-      for cookie in cookie_str.split(';') {
-        let cookie = cookie.trim();
+    // Try Cookie header
+    if let Some(cookie_header) = headers.get("cookie") {
+        if let Ok(cookie_str) = cookie_header.to_str() {
+            for cookie in cookie_str.split(';') {
+                let cookie = cookie.trim();
 
-        // Check for both production (__Secure-) and local cookie names
-        let is_session_cookie = cookie.starts_with("__Secure-better-auth.session_token=")
-          || cookie.starts_with("better-auth.session_token=");
+                // Check for both production (__Secure-) and local cookie names
+                let is_session_cookie = cookie.starts_with("__Secure-better-auth.session_token=")
+                    || cookie.starts_with("better-auth.session_token=");
 
-        if is_session_cookie {
-          if let Some((_, value)) = cookie.split_once('=') {
-            // URL-decode the cookie value
-            let decoded_value = percent_decode_str(value).decode_utf8().ok()?.into_owned();
+                if is_session_cookie {
+                    if let Some((_, value)) = cookie.split_once('=') {
+                        // URL-decode the cookie value
+                        let decoded_value =
+                            percent_decode_str(value).decode_utf8().ok()?.into_owned();
 
-            // Better Auth uses signed cookies in format: "value.signature"
-            // The database stores only the unsigned value (before the dot)
-            // Extract just the token value, ignoring the signature
-            let token_value = if let Some((token, _signature)) = decoded_value.split_once('.') {
-              token.to_string()
-            } else {
-              // Fallback: if no signature found, use full value
-              decoded_value
-            };
+                        // Better Auth uses signed cookies in format: "value.signature"
+                        // The database stores only the unsigned value (before the dot)
+                        // Extract just the token value, ignoring the signature
+                        let token_value =
+                            if let Some((token, _signature)) = decoded_value.split_once('.') {
+                                token.to_string()
+                            } else {
+                                // Fallback: if no signature found, use full value
+                                decoded_value
+                            };
 
-            return Some(token_value);
-          }
+                        return Some(token_value);
+                    }
+                }
+            }
         }
-      }
     }
-  }
 
-  None
+    None
 }
 
 /// Validates a Better Auth session token by querying the database.
@@ -98,11 +100,11 @@ pub fn extract_session_token(headers: &HeaderMap) -> Option<String> {
 /// * `Err(AuthError::Unauthorized)` if the session is invalid or expired
 /// * `Err(AuthError::InternalServerError)` for database errors
 pub async fn validate_session_token(
-  db_client: &Client,
-  session_token: &str,
+    db_client: &Client,
+    session_token: &str,
 ) -> Result<BetterAuthSession, AuthError> {
-  // Query session and join with user table
-  let query = r#"
+    // Query session and join with user table
+    let query = r#"
         SELECT
             s.id as session_id,
             s."userId" as user_id,
@@ -115,22 +117,22 @@ pub async fn validate_session_token(
         WHERE s.token = $1
     "#;
 
-  let row = db_client
-    .query_opt(query, &[&session_token])
-    .await?
-    .ok_or(AuthError::Unauthorized)?;
+    let row = db_client
+        .query_opt(query, &[&session_token])
+        .await?
+        .ok_or(AuthError::Unauthorized)?;
 
-  // Check if session has expired
-  let expires_at: chrono::DateTime<chrono::Utc> = row.get("expires_at");
-  if expires_at < chrono::Utc::now() {
-    return Err(AuthError::Unauthorized);
-  }
+    // Check if session has expired
+    let expires_at: chrono::DateTime<chrono::Utc> = row.get("expires_at");
+    if expires_at < chrono::Utc::now() {
+        return Err(AuthError::Unauthorized);
+    }
 
-  Ok(BetterAuthSession {
-    session_id: row.get("session_id"),
-    user_id: row.get("user_id"),
-    email: row.get("email"),
-    name: row.get("name"),
-    phone: row.get("phone"),
-  })
+    Ok(BetterAuthSession {
+        session_id: row.get("session_id"),
+        user_id: row.get("user_id"),
+        email: row.get("email"),
+        name: row.get("name"),
+        phone: row.get("phone"),
+    })
 }

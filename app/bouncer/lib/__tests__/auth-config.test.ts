@@ -113,4 +113,3 @@ describe("auth-config", () => {
     });
   });
 });
-

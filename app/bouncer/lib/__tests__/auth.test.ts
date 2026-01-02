@@ -1,6 +1,6 @@
 /**
  * Integration tests for auth.ts email OTP configuration
- * 
+ *
  * These tests verify that the auth configuration correctly integrates
  * with the email-service for sending OTP emails via Resend.
  */
@@ -63,4 +63,3 @@ describe("auth email OTP integration", () => {
     ).rejects.toThrow("Resend API error");
   });
 });
-

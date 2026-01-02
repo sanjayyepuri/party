@@ -49,4 +49,3 @@ export const getRpID = (): string => {
 export const getRpName = (): string => {
   return process.env.BETTER_AUTH_PASSKEY_RP_NAME || "Party Platform";
 };
-

@@ -172,9 +172,7 @@ describe("email-service", () => {
       process.env.RESEND_API_KEY = "test-api-key";
       const apiError = new Error("Resend API error");
       mockResendInstance.emails.send.mockRejectedValue(apiError);
-      const consoleErrorSpy = jest
-        .spyOn(console, "error")
-        .mockImplementation();
+      const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation();
 
       await expect(
         sendOTPEmail({
@@ -207,4 +205,3 @@ describe("email-service", () => {
     });
   });
 });
-
