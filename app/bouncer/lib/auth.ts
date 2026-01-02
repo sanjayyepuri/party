@@ -26,13 +26,46 @@ export const auth = betterAuth({
     }),
     emailOTP({
       async sendVerificationOTP({ email, otp, type }) {
-        // Use Resend to send OTP emails
-        // The email-service handles fallback to console logging if RESEND_API_KEY is not set
-        await sendOTPEmail({
-          email,
-          otp,
-          type: type as string,
-        });
+        try {
+          // Use Resend to send OTP emails
+          // The email-service handles fallback to console logging if RESEND_API_KEY is not set
+          await sendOTPEmail({
+            email,
+            otp,
+            type: type as string,
+          });
+        } catch (error) {
+          // Log the error for debugging
+          console.error("[Auth] Failed to send OTP email:", error);
+
+          // Provide user-friendly error messages
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
+
+          // Check for specific error types and provide helpful messages
+          if (
+            errorMessage.includes("RESEND_FROM_EMAIL") ||
+            errorMessage.includes("environment variable")
+          ) {
+            throw new Error(
+              "Email service is not properly configured. Please contact support."
+            );
+          }
+
+          if (
+            errorMessage.includes("Invalid `from` field") ||
+            errorMessage.includes("validation_error")
+          ) {
+            throw new Error(
+              "Email service configuration error. Please contact support."
+            );
+          }
+
+          // For other errors, provide a generic but helpful message
+          throw new Error(
+            "Unable to send verification email. Please check your email address and try again, or contact support if the problem persists."
+          );
+        }
       },
     }),
   ],

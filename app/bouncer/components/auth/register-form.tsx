@@ -44,17 +44,25 @@ export function RegisterForm() {
       });
 
       if (otpResult.error) {
-        setError(otpResult.error.message || "Failed to send verification code");
+        // Display the error message from Better Auth
+        const errorMessage =
+          otpResult.error.message || "Failed to send verification code";
+        setError(errorMessage);
         setLoading(false);
         return;
       }
 
-      // Move to OTP verification step
+      // Move to OTP verification step only if email was sent successfully
       setStep("otp");
       setLoading(false);
     } catch (err) {
       console.error("OTP send error:", err);
-      setError("An unexpected error occurred. Please try again.");
+      // Extract error message if available
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : "An unexpected error occurred. Please try again.";
+      setError(errorMessage);
       setLoading(false);
     }
   };
@@ -168,9 +176,10 @@ export function RegisterForm() {
       });
 
       if (otpResult.error) {
-        setError(
-          otpResult.error.message || "Failed to resend verification code"
-        );
+        // Display the error message from Better Auth
+        const errorMessage =
+          otpResult.error.message || "Failed to resend verification code";
+        setError(errorMessage);
       } else {
         setError(""); // Clear any previous errors
         // Show success message (you could add a success state here)
@@ -178,7 +187,12 @@ export function RegisterForm() {
       setLoading(false);
     } catch (err) {
       console.error("OTP resend error:", err);
-      setError("An unexpected error occurred. Please try again.");
+      // Extract error message if available
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : "An unexpected error occurred. Please try again.";
+      setError(errorMessage);
       setLoading(false);
     }
   };

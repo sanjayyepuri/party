@@ -217,6 +217,7 @@ describe("email-service", () => {
 
     it("escapes HTML special characters in OTP and subject", async () => {
       process.env.RESEND_API_KEY = "test-api-key";
+      process.env.RESEND_FROM_EMAIL = "Test <[email protected]>";
 
       await sendOTPEmail({
         email: "[email protected]",
