@@ -5,7 +5,16 @@
 
 /**
  * Automatically detect base URL from Vercel or use localhost
+ * 
  * @param origin - Optional origin (e.g., window.location.origin for client-side)
+ * 
+ * **Environment Variable Handling:**
+ * - NEXT_PUBLIC_APP_URL: Available in both server and client (inlined at build time by Next.js)
+ *   https://nextjs.org/docs/pages/building-your-application/configuring/environment-variables
+ * - VERCEL_URL: Only available on the server (not exposed to client bundle)
+ *   https://vercel.com/docs/projects/environment-variables/system-environment-variables
+ * - Next.js does NOT add any prefixes or modify environment variable values during build
+ * - Client-side code should pass window.location.origin via the origin parameter
  */
 export const getBaseURL = (origin?: string): string => {
   if (process.env.NEXT_PUBLIC_APP_URL) {
