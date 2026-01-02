@@ -7,11 +7,7 @@ import { Resend } from "resend";
 // Better Auth emailOTP plugin types
 // The type can be "sign-up", "sign-in", "email-verification", or other strings
 // Note: "forget-password" is not used since we use passwordless authentication (OTP + passkey)
-type OTPType =
-  | "sign-up"
-  | "sign-in"
-  | "email-verification"
-  | string;
+type OTPType = "sign-up" | "sign-in" | "email-verification" | string;
 
 interface SendOTPParams {
   email: string;
