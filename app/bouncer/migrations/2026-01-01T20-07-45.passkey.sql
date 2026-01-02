@@ -7,7 +7,7 @@ create table "passkey" (
   "counter" integer not null default 0,
   "deviceType" text,
   "backedUp" boolean not null default false,
-  "transports" text[],
+  "transports" text,
   "createdAt" timestamptz default CURRENT_TIMESTAMP not null,
   "aaguid" text
 );

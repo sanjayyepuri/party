@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import { signIn } from "@/lib/auth-client";
+import { useState, useEffect } from "react";
+import { signIn, authClient } from "@/lib/auth-client";
 
 export function LoginForm() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isPasskeySupported, setIsPasskeySupported] = useState(true); // Default to true to avoid hydration mismatch
 
   const handlePasskeySignIn = async () => {
     setError("");
@@ -59,9 +60,37 @@ export function LoginForm() {
     }
   };
 
-  // Check if passkeys are supported
-  const isPasskeySupported = typeof window !== "undefined" && 
-    typeof window.PublicKeyCredential !== "undefined";
+  // Check if passkeys are supported (client-side only to avoid hydration mismatch)
+  useEffect(() => {
+    setIsPasskeySupported(
+      typeof window !== "undefined" && 
+      typeof window.PublicKeyCredential !== "undefined"
+    );
+
+    // Optional: Preload passkeys for Conditional UI (autofill)
+    // This enables browser autofill suggestions for passkeys
+    if (
+      typeof window !== "undefined" &&
+      window.PublicKeyCredential &&
+      (window.PublicKeyCredential as any).isConditionalMediationAvailable
+    ) {
+      const checkConditionalUI = async () => {
+        try {
+          const available = await (window.PublicKeyCredential as any).isConditionalMediationAvailable();
+          if (available) {
+            // Preload passkeys for autofill
+            // This will show passkey suggestions in browser autofill
+            void authClient.signIn.passkey({ autoFill: true }).catch(() => {
+              // Silently fail - this is just for preloading
+            });
+          }
+        } catch {
+          // Conditional UI not available - that's okay
+        }
+      };
+      checkConditionalUI();
+    }
+  }, []);
 
   return (
     <div className="max-w-md mx-auto">

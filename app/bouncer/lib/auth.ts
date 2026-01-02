@@ -1,6 +1,6 @@
 import { betterAuth } from "better-auth";
-// @ts-ignore - passkey plugin may not have type definitions
-import { passkey } from "better-auth/plugins";
+import { passkey } from "@better-auth/passkey";
+import { emailOTP } from "better-auth/plugins";
 import { Pool } from "pg";
 
 // Create a connection pool for Neon PostgreSQL
@@ -10,13 +10,23 @@ if (!process.env.NEON_POSTGRES_URL) {
 
 // Automatically detect base URL from Vercel or use localhost
 const getBaseURL = () => {
+  let baseURL: string;
+  
   if (process.env.NEXT_PUBLIC_APP_URL) {
-    return process.env.NEXT_PUBLIC_APP_URL;
+    baseURL = process.env.NEXT_PUBLIC_APP_URL;
+  } else if (process.env.VERCEL_URL) {
+    // Check if it's localhost - use http:// for localhost, https:// for production
+    const host = process.env.VERCEL_URL;
+    if (host.startsWith("localhost") || host.includes("localhost:")) {
+      baseURL = `http://${host}`;
+    } else {
+      baseURL = `https://${host}`;
+    }
+  } else {
+    baseURL = "http://localhost:3000";
   }
-  if (process.env.VERCEL_URL) {
-    return `https://${process.env.VERCEL_URL}`;
-  }
-  return "http://localhost:3000";
+  
+  return baseURL;
 };
 
 // Get Relying Party ID from base URL (domain only, no protocol/port)
@@ -39,19 +49,41 @@ const getRpName = () => {
   return process.env.BETTER_AUTH_PASSKEY_RP_NAME || "Party Platform";
 };
 
+const baseURL = getBaseURL();
+const rpID = getRpID();
+const rpName = getRpName();
+
 export const auth = betterAuth({
   database: new Pool({
     connectionString: process.env.NEON_POSTGRES_URL,
   }),
   plugins: [
     passkey({
-      rpID: getRpID(),
-      rpName: getRpName(),
-      origin: getBaseURL(),
+      rpID: rpID,
+      rpName: rpName,
+      origin: baseURL, // Must match trustedOrigins for validation
+    }),
+    emailOTP({
+      async sendVerificationOTP({ email, otp, type }) {
+        // TODO: Replace with actual email service (SendGrid, Resend, etc.)
+        // For development, log the OTP to console
+        console.log(`[Email OTP] Sending OTP to ${email}: ${otp} (type: ${type})`);
+        
+        // In production, implement actual email sending:
+        // await emailService.send({
+        //   to: email,
+        //   subject: type === "sign-up" 
+        //     ? "Verify your email to create your account"
+        //     : "Your verification code",
+        //   text: `Your verification code is: ${otp}\n\nThis code will expire in 5 minutes.`,
+        //   html: `<p>Your verification code is: <strong>${otp}</strong></p><p>This code will expire in 5 minutes.</p>`,
+        // });
+      },
     }),
   ],
+  // Disable email/password - using OTP + passkey flow instead
   emailAndPassword: {
-    enabled: false, // Disabled - using passkeys only
+    enabled: false,
   },
   user: {
     additionalFields: {
@@ -70,9 +102,9 @@ export const auth = betterAuth({
       maxAge: 5 * 60, // 5 minutes - cache user data in cookie
     },
   },
-  baseURL: getBaseURL(),
+  baseURL: baseURL,
   basePath: "/handlers/auth",
-  trustedOrigins: [getBaseURL()],
+  trustedOrigins: [baseURL],
 });
 
 export type Session = typeof auth.$Infer.Session;
