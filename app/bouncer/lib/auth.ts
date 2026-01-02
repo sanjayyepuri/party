@@ -2,6 +2,7 @@ import { betterAuth } from "better-auth";
 import { passkey } from "@better-auth/passkey";
 import { emailOTP } from "better-auth/plugins";
 import { Pool } from "pg";
+import { sendOTPEmail } from "./email-service";
 
 // Create a connection pool for Neon PostgreSQL
 if (!process.env.NEON_POSTGRES_URL) {
@@ -65,21 +66,13 @@ export const auth = betterAuth({
     }),
     emailOTP({
       async sendVerificationOTP({ email, otp, type }) {
-        // TODO: Replace with actual email service (SendGrid, Resend, etc.)
-        // For development, log the OTP to console
-        console.log(
-          `[Email OTP] Sending OTP to ${email}: ${otp} (type: ${type})`
-        );
-
-        // In production, implement actual email sending:
-        // await emailService.send({
-        //   to: email,
-        //   subject: type === "sign-up"
-        //     ? "Verify your email to create your account"
-        //     : "Your verification code",
-        //   text: `Your verification code is: ${otp}\n\nThis code will expire in 5 minutes.`,
-        //   html: `<p>Your verification code is: <strong>${otp}</strong></p><p>This code will expire in 5 minutes.</p>`,
-        // });
+        // Use Resend to send OTP emails
+        // The email-service handles fallback to console logging if RESEND_API_KEY is not set
+        await sendOTPEmail({
+          email,
+          otp,
+          type: type as string,
+        });
       },
     }),
   ],
