@@ -26,13 +26,19 @@ export function LoginForm() {
             window.location.href = "/invitations";
           },
           onError: (ctx: { error?: { message?: string } }) => {
-            const errorMessage = ctx.error?.message || "Failed to sign in with passkey";
-            
+            const errorMessage =
+              ctx.error?.message || "Failed to sign in with passkey";
+
             // Provide user-friendly error messages
-            if (errorMessage.includes("NotAllowedError") || errorMessage.includes("cancelled")) {
+            if (
+              errorMessage.includes("NotAllowedError") ||
+              errorMessage.includes("cancelled")
+            ) {
               setError("Sign in was cancelled. Please try again.");
             } else if (errorMessage.includes("NotSupportedError")) {
-              setError("Passkeys are not supported in this browser. Please use a modern browser that supports WebAuthn.");
+              setError(
+                "Passkeys are not supported in this browser. Please use a modern browser that supports WebAuthn."
+              );
             } else if (errorMessage.includes("InvalidStateError")) {
               setError("No passkey found. Please register first.");
             } else {
@@ -45,8 +51,12 @@ export function LoginForm() {
 
       // Fallback error handling
       if (result?.error) {
-        const errorMessage = result.error.message || "Failed to sign in with passkey";
-        if (errorMessage.includes("NotAllowedError") || errorMessage.includes("cancelled")) {
+        const errorMessage =
+          result.error.message || "Failed to sign in with passkey";
+        if (
+          errorMessage.includes("NotAllowedError") ||
+          errorMessage.includes("cancelled")
+        ) {
           setError("Sign in was cancelled. Please try again.");
         } else {
           setError(errorMessage);
@@ -63,8 +73,8 @@ export function LoginForm() {
   // Check if passkeys are supported (client-side only to avoid hydration mismatch)
   useEffect(() => {
     setIsPasskeySupported(
-      typeof window !== "undefined" && 
-      typeof window.PublicKeyCredential !== "undefined"
+      typeof window !== "undefined" &&
+        typeof window.PublicKeyCredential !== "undefined"
     );
 
     // Optional: Preload passkeys for Conditional UI (autofill)
@@ -76,7 +86,9 @@ export function LoginForm() {
     ) {
       const checkConditionalUI = async () => {
         try {
-          const available = await (window.PublicKeyCredential as any).isConditionalMediationAvailable();
+          const available = await (
+            window.PublicKeyCredential as any
+          ).isConditionalMediationAvailable();
           if (available) {
             // Preload passkeys for autofill
             // This will show passkey suggestions in browser autofill
@@ -104,7 +116,8 @@ export function LoginForm() {
 
       {!isPasskeySupported && (
         <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 text-yellow-700 rounded">
-          Your browser does not support passkeys. Please use a modern browser that supports WebAuthn.
+          Your browser does not support passkeys. Please use a modern browser
+          that supports WebAuthn.
         </div>
       )}
 
@@ -129,7 +142,8 @@ export function LoginForm() {
         </button>
 
         <p className="text-sm text-gray-600 text-center">
-          Use your device&apos;s biometric authentication, security key, or passkey to sign in.
+          Use your device&apos;s biometric authentication, security key, or
+          passkey to sign in.
         </p>
       </div>
 

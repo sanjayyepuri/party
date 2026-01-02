@@ -11,7 +11,7 @@ if (!process.env.NEON_POSTGRES_URL) {
 // Automatically detect base URL from Vercel or use localhost
 const getBaseURL = () => {
   let baseURL: string;
-  
+
   if (process.env.NEXT_PUBLIC_APP_URL) {
     baseURL = process.env.NEXT_PUBLIC_APP_URL;
   } else if (process.env.VERCEL_URL) {
@@ -25,7 +25,7 @@ const getBaseURL = () => {
   } else {
     baseURL = "http://localhost:3000";
   }
-  
+
   return baseURL;
 };
 
@@ -67,12 +67,14 @@ export const auth = betterAuth({
       async sendVerificationOTP({ email, otp, type }) {
         // TODO: Replace with actual email service (SendGrid, Resend, etc.)
         // For development, log the OTP to console
-        console.log(`[Email OTP] Sending OTP to ${email}: ${otp} (type: ${type})`);
-        
+        console.log(
+          `[Email OTP] Sending OTP to ${email}: ${otp} (type: ${type})`
+        );
+
         // In production, implement actual email sending:
         // await emailService.send({
         //   to: email,
-        //   subject: type === "sign-up" 
+        //   subject: type === "sign-up"
         //     ? "Verify your email to create your account"
         //     : "Your verification code",
         //   text: `Your verification code is: ${otp}\n\nThis code will expire in 5 minutes.`,

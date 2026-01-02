@@ -9,27 +9,32 @@ Bouncer is designed as a deployable frontend that creates bespoke invitation exp
 ## Architecture
 
 ### Data Providers
+
 - **PartyProvider**: Manages party data and code validation
-- **GuestProvider**: Handles guest state and plus-one management  
+- **GuestProvider**: Handles guest state and plus-one management
 - **RSVPProvider**: Form data, validation, and submission logic
 
 ### Custom Components
+
 Each party deployment implements completely custom React components that consume the shared data providers, enabling unlimited design freedom while maintaining consistent business logic.
 
 ## Development
 
 ### Prerequisites
+
 - Node.js 20+
 - Docker (for backend services)
 
 ### Getting Started
 
 1. Install dependencies:
+
    ```bash
    npm install
    ```
 
 2. Start the development server:
+
    ```bash
    npm run dev
    ```
@@ -39,6 +44,7 @@ Each party deployment implements completely custom React components that consume
 ### Testing the Flow
 
 The application includes mock data for development:
+
 - Use invitation code `SUNSET24` to test the complete flow
 - Try phone number `+15551234567` to test returning guest functionality
 
@@ -63,8 +69,9 @@ lib/
 ## Deployment Strategy
 
 Each party gets its own frontend deployment:
+
 - `sunset-dinner.vercel.app` → Custom SunsetDinner component
-- `garden-brunch.vercel.app` → Custom GardenBrunch component  
+- `garden-brunch.vercel.app` → Custom GardenBrunch component
 - `house-warming.vercel.app` → Custom HouseWarming component
 
 All deployments consume the same backend API but render with completely different custom designs.
@@ -81,6 +88,7 @@ All deployments consume the same backend API but render with completely differen
 ## API Integration
 
 The frontend communicates with the Rust gRPC backend service (pregame) for:
+
 - Party lookup by invitation code
 - Guest RSVP submission
 - Returning guest verification
@@ -95,11 +103,12 @@ To create a custom invitation for a new party:
 4. All RSVPs flow to the same backend database
 
 Example:
+
 ```jsx
 function CustomPartyInvitation() {
   const { party } = useParty();
   const { submitRSVP } = useRSVP();
-  
+
   return (
     <div className="your-custom-design">
       {/* Completely custom UI implementation */}
@@ -111,6 +120,7 @@ function CustomPartyInvitation() {
 ## Contributing
 
 When adding new features:
+
 1. Maintain the separation between data providers and UI components
 2. Ensure changes work across all custom invitation implementations
 3. Add appropriate TypeScript types for new data structures

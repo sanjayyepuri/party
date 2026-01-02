@@ -5,7 +5,7 @@ use crate::db::DbState;
 /// This is to store connections and other shared resources.
 /// No request specific state should be stored here.
 pub struct ApiState {
-    pub db_state: DbState,
+  pub db_state: DbState,
 }
 
 pub mod auth;

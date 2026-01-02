@@ -1,5 +1,4 @@
-
-import localFont from 'next/font/local'
+import localFont from "next/font/local";
 import "./globals.css";
 import { Navbar } from "./components/navbar";
 import Footer from "./components/footer";
@@ -14,7 +13,6 @@ const departureMono = localFont({
   ],
   variable: "--font-departure-mono",
 });
-
 
 export default function RootLayout({
   children,
