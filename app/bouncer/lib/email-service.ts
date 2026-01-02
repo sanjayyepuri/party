@@ -85,9 +85,18 @@ const getResendClient = (): Resend | null => {
 
 /**
  * Get the "from" email address
+ * Throws an error if RESEND_FROM_EMAIL is not set when RESEND_API_KEY is configured
  */
 const getFromEmail = (): string => {
-  return process.env.RESEND_FROM_EMAIL || "Party Platform <[email protected]>";
+  const fromEmail = process.env.RESEND_FROM_EMAIL;
+  if (!fromEmail) {
+    throw new Error(
+      "RESEND_FROM_EMAIL environment variable is required when RESEND_API_KEY is set. " +
+        "Please set RESEND_FROM_EMAIL to a valid email address in the format: " +
+        "'email@example.com' or 'Name <email@example.com>'"
+    );
+  }
+  return fromEmail;
 };
 
 /**
@@ -101,7 +110,6 @@ export const sendOTPEmail = async ({
 }: SendOTPParams): Promise<void> => {
   // Lazy initialization for testability (checks env var on each call)
   const resend = getResendClient();
-  const fromEmail = getFromEmail();
 
   // If Resend is not configured, log to console for development
   if (!resend) {
@@ -111,21 +119,74 @@ export const sendOTPEmail = async ({
     return;
   }
 
+  // Get from email (will throw if not set)
+  let fromEmail: string;
   try {
-    const subject = getOTPSubject(type);
-    const html = generateOTPEmailHTML(subject, otp);
-    const text = generateOTPEmailText(otp);
+    fromEmail = getFromEmail();
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    console.error("[Email OTP] Configuration error:", errorMessage);
+    throw error;
+  }
 
-    await resend.emails.send({
+  const subject = getOTPSubject(type);
+  const html = generateOTPEmailHTML(subject, otp);
+  const text = generateOTPEmailText(otp);
+
+  // Log request details for debugging
+  console.log("[Email OTP] Sending email:", {
+    to: email,
+    from: fromEmail,
+    subject: subject,
+    type: type,
+  });
+
+  try {
+    const result = await resend.emails.send({
       from: fromEmail,
       to: email,
       subject: subject,
       html: html,
       text: text,
     });
-  } catch (error) {
-    // Log error and re-throw so Better Auth can handle the error state
-    console.error("[Email OTP] Failed to send email via Resend:", error);
+
+    // Log success (Resend returns { data: { id: string } } on success)
+    if (result.data && "id" in result.data) {
+      console.log("[Email OTP] Email sent successfully:", {
+        emailId: result.data.id,
+        to: email,
+      });
+    } else {
+      console.log("[Email OTP] Email sent successfully to:", email);
+    }
+  } catch (error: unknown) {
+    // Enhanced error logging with detailed information
+    const errorDetails: Record<string, unknown> = {
+      message: error instanceof Error ? error.message : String(error),
+      to: email,
+      from: fromEmail,
+      subject: subject,
+      type: type,
+    };
+
+    // Try to extract additional error information if available
+    if (error && typeof error === "object") {
+      if ("name" in error) errorDetails.name = error.name;
+      if ("statusCode" in error) errorDetails.statusCode = error.statusCode;
+      if ("response" in error) {
+        try {
+          errorDetails.response = error.response;
+        } catch {
+          // Ignore if response can't be serialized
+        }
+      }
+    }
+
+    console.error("[Email OTP] Failed to send email via Resend:", errorDetails);
+    console.error("[Email OTP] Full error object:", error);
+
+    // Re-throw so Better Auth can handle the error state
     throw error;
   }
 };

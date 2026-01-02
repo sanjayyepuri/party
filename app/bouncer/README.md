@@ -85,7 +85,7 @@ All deployments consume the same backend API but render with completely differen
 - `BETTER_AUTH_PASSKEY_RP_ID`: Relying Party ID for passkeys (optional, defaults to hostname from baseURL)
 - `BETTER_AUTH_PASSKEY_RP_NAME`: Human-readable name for passkeys (optional, defaults to "Party Platform")
 - `RESEND_API_KEY`: Resend API key for sending email OTP verification codes (optional for development, required for production)
-- `RESEND_FROM_EMAIL`: Email address to send from (optional, defaults to "Party Platform <[email protected]>")
+- `RESEND_FROM_EMAIL`: Email address to send from (required when RESEND_API_KEY is set). Must be in the format `email@example.com` or `Name <email@example.com>`. The email domain must be verified in your Resend account.
 
 ## Authentication
 

@@ -49,21 +49,17 @@ describe("email-service", () => {
       });
     });
 
-    it("uses default from email when RESEND_FROM_EMAIL is not set", async () => {
+    it("throws error when RESEND_FROM_EMAIL is not set but RESEND_API_KEY is set", async () => {
       process.env.RESEND_API_KEY = "test-api-key";
       delete process.env.RESEND_FROM_EMAIL;
 
-      await sendOTPEmail({
-        email: "[email protected]",
-        otp: "123456",
-        type: "sign-in",
-      });
-
-      expect(mockResendInstance.emails.send).toHaveBeenCalledWith(
-        expect.objectContaining({
-          from: "Party Platform <[email protected]>",
+      await expect(
+        sendOTPEmail({
+          email: "[email protected]",
+          otp: "123456",
+          type: "sign-in",
         })
-      );
+      ).rejects.toThrow("RESEND_FROM_EMAIL environment variable is required");
     });
 
     it("logs to console when RESEND_API_KEY is not set", async () => {
@@ -92,6 +88,7 @@ describe("email-service", () => {
 
     it("uses correct subject for sign-in type", async () => {
       process.env.RESEND_API_KEY = "test-api-key";
+      process.env.RESEND_FROM_EMAIL = "Test <[email protected]>";
 
       await sendOTPEmail({
         email: "[email protected]",
@@ -108,6 +105,7 @@ describe("email-service", () => {
 
     it("uses correct subject for sign-up type", async () => {
       process.env.RESEND_API_KEY = "test-api-key";
+      process.env.RESEND_FROM_EMAIL = "Test <[email protected]>";
 
       await sendOTPEmail({
         email: "[email protected]",
@@ -124,6 +122,7 @@ describe("email-service", () => {
 
     it("uses correct subject for email-verification type", async () => {
       process.env.RESEND_API_KEY = "test-api-key";
+      process.env.RESEND_FROM_EMAIL = "Test <[email protected]>";
 
       await sendOTPEmail({
         email: "[email protected]",
@@ -140,6 +139,7 @@ describe("email-service", () => {
 
     it("uses correct subject for forget-password type", async () => {
       process.env.RESEND_API_KEY = "test-api-key";
+      process.env.RESEND_FROM_EMAIL = "Test <[email protected]>";
 
       await sendOTPEmail({
         email: "[email protected]",
@@ -156,6 +156,7 @@ describe("email-service", () => {
 
     it("includes OTP in both HTML and text email content", async () => {
       process.env.RESEND_API_KEY = "test-api-key";
+      process.env.RESEND_FROM_EMAIL = "Test <[email protected]>";
 
       await sendOTPEmail({
         email: "[email protected]",
@@ -170,6 +171,7 @@ describe("email-service", () => {
 
     it("throws error when Resend API call fails", async () => {
       process.env.RESEND_API_KEY = "test-api-key";
+      process.env.RESEND_FROM_EMAIL = "Test <[email protected]>";
       const apiError = new Error("Resend API error");
       mockResendInstance.emails.send.mockRejectedValue(apiError);
       const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation();
@@ -182,8 +184,16 @@ describe("email-service", () => {
         })
       ).rejects.toThrow("Resend API error");
 
+      // Verify error logging includes detailed information
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         expect.stringContaining("[Email OTP] Failed to send email via Resend:"),
+        expect.objectContaining({
+          message: "Resend API error",
+          to: "[email protected]",
+        })
+      );
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        expect.stringContaining("[Email OTP] Full error object:"),
         apiError
       );
 
@@ -192,6 +202,7 @@ describe("email-service", () => {
 
     it("includes expiration message in email content", async () => {
       process.env.RESEND_API_KEY = "test-api-key";
+      process.env.RESEND_FROM_EMAIL = "Test <[email protected]>";
 
       await sendOTPEmail({
         email: "[email protected]",
