@@ -1,8 +1,8 @@
 use axum::{
-  Extension, Json,
-  extract::{Path, State},
-  http::StatusCode,
-  response::IntoResponse,
+    Extension, Json,
+    extract::{Path, State},
+    http::StatusCode,
+    response::IntoResponse,
 };
 use serde::Deserialize;
 use std::sync::Arc;
@@ -13,20 +13,20 @@ use crate::model::Rsvp;
 
 /// Get RSVPs for a specific party
 pub async fn get_party_rsvps(
-  State(api_state): State<Arc<ApiState>>,
-  Path(party_id): Path<String>,
+    State(api_state): State<Arc<ApiState>>,
+    Path(party_id): Path<String>,
 ) -> impl IntoResponse {
-  match get_party_rsvps_impl(api_state, party_id).await {
-    Ok(rsvps) => (StatusCode::OK, Json(rsvps)).into_response(),
-    Err(response) => response,
-  }
+    match get_party_rsvps_impl(api_state, party_id).await {
+        Ok(rsvps) => (StatusCode::OK, Json(rsvps)).into_response(),
+        Err(response) => response,
+    }
 }
 
 async fn get_party_rsvps_impl(
-  api_state: Arc<ApiState>,
-  party_id: String,
+    api_state: Arc<ApiState>,
+    party_id: String,
 ) -> Result<Vec<Rsvp>, axum::response::Response> {
-  let rows = api_state
+    let rows = api_state
     .db_state
     .client
     .query(
@@ -46,44 +46,43 @@ async fn get_party_rsvps_impl(
         .into_response()
     })?;
 
-  rows
-    .into_iter()
-    .map(|row| Rsvp::from_row(&row))
-    .collect::<Result<Vec<Rsvp>, _>>()
-    .map_err(|err| {
-      tracing::error!("Failed to parse RSVP from row: {:?}", err);
-      (
-        StatusCode::INTERNAL_SERVER_ERROR,
-        Json("Internal Server Error"),
-      )
-        .into_response()
-    })
+    rows.into_iter()
+        .map(|row| Rsvp::from_row(&row))
+        .collect::<Result<Vec<Rsvp>, _>>()
+        .map_err(|err| {
+            tracing::error!("Failed to parse RSVP from row: {:?}", err);
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json("Internal Server Error"),
+            )
+                .into_response()
+        })
 }
 
 /// Get or create RSVP for the authenticated user for a specific party
 /// Uses the user_id from the authenticated session
 pub async fn get_rsvp(
-  State(api_state): State<Arc<ApiState>>,
-  Extension(session): Extension<BetterAuthSession>,
-  Path(party_id): Path<String>,
+    State(api_state): State<Arc<ApiState>>,
+    Extension(session): Extension<BetterAuthSession>,
+    Path(party_id): Path<String>,
 ) -> impl IntoResponse {
-  match get_rsvp_impl(api_state, party_id, session.user_id).await {
-    Ok(rsvp) => (StatusCode::OK, Json(rsvp)).into_response(),
-    Err(response) => response,
-  }
+    match get_rsvp_impl(api_state, party_id, session.user_id).await {
+        Ok(rsvp) => (StatusCode::OK, Json(rsvp)).into_response(),
+        Err(response) => response,
+    }
 }
 
 async fn get_rsvp_impl(
-  api_state: Arc<ApiState>,
-  party_id: String,
-  user_id: String,
+    api_state: Arc<ApiState>,
+    party_id: String,
+    user_id: String,
 ) -> Result<Rsvp, axum::response::Response> {
-  let rsvp_id = uuid::Uuid::new_v4().to_string();
-  let now = chrono::Utc::now();
-  let default_status = "pending";
+    let rsvp_id = uuid::Uuid::new_v4().to_string();
+    let now = chrono::Utc::now();
+    let default_status = "pending";
 
-  // Single query: validate party exists, insert if not exists, then select the RSVP
-  let row = api_state
+    // Single query: validate party exists, insert if not exists, then select the RSVP
+    let row = api_state
         .db_state
         .client
         .query_opt(
@@ -136,119 +135,119 @@ async fn get_rsvp_impl(
                 .into_response()
         })?;
 
-  match row {
-    Some(row) => Rsvp::from_row(&row).map_err(|err| {
-      tracing::error!("Failed to parse RSVP from row: {:?}", err);
-      (
-        StatusCode::INTERNAL_SERVER_ERROR,
-        Json("Internal Server Error"),
-      )
-        .into_response()
-    }),
-    None => Err((StatusCode::NOT_FOUND, Json("RSVP not found")).into_response()),
-  }
+    match row {
+        Some(row) => Rsvp::from_row(&row).map_err(|err| {
+            tracing::error!("Failed to parse RSVP from row: {:?}", err);
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json("Internal Server Error"),
+            )
+                .into_response()
+        }),
+        None => Err((StatusCode::NOT_FOUND, Json("RSVP not found")).into_response()),
+    }
 }
 
 /// Update an existing RSVP
 #[derive(Debug, Deserialize)]
 pub struct UpdateRsvpRequest {
-  pub rsvp_id: String,
-  pub status: String,
+    pub rsvp_id: String,
+    pub status: String,
 }
 
 pub async fn update_rsvp(
-  State(api_state): State<Arc<ApiState>>,
-  Extension(session): Extension<BetterAuthSession>,
-  Json(payload): Json<UpdateRsvpRequest>,
+    State(api_state): State<Arc<ApiState>>,
+    Extension(session): Extension<BetterAuthSession>,
+    Json(payload): Json<UpdateRsvpRequest>,
 ) -> impl IntoResponse {
-  match update_rsvp_impl(api_state, payload, session.user_id).await {
-    Ok(rsvp) => (StatusCode::OK, Json(rsvp)).into_response(),
-    Err(response) => response,
-  }
+    match update_rsvp_impl(api_state, payload, session.user_id).await {
+        Ok(rsvp) => (StatusCode::OK, Json(rsvp)).into_response(),
+        Err(response) => response,
+    }
 }
 
 async fn update_rsvp_impl(
-  api_state: Arc<ApiState>,
-  payload: UpdateRsvpRequest,
-  user_id: String,
+    api_state: Arc<ApiState>,
+    payload: UpdateRsvpRequest,
+    user_id: String,
 ) -> Result<Rsvp, axum::response::Response> {
-  let now = chrono::Utc::now();
+    let now = chrono::Utc::now();
 
-  // Only allow users to update their own RSVPs
-  let row = api_state
-    .db_state
-    .client
-    .query_opt(
-      "UPDATE rsvp
+    // Only allow users to update their own RSVPs
+    let row = api_state
+        .db_state
+        .client
+        .query_opt(
+            "UPDATE rsvp
              SET status = $1, updated_at = $2
              WHERE rsvp_id = $3 AND user_id = $4 AND deleted_at IS NULL
              RETURNING rsvp_id, party_id, user_id, status, created_at, updated_at, deleted_at;",
-      &[&payload.status, &now, &payload.rsvp_id, &user_id],
-    )
-    .await
-    .map_err(|err| {
-      tracing::error!("Database update failed: {:?}", err);
-      (
-        StatusCode::INTERNAL_SERVER_ERROR,
-        Json("Internal Server Error"),
-      )
-        .into_response()
-    })?;
+            &[&payload.status, &now, &payload.rsvp_id, &user_id],
+        )
+        .await
+        .map_err(|err| {
+            tracing::error!("Database update failed: {:?}", err);
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json("Internal Server Error"),
+            )
+                .into_response()
+        })?;
 
-  match row {
-    Some(row) => Rsvp::from_row(&row).map_err(|err| {
-      tracing::error!("Failed to parse RSVP from row: {:?}", err);
-      (
-        StatusCode::INTERNAL_SERVER_ERROR,
-        Json("Internal Server Error"),
-      )
-        .into_response()
-    }),
-    None => Err((StatusCode::NOT_FOUND, Json("RSVP not found")).into_response()),
-  }
+    match row {
+        Some(row) => Rsvp::from_row(&row).map_err(|err| {
+            tracing::error!("Failed to parse RSVP from row: {:?}", err);
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json("Internal Server Error"),
+            )
+                .into_response()
+        }),
+        None => Err((StatusCode::NOT_FOUND, Json("RSVP not found")).into_response()),
+    }
 }
 
 /// Delete an RSVP (soft delete)
 /// Users can only delete their own RSVPs
 pub async fn delete_rsvp(
-  State(api_state): State<Arc<ApiState>>,
-  Extension(session): Extension<BetterAuthSession>,
-  Path(party_id): Path<String>,
+    State(api_state): State<Arc<ApiState>>,
+    Extension(session): Extension<BetterAuthSession>,
+    Path(party_id): Path<String>,
 ) -> impl IntoResponse {
-  match delete_rsvp_impl(api_state, party_id, session.user_id).await {
-    Ok(_) => (StatusCode::NO_CONTENT).into_response(),
-    Err(response) => response,
-  }
+    match delete_rsvp_impl(api_state, party_id, session.user_id).await {
+        Ok(_) => (StatusCode::NO_CONTENT).into_response(),
+        Err(response) => response,
+    }
 }
 
 async fn delete_rsvp_impl(
-  api_state: Arc<ApiState>,
-  party_id: String,
-  user_id: String,
+    api_state: Arc<ApiState>,
+    party_id: String,
+    user_id: String,
 ) -> Result<(), axum::response::Response> {
-  let now = chrono::Utc::now();
+    let now = chrono::Utc::now();
 
-  let rows_affected = api_state
-    .db_state
-    .client
-    .execute(
-      "UPDATE rsvp SET deleted_at = $1, updated_at = $1
+    let rows_affected = api_state
+        .db_state
+        .client
+        .execute(
+            "UPDATE rsvp SET deleted_at = $1, updated_at = $1
              WHERE party_id = $2 AND user_id = $3 AND deleted_at IS NULL;",
-      &[&now, &party_id, &user_id],
-    )
-    .await
-    .map_err(|err| {
-      tracing::error!("Database update failed: {:?}", err);
-      (
-        StatusCode::INTERNAL_SERVER_ERROR,
-        Json("Internal Server Error"),
-      )
-        .into_response()
-    })?;
+            &[&now, &party_id, &user_id],
+        )
+        .await
+        .map_err(|err| {
+            tracing::error!("Database update failed: {:?}", err);
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json("Internal Server Error"),
+            )
+                .into_response()
+        })?;
 
-  if rows_affected == 0 {
-    return Err((StatusCode::NOT_FOUND, Json("RSVP not found")).into_response());
-  }
+    if rows_affected == 0 {
+        return Err((StatusCode::NOT_FOUND, Json("RSVP not found")).into_response());
+    }
 
-  Ok(())
+    Ok(())
 }

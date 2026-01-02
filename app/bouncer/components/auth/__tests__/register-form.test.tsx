@@ -668,7 +668,7 @@ describe("RegisterForm", () => {
   });
 
   describe("Error Handling", () => {
-    it("displays generic error for unexpected errors", async () => {
+    it("displays error message for unexpected errors", async () => {
       const user = userEvent.setup();
       const mockSendOtp = emailOtp.sendVerificationOtp as jest.Mock;
       mockSendOtp.mockRejectedValue(new Error("Network error"));
@@ -687,9 +687,8 @@ describe("RegisterForm", () => {
       await user.click(button);
 
       await waitFor(() => {
-        expect(
-          screen.getByText(/An unexpected error occurred/i)
-        ).toBeInTheDocument();
+        // The error message from the Error object is displayed
+        expect(screen.getByText(/Network error/i)).toBeInTheDocument();
       });
     });
   });

@@ -55,5 +55,17 @@ if command -v cargo &> /dev/null; then
   done
 fi
 
+# Check if formatting changed any files
+cd "$PROJECT_ROOT"
+FORMATTED_FILES=$(git diff --name-only)
+
+if [ -n "$FORMATTED_FILES" ]; then
+  echo "Error: The following files were reformatted and need to be staged:"
+  echo "$FORMATTED_FILES"
+  echo ""
+  echo "Please run 'git add' on these files and commit again."
+  exit 1
+fi
+
 echo "Pre-commit checks passed!"
 
