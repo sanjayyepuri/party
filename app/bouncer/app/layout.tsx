@@ -2,6 +2,8 @@ import localFont from "next/font/local";
 import "./globals.css";
 import { Navbar } from "./components/navbar";
 import Footer from "./components/footer";
+import { PartyProvider } from "@/lib/providers/party-provider";
+import { RsvpProvider } from "@/lib/providers/rsvp-provider";
 
 const departureMono = localFont({
   src: [
@@ -34,7 +36,9 @@ export default function RootLayout({
               sanjay <span> • party </span>
             </h1>
             <div className="flex-1">
-              {children}
+              <PartyProvider>
+                <RsvpProvider>{children}</RsvpProvider>
+              </PartyProvider>
               <Footer />
             </div>
           </div>

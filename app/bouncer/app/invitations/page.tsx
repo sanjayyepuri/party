@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { LogoutButton } from "@/components/auth/logout-button";
+import { PartyList } from "./party-list";
 
 export default async function InvitationsPage() {
   // Check if user is authenticated
@@ -26,18 +27,19 @@ export default async function InvitationsPage() {
         {/* Parties Section */}
         <div className="mb-12">
           <h2 className="text-2xl mb-4">your invitations</h2>
+          <PartyList />
+        </div>
 
-          <div className="space-y-4 pt-6 border-t border-white/20">
-            <a
-              href="/settings"
-              className="inline-block hover:underline transition-all"
-            >
-              manage your account →
-            </a>
-            <br />
+        <div className="space-y-4 pt-6 border-t border-white/20">
+          <a
+            href="/settings"
+            className="inline-block hover:underline transition-all"
+          >
+            manage your account →
+          </a>
+          <br />
 
-            <LogoutButton />
-          </div>
+          <LogoutButton />
         </div>
       </div>
     </div>

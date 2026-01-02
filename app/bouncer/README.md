@@ -84,6 +84,8 @@ All deployments consume the same backend API but render with completely differen
 - `NEXT_PUBLIC_APP_URL`: Base URL of the application (auto-detected from Vercel or defaults to localhost)
 - `BETTER_AUTH_PASSKEY_RP_ID`: Relying Party ID for passkeys (optional, defaults to hostname from baseURL)
 - `BETTER_AUTH_PASSKEY_RP_NAME`: Human-readable name for passkeys (optional, defaults to "Party Platform")
+- `RESEND_API_KEY`: Resend API key for sending email OTPs (optional, falls back to console logging if not set)
+- `RESEND_FROM_EMAIL`: Email address to send OTP emails from (optional, defaults to "Party Platform <[email protected]>")
 
 ## API Integration
 
