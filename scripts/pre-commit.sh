@@ -23,10 +23,6 @@ fi
 
 echo "Running pre-commit checks..."
 
-# Check for uncommitted changes before formatting
-cd "$PROJECT_ROOT"
-UNCOMMITTED_BEFORE=$(git diff --name-only)
-
 # Format and lint TypeScript/JavaScript files
 cd "$PROJECT_ROOT/app/bouncer"
 echo "Formatting TypeScript/JavaScript files..."
@@ -61,7 +57,6 @@ fi
 
 # Check if formatting changed any files
 cd "$PROJECT_ROOT"
-UNCOMMITTED_AFTER=$(git diff --name-only)
 FORMATTED_FILES=$(git diff --name-only)
 
 if [ -n "$FORMATTED_FILES" ]; then
