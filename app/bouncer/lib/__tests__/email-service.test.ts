@@ -137,7 +137,6 @@ describe("email-service", () => {
       );
     });
 
-
     it("includes OTP in both HTML and text email content", async () => {
       process.env.RESEND_API_KEY = "test-api-key";
       process.env.RESEND_FROM_EMAIL = "Test <[email protected]>";
