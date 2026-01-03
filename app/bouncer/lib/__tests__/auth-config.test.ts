@@ -15,6 +15,7 @@ describe("auth-config", () => {
   describe("getBaseURL", () => {
     it("returns NEXT_PUBLIC_APP_URL when set", () => {
       process.env.NEXT_PUBLIC_APP_URL = "https://example.com";
+      delete process.env.NEXT_PUBLIC_VERCEL_URL;
       delete process.env.VERCEL_URL;
 
       expect(getBaseURL()).toBe("https://example.com");
@@ -22,6 +23,39 @@ describe("auth-config", () => {
 
     it("returns http://localhost:3000 when no env vars are set", () => {
       delete process.env.NEXT_PUBLIC_APP_URL;
+      delete process.env.NEXT_PUBLIC_VERCEL_URL;
+      delete process.env.VERCEL_URL;
+
+      expect(getBaseURL()).toBe("http://localhost:3000");
+    });
+
+    it("returns https:// for production NEXT_PUBLIC_VERCEL_URL", () => {
+      delete process.env.NEXT_PUBLIC_APP_URL;
+      process.env.NEXT_PUBLIC_VERCEL_URL = "my-app.vercel.app";
+      delete process.env.VERCEL_URL;
+
+      expect(getBaseURL()).toBe("https://my-app.vercel.app");
+    });
+
+    it("handles NEXT_PUBLIC_VERCEL_URL that already includes https:// protocol", () => {
+      delete process.env.NEXT_PUBLIC_APP_URL;
+      process.env.NEXT_PUBLIC_VERCEL_URL = "https://my-app.vercel.app";
+      delete process.env.VERCEL_URL;
+
+      expect(getBaseURL()).toBe("https://my-app.vercel.app");
+    });
+
+    it("handles NEXT_PUBLIC_VERCEL_URL that already includes http:// protocol", () => {
+      delete process.env.NEXT_PUBLIC_APP_URL;
+      process.env.NEXT_PUBLIC_VERCEL_URL = "http://localhost:3000";
+      delete process.env.VERCEL_URL;
+
+      expect(getBaseURL()).toBe("http://localhost:3000");
+    });
+
+    it("returns http:// for localhost NEXT_PUBLIC_VERCEL_URL", () => {
+      delete process.env.NEXT_PUBLIC_APP_URL;
+      process.env.NEXT_PUBLIC_VERCEL_URL = "localhost:3000";
       delete process.env.VERCEL_URL;
 
       expect(getBaseURL()).toBe("http://localhost:3000");
@@ -29,6 +63,7 @@ describe("auth-config", () => {
 
     it("returns http:// for localhost VERCEL_URL", () => {
       delete process.env.NEXT_PUBLIC_APP_URL;
+      delete process.env.NEXT_PUBLIC_VERCEL_URL;
       process.env.VERCEL_URL = "localhost:3000";
 
       expect(getBaseURL()).toBe("http://localhost:3000");
@@ -36,6 +71,7 @@ describe("auth-config", () => {
 
     it("returns http:// for VERCEL_URL starting with localhost", () => {
       delete process.env.NEXT_PUBLIC_APP_URL;
+      delete process.env.NEXT_PUBLIC_VERCEL_URL;
       process.env.VERCEL_URL = "localhost";
 
       expect(getBaseURL()).toBe("http://localhost");
@@ -43,16 +79,74 @@ describe("auth-config", () => {
 
     it("returns https:// for production VERCEL_URL", () => {
       delete process.env.NEXT_PUBLIC_APP_URL;
+      delete process.env.NEXT_PUBLIC_VERCEL_URL;
       process.env.VERCEL_URL = "my-app.vercel.app";
 
       expect(getBaseURL()).toBe("https://my-app.vercel.app");
     });
 
+    it("handles VERCEL_URL that already includes https:// protocol", () => {
+      delete process.env.NEXT_PUBLIC_APP_URL;
+      delete process.env.NEXT_PUBLIC_VERCEL_URL;
+      process.env.VERCEL_URL = "https://my-app.vercel.app";
+
+      expect(getBaseURL()).toBe("https://my-app.vercel.app");
+    });
+
+    it("handles VERCEL_URL that already includes http:// protocol", () => {
+      delete process.env.NEXT_PUBLIC_APP_URL;
+      delete process.env.NEXT_PUBLIC_VERCEL_URL;
+      process.env.VERCEL_URL = "http://localhost:3000";
+
+      expect(getBaseURL()).toBe("http://localhost:3000");
+    });
+
+    it("prioritizes NEXT_PUBLIC_APP_URL over NEXT_PUBLIC_VERCEL_URL", () => {
+      process.env.NEXT_PUBLIC_APP_URL = "https://custom-domain.com";
+      process.env.NEXT_PUBLIC_VERCEL_URL = "my-app.vercel.app";
+      delete process.env.VERCEL_URL;
+
+      expect(getBaseURL()).toBe("https://custom-domain.com");
+    });
+
     it("prioritizes NEXT_PUBLIC_APP_URL over VERCEL_URL", () => {
       process.env.NEXT_PUBLIC_APP_URL = "https://custom-domain.com";
+      delete process.env.NEXT_PUBLIC_VERCEL_URL;
       process.env.VERCEL_URL = "my-app.vercel.app";
 
       expect(getBaseURL()).toBe("https://custom-domain.com");
+    });
+
+    it("prioritizes origin over NEXT_PUBLIC_VERCEL_URL", () => {
+      delete process.env.NEXT_PUBLIC_APP_URL;
+      process.env.NEXT_PUBLIC_VERCEL_URL = "my-app.vercel.app";
+      delete process.env.VERCEL_URL;
+
+      expect(getBaseURL("https://client-origin.com")).toBe("https://client-origin.com");
+    });
+
+    it("returns provided origin when passed as argument", () => {
+      delete process.env.NEXT_PUBLIC_APP_URL;
+      delete process.env.NEXT_PUBLIC_VERCEL_URL;
+      delete process.env.VERCEL_URL;
+
+      expect(getBaseURL("https://client-origin.com")).toBe("https://client-origin.com");
+    });
+
+    it("prioritizes NEXT_PUBLIC_APP_URL over provided origin", () => {
+      process.env.NEXT_PUBLIC_APP_URL = "https://env-url.com";
+      delete process.env.NEXT_PUBLIC_VERCEL_URL;
+      delete process.env.VERCEL_URL;
+
+      expect(getBaseURL("https://client-origin.com")).toBe("https://env-url.com");
+    });
+
+    it("uses origin when NEXT_PUBLIC_APP_URL is not set but VERCEL_URL is", () => {
+      delete process.env.NEXT_PUBLIC_APP_URL;
+      delete process.env.NEXT_PUBLIC_VERCEL_URL;
+      process.env.VERCEL_URL = "my-app.vercel.app";
+
+      expect(getBaseURL("https://client-origin.com")).toBe("https://client-origin.com");
     });
   });
 
@@ -60,6 +154,7 @@ describe("auth-config", () => {
     it("returns BETTER_AUTH_PASSKEY_RP_ID when set", () => {
       process.env.BETTER_AUTH_PASSKEY_RP_ID = "custom-rp-id";
       delete process.env.NEXT_PUBLIC_APP_URL;
+      delete process.env.NEXT_PUBLIC_VERCEL_URL;
       delete process.env.VERCEL_URL;
 
       expect(getRpID()).toBe("custom-rp-id");
@@ -68,13 +163,25 @@ describe("auth-config", () => {
     it("extracts hostname from NEXT_PUBLIC_APP_URL", () => {
       delete process.env.BETTER_AUTH_PASSKEY_RP_ID;
       process.env.NEXT_PUBLIC_APP_URL = "https://example.com:3000";
+      delete process.env.NEXT_PUBLIC_VERCEL_URL;
+      delete process.env.VERCEL_URL;
 
       expect(getRpID()).toBe("example.com");
+    });
+
+    it("extracts hostname from NEXT_PUBLIC_VERCEL_URL", () => {
+      delete process.env.BETTER_AUTH_PASSKEY_RP_ID;
+      delete process.env.NEXT_PUBLIC_APP_URL;
+      process.env.NEXT_PUBLIC_VERCEL_URL = "my-app.vercel.app";
+      delete process.env.VERCEL_URL;
+
+      expect(getRpID()).toBe("my-app.vercel.app");
     });
 
     it("extracts hostname from VERCEL_URL", () => {
       delete process.env.BETTER_AUTH_PASSKEY_RP_ID;
       delete process.env.NEXT_PUBLIC_APP_URL;
+      delete process.env.NEXT_PUBLIC_VERCEL_URL;
       process.env.VERCEL_URL = "my-app.vercel.app";
 
       expect(getRpID()).toBe("my-app.vercel.app");
@@ -83,6 +190,7 @@ describe("auth-config", () => {
     it("returns localhost as fallback for invalid URL", () => {
       delete process.env.BETTER_AUTH_PASSKEY_RP_ID;
       delete process.env.NEXT_PUBLIC_APP_URL;
+      delete process.env.NEXT_PUBLIC_VERCEL_URL;
       delete process.env.VERCEL_URL;
 
       // When getBaseURL returns a valid URL, getRpID should extract hostname
@@ -93,6 +201,7 @@ describe("auth-config", () => {
     it("returns localhost when baseURL is localhost", () => {
       delete process.env.BETTER_AUTH_PASSKEY_RP_ID;
       delete process.env.NEXT_PUBLIC_APP_URL;
+      delete process.env.NEXT_PUBLIC_VERCEL_URL;
       delete process.env.VERCEL_URL;
 
       expect(getRpID()).toBe("localhost");
