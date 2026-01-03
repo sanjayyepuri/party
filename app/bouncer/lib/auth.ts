@@ -3,7 +3,12 @@ import { passkey } from "@better-auth/passkey";
 import { emailOTP } from "better-auth/plugins";
 import { Pool } from "pg";
 import { sendOTPEmail } from "./email-service";
-import { getBaseURL, getRpID, getRpName } from "./auth-config";
+import {
+  getBaseURL,
+  getRpID,
+  getRpName,
+  getTrustedOrigins,
+} from "./auth-config";
 
 // Create a connection pool for Neon PostgreSQL
 if (!process.env.NEON_POSTGRES_URL) {
@@ -92,7 +97,7 @@ export const auth = betterAuth({
   },
   baseURL: baseURL,
   basePath: "/handlers/auth",
-  trustedOrigins: [baseURL],
+  trustedOrigins: getTrustedOrigins(),
 });
 
 export type Session = typeof auth.$Infer.Session;

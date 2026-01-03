@@ -5,9 +5,9 @@
 
 /**
  * Automatically detect base URL from Vercel or use localhost
- * 
+ *
  * @param origin - Optional origin (e.g., window.location.origin for client-side)
- * 
+ *
  * **Environment Variable Handling:**
  * - NEXT_PUBLIC_APP_URL: Optional custom override (available in both server and client if set)
  *   https://nextjs.org/docs/pages/building-your-application/configuring/environment-variables
@@ -32,12 +32,12 @@ export const getBaseURL = (origin?: string): string => {
   // Priority 3: NEXT_PUBLIC_VERCEL_URL (automatically set by Vercel, available on client and server)
   if (process.env.NEXT_PUBLIC_VERCEL_URL) {
     const host = process.env.NEXT_PUBLIC_VERCEL_URL;
-    
+
     // If the URL already includes a protocol, return it as-is
     if (host.startsWith("http://") || host.startsWith("https://")) {
       return host;
     }
-    
+
     // NEXT_PUBLIC_VERCEL_URL does not include the protocol according to Vercel docs
     // Check if it's localhost - use http:// for localhost, https:// for production
     if (host.startsWith("localhost") || host.includes("localhost:")) {
@@ -52,12 +52,12 @@ export const getBaseURL = (origin?: string): string => {
     // https://vercel.com/docs/projects/environment-variables/system-environment-variables
     // However, we handle the case defensively in case it's already prefixed
     const host = process.env.VERCEL_URL; // Guaranteed to be defined by the if condition above
-    
+
     // If the URL already includes a protocol, return it as-is
     if (host.startsWith("http://") || host.startsWith("https://")) {
       return host;
     }
-    
+
     // Check if it's localhost - use http:// for localhost, https:// for production
     if (host.startsWith("localhost") || host.includes("localhost:")) {
       return `http://${host}`;
@@ -94,4 +94,23 @@ export const getRpID = (): string => {
  */
 export const getRpName = (): string => {
   return process.env.BETTER_AUTH_PASSKEY_RP_NAME || "Party Platform";
+};
+
+/**
+ * Get trusted origins for Better Auth CSRF protection
+ * Server-side only - used in auth.ts configuration
+ *
+ * Configure via BETTER_AUTH_TRUSTED_ORIGINS environment variable (comma-separated list)
+ * If not set, defaults to the baseURL only
+ */
+export const getTrustedOrigins = (): string[] => {
+  // Use explicit environment variable if set
+  if (process.env.BETTER_AUTH_TRUSTED_ORIGINS) {
+    return process.env.BETTER_AUTH_TRUSTED_ORIGINS.split(",").map((origin) =>
+      origin.trim()
+    );
+  }
+
+  // Default to baseURL only
+  return [getBaseURL()];
 };

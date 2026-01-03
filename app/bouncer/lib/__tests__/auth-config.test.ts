@@ -1,4 +1,9 @@
-import { getBaseURL, getRpID, getRpName } from "../auth-config";
+import {
+  getBaseURL,
+  getRpID,
+  getRpName,
+  getTrustedOrigins,
+} from "../auth-config";
 
 describe("auth-config", () => {
   const originalEnv = process.env;
@@ -122,7 +127,9 @@ describe("auth-config", () => {
       process.env.NEXT_PUBLIC_VERCEL_URL = "my-app.vercel.app";
       delete process.env.VERCEL_URL;
 
-      expect(getBaseURL("https://client-origin.com")).toBe("https://client-origin.com");
+      expect(getBaseURL("https://client-origin.com")).toBe(
+        "https://client-origin.com"
+      );
     });
 
     it("returns provided origin when passed as argument", () => {
@@ -130,7 +137,9 @@ describe("auth-config", () => {
       delete process.env.NEXT_PUBLIC_VERCEL_URL;
       delete process.env.VERCEL_URL;
 
-      expect(getBaseURL("https://client-origin.com")).toBe("https://client-origin.com");
+      expect(getBaseURL("https://client-origin.com")).toBe(
+        "https://client-origin.com"
+      );
     });
 
     it("prioritizes NEXT_PUBLIC_APP_URL over provided origin", () => {
@@ -138,7 +147,9 @@ describe("auth-config", () => {
       delete process.env.NEXT_PUBLIC_VERCEL_URL;
       delete process.env.VERCEL_URL;
 
-      expect(getBaseURL("https://client-origin.com")).toBe("https://env-url.com");
+      expect(getBaseURL("https://client-origin.com")).toBe(
+        "https://env-url.com"
+      );
     });
 
     it("uses origin when NEXT_PUBLIC_APP_URL is not set but VERCEL_URL is", () => {
@@ -146,7 +157,9 @@ describe("auth-config", () => {
       delete process.env.NEXT_PUBLIC_VERCEL_URL;
       process.env.VERCEL_URL = "my-app.vercel.app";
 
-      expect(getBaseURL("https://client-origin.com")).toBe("https://client-origin.com");
+      expect(getBaseURL("https://client-origin.com")).toBe(
+        "https://client-origin.com"
+      );
     });
   });
 
@@ -219,6 +232,77 @@ describe("auth-config", () => {
       delete process.env.BETTER_AUTH_PASSKEY_RP_NAME;
 
       expect(getRpName()).toBe("Party Platform");
+    });
+  });
+
+  describe("getTrustedOrigins", () => {
+    it("returns BETTER_AUTH_TRUSTED_ORIGINS when set", () => {
+      process.env.BETTER_AUTH_TRUSTED_ORIGINS =
+        "https://sanjay.party, https://www.sanjay.party, https://app.sanjay.party";
+      delete process.env.NEXT_PUBLIC_APP_URL;
+      delete process.env.NEXT_PUBLIC_VERCEL_URL;
+      delete process.env.VERCEL_URL;
+
+      const origins = getTrustedOrigins();
+      expect(origins).toEqual([
+        "https://sanjay.party",
+        "https://www.sanjay.party",
+        "https://app.sanjay.party",
+      ]);
+    });
+
+    it("trims whitespace from BETTER_AUTH_TRUSTED_ORIGINS", () => {
+      process.env.BETTER_AUTH_TRUSTED_ORIGINS =
+        " https://sanjay.party , https://www.sanjay.party ";
+      delete process.env.NEXT_PUBLIC_APP_URL;
+      delete process.env.NEXT_PUBLIC_VERCEL_URL;
+      delete process.env.VERCEL_URL;
+
+      const origins = getTrustedOrigins();
+      expect(origins).toEqual([
+        "https://sanjay.party",
+        "https://www.sanjay.party",
+      ]);
+    });
+
+    it("returns baseURL as single-item array when BETTER_AUTH_TRUSTED_ORIGINS is not set", () => {
+      delete process.env.BETTER_AUTH_TRUSTED_ORIGINS;
+      process.env.NEXT_PUBLIC_APP_URL = "https://sanjay.party";
+      delete process.env.NEXT_PUBLIC_VERCEL_URL;
+      delete process.env.VERCEL_URL;
+
+      const origins = getTrustedOrigins();
+      expect(origins).toEqual(["https://sanjay.party"]);
+    });
+
+    it("returns localhost URL when no env vars are set", () => {
+      delete process.env.BETTER_AUTH_TRUSTED_ORIGINS;
+      delete process.env.NEXT_PUBLIC_APP_URL;
+      delete process.env.NEXT_PUBLIC_VERCEL_URL;
+      delete process.env.VERCEL_URL;
+
+      const origins = getTrustedOrigins();
+      expect(origins).toEqual(["http://localhost:3000"]);
+    });
+
+    it("uses baseURL from NEXT_PUBLIC_VERCEL_URL when BETTER_AUTH_TRUSTED_ORIGINS is not set", () => {
+      delete process.env.BETTER_AUTH_TRUSTED_ORIGINS;
+      delete process.env.NEXT_PUBLIC_APP_URL;
+      process.env.NEXT_PUBLIC_VERCEL_URL = "my-app.vercel.app";
+      delete process.env.VERCEL_URL;
+
+      const origins = getTrustedOrigins();
+      expect(origins).toEqual(["https://my-app.vercel.app"]);
+    });
+
+    it("uses baseURL from VERCEL_URL when BETTER_AUTH_TRUSTED_ORIGINS is not set", () => {
+      delete process.env.BETTER_AUTH_TRUSTED_ORIGINS;
+      delete process.env.NEXT_PUBLIC_APP_URL;
+      delete process.env.NEXT_PUBLIC_VERCEL_URL;
+      process.env.VERCEL_URL = "my-app.vercel.app";
+
+      const origins = getTrustedOrigins();
+      expect(origins).toEqual(["https://my-app.vercel.app"]);
     });
   });
 });
