@@ -308,29 +308,32 @@ describe("auth-config", () => {
   });
 
   describe("getPasskeyOrigin", () => {
-    it("returns NEXT_PUBLIC_APP_URL when set (priority 1)", () => {
-      process.env.NEXT_PUBLIC_APP_URL = "https://sanjay.party";
+    it("returns BETTER_AUTH_PASSKEY_ORIGIN when set (priority 1)", () => {
+      process.env.BETTER_AUTH_PASSKEY_ORIGIN = "https://sanjay.party";
       delete process.env.BETTER_AUTH_TRUSTED_ORIGINS;
+      delete process.env.NEXT_PUBLIC_APP_URL;
       delete process.env.NEXT_PUBLIC_VERCEL_URL;
       delete process.env.VERCEL_URL;
 
       expect(getPasskeyOrigin()).toBe("https://sanjay.party");
     });
 
-    it("prioritizes NEXT_PUBLIC_APP_URL over trustedOrigins", () => {
-      process.env.NEXT_PUBLIC_APP_URL = "https://sanjay.party";
+    it("prioritizes BETTER_AUTH_PASSKEY_ORIGIN over trustedOrigins", () => {
+      process.env.BETTER_AUTH_PASSKEY_ORIGIN = "https://sanjay.party";
       process.env.BETTER_AUTH_TRUSTED_ORIGINS =
         "https://www.sanjay.party, https://app.sanjay.party";
+      delete process.env.NEXT_PUBLIC_APP_URL;
       delete process.env.NEXT_PUBLIC_VERCEL_URL;
       delete process.env.VERCEL_URL;
 
       expect(getPasskeyOrigin()).toBe("https://sanjay.party");
     });
 
-    it("returns non-www from trustedOrigins when NEXT_PUBLIC_APP_URL is not set", () => {
-      delete process.env.NEXT_PUBLIC_APP_URL;
+    it("returns non-www from trustedOrigins when BETTER_AUTH_PASSKEY_ORIGIN is not set", () => {
+      delete process.env.BETTER_AUTH_PASSKEY_ORIGIN;
       process.env.BETTER_AUTH_TRUSTED_ORIGINS =
         "https://sanjay.party, https://www.sanjay.party";
+      delete process.env.NEXT_PUBLIC_APP_URL;
       delete process.env.NEXT_PUBLIC_VERCEL_URL;
       delete process.env.VERCEL_URL;
 
@@ -338,9 +341,10 @@ describe("auth-config", () => {
     });
 
     it("returns first trusted origin if no non-www exists", () => {
-      delete process.env.NEXT_PUBLIC_APP_URL;
+      delete process.env.BETTER_AUTH_PASSKEY_ORIGIN;
       process.env.BETTER_AUTH_TRUSTED_ORIGINS =
         "https://www.sanjay.party, https://app.sanjay.party";
+      delete process.env.NEXT_PUBLIC_APP_URL;
       delete process.env.NEXT_PUBLIC_VERCEL_URL;
       delete process.env.VERCEL_URL;
 
@@ -348,18 +352,20 @@ describe("auth-config", () => {
     });
 
     it("prefers non-www over www when both exist in trustedOrigins", () => {
-      delete process.env.NEXT_PUBLIC_APP_URL;
+      delete process.env.BETTER_AUTH_PASSKEY_ORIGIN;
       process.env.BETTER_AUTH_TRUSTED_ORIGINS =
         "https://www.sanjay.party, https://sanjay.party";
+      delete process.env.NEXT_PUBLIC_APP_URL;
       delete process.env.NEXT_PUBLIC_VERCEL_URL;
       delete process.env.VERCEL_URL;
 
       expect(getPasskeyOrigin()).toBe("https://sanjay.party");
     });
 
-    it("falls back to baseURL when no trustedOrigins and NEXT_PUBLIC_APP_URL not set", () => {
-      delete process.env.NEXT_PUBLIC_APP_URL;
+    it("falls back to baseURL when no trustedOrigins and BETTER_AUTH_PASSKEY_ORIGIN not set", () => {
+      delete process.env.BETTER_AUTH_PASSKEY_ORIGIN;
       delete process.env.BETTER_AUTH_TRUSTED_ORIGINS;
+      delete process.env.NEXT_PUBLIC_APP_URL;
       delete process.env.NEXT_PUBLIC_VERCEL_URL;
       delete process.env.VERCEL_URL;
 
@@ -367,8 +373,9 @@ describe("auth-config", () => {
     });
 
     it("uses baseURL from NEXT_PUBLIC_VERCEL_URL when no trustedOrigins", () => {
-      delete process.env.NEXT_PUBLIC_APP_URL;
+      delete process.env.BETTER_AUTH_PASSKEY_ORIGIN;
       delete process.env.BETTER_AUTH_TRUSTED_ORIGINS;
+      delete process.env.NEXT_PUBLIC_APP_URL;
       process.env.NEXT_PUBLIC_VERCEL_URL = "my-app.vercel.app";
       delete process.env.VERCEL_URL;
 
@@ -376,8 +383,9 @@ describe("auth-config", () => {
     });
 
     it("uses baseURL from VERCEL_URL when no trustedOrigins", () => {
-      delete process.env.NEXT_PUBLIC_APP_URL;
+      delete process.env.BETTER_AUTH_PASSKEY_ORIGIN;
       delete process.env.BETTER_AUTH_TRUSTED_ORIGINS;
+      delete process.env.NEXT_PUBLIC_APP_URL;
       delete process.env.NEXT_PUBLIC_VERCEL_URL;
       process.env.VERCEL_URL = "my-app.vercel.app";
 
@@ -385,8 +393,9 @@ describe("auth-config", () => {
     });
 
     it("handles trustedOrigins with single origin", () => {
-      delete process.env.NEXT_PUBLIC_APP_URL;
+      delete process.env.BETTER_AUTH_PASSKEY_ORIGIN;
       process.env.BETTER_AUTH_TRUSTED_ORIGINS = "https://sanjay.party";
+      delete process.env.NEXT_PUBLIC_APP_URL;
       delete process.env.NEXT_PUBLIC_VERCEL_URL;
       delete process.env.VERCEL_URL;
 
@@ -394,8 +403,9 @@ describe("auth-config", () => {
     });
 
     it("handles trustedOrigins with www only", () => {
-      delete process.env.NEXT_PUBLIC_APP_URL;
+      delete process.env.BETTER_AUTH_PASSKEY_ORIGIN;
       process.env.BETTER_AUTH_TRUSTED_ORIGINS = "https://www.sanjay.party";
+      delete process.env.NEXT_PUBLIC_APP_URL;
       delete process.env.NEXT_PUBLIC_VERCEL_URL;
       delete process.env.VERCEL_URL;
 
@@ -403,8 +413,9 @@ describe("auth-config", () => {
     });
 
     it("handles localhost in trustedOrigins", () => {
-      delete process.env.NEXT_PUBLIC_APP_URL;
+      delete process.env.BETTER_AUTH_PASSKEY_ORIGIN;
       process.env.BETTER_AUTH_TRUSTED_ORIGINS = "http://localhost:3000";
+      delete process.env.NEXT_PUBLIC_APP_URL;
       delete process.env.NEXT_PUBLIC_VERCEL_URL;
       delete process.env.VERCEL_URL;
 
@@ -412,9 +423,10 @@ describe("auth-config", () => {
     });
 
     it("handles invalid URL in trustedOrigins gracefully", () => {
-      delete process.env.NEXT_PUBLIC_APP_URL;
+      delete process.env.BETTER_AUTH_PASSKEY_ORIGIN;
       // This shouldn't happen in practice, but test defensive behavior
       process.env.BETTER_AUTH_TRUSTED_ORIGINS = "not-a-valid-url";
+      delete process.env.NEXT_PUBLIC_APP_URL;
       delete process.env.NEXT_PUBLIC_VERCEL_URL;
       delete process.env.VERCEL_URL;
 

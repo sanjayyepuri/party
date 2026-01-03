@@ -117,13 +117,13 @@ export const getTrustedOrigins = (): string[] => {
 
 /**
  * Get canonical origin for passkey configuration
- * Prioritizes NEXT_PUBLIC_APP_URL (production domain) over Vercel preview URLs
+ * Configure via BETTER_AUTH_PASSKEY_ORIGIN environment variable
  * Server-side only - used in auth.ts passkey plugin configuration
  */
 export const getPasskeyOrigin = (): string => {
-  // Priority 1: Use explicit production domain if set
-  if (process.env.NEXT_PUBLIC_APP_URL) {
-    return process.env.NEXT_PUBLIC_APP_URL;
+  // Priority 1: Use explicit passkey origin if set
+  if (process.env.BETTER_AUTH_PASSKEY_ORIGIN) {
+    return process.env.BETTER_AUTH_PASSKEY_ORIGIN;
   }
 
   // Priority 2: Use first trusted origin if available (should be production domain)
