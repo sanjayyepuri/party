@@ -8,6 +8,7 @@ import {
   getRpID,
   getRpName,
   getTrustedOrigins,
+  getPasskeyOrigin,
 } from "./auth-config";
 
 // Create a connection pool for Neon PostgreSQL
@@ -18,6 +19,7 @@ if (!process.env.NEON_POSTGRES_URL) {
 const baseURL = getBaseURL();
 const rpID = getRpID();
 const rpName = getRpName();
+const passkeyOrigin = getPasskeyOrigin();
 
 export const auth = betterAuth({
   database: new Pool({
@@ -27,7 +29,7 @@ export const auth = betterAuth({
     passkey({
       rpID: rpID,
       rpName: rpName,
-      origin: baseURL, // Must match trustedOrigins for validation
+      origin: passkeyOrigin, // Canonical production domain, must be in trustedOrigins
     }),
     emailOTP({
       async sendVerificationOTP({ email, otp, type }) {
