@@ -5,9 +5,42 @@
 
 import { headers } from "next/headers";
 import type { Party, Rsvp, UpdateRsvpRequest } from "./types";
+import { getBaseURL } from "./auth-config";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 const API_PATH = "/api/bouncer";
+
+/**
+ * Get the API base URL for server-side requests
+ * Uses the same origin as the current request in production
+ */
+async function getApiBaseUrl(): Promise<string> {
+  // In production/server-side, construct URL from request headers
+  if (typeof window === "undefined") {
+    // Server-side: use environment variable if set
+    if (process.env.NEXT_PUBLIC_API_URL) {
+      return process.env.NEXT_PUBLIC_API_URL;
+    }
+
+    // Otherwise, try to get the origin from request headers
+    try {
+      const headersList = await headers();
+      const host = headersList.get("host");
+      const protocol = headersList.get("x-forwarded-proto") || "https";
+
+      if (host) {
+        // Construct URL from request headers (works in Vercel/production)
+        return `${protocol}://${host}`;
+      }
+    } catch {
+      // If headers() fails, fall back to base URL
+    }
+
+    // Fallback to base URL from auth config
+    return getBaseURL();
+  }
+  // Client-side: use environment variable or current origin
+  return process.env.NEXT_PUBLIC_API_URL || window.location.origin;
+}
 
 /**
  * Get authentication headers from the current request
@@ -35,25 +68,36 @@ async function getAuthHeaders(): Promise<HeadersInit> {
  */
 export async function fetchParties(): Promise<Party[]> {
   const authHeaders = await getAuthHeaders();
+  const apiBaseUrl = await getApiBaseUrl();
 
-  const response = await fetch(`${API_BASE_URL}${API_PATH}/parties`, {
-    method: "GET",
-    headers: authHeaders,
-    cache: "no-store", // Always fetch fresh data
-  });
+  try {
+    const response = await fetch(`${apiBaseUrl}${API_PATH}/parties`, {
+      method: "GET",
+      headers: authHeaders,
+      cache: "no-store", // Always fetch fresh data
+    });
 
-  if (!response.ok) {
-    if (response.status === 401) {
-      throw new Error("Unauthorized: Please log in to view parties");
+    if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error("Unauthorized: Please log in to view parties");
+      }
+      if (response.status === 500) {
+        throw new Error("Server error: Unable to fetch parties");
+      }
+      throw new Error(`Failed to fetch parties: ${response.statusText}`);
     }
-    if (response.status === 500) {
-      throw new Error("Server error: Unable to fetch parties");
+
+    const parties: Party[] = await response.json();
+    return parties;
+  } catch (error) {
+    // Improve error message for network failures
+    if (error instanceof TypeError && error.message.includes("fetch")) {
+      throw new Error(
+        `Network error: Unable to connect to API at ${apiBaseUrl}${API_PATH}/parties`
+      );
     }
-    throw new Error(`Failed to fetch parties: ${response.statusText}`);
+    throw error;
   }
-
-  const parties: Party[] = await response.json();
-  return parties;
 }
 
 /**
@@ -64,15 +108,13 @@ export async function fetchParties(): Promise<Party[]> {
  */
 export async function fetchPartyById(partyId: string): Promise<Party | null> {
   const authHeaders = await getAuthHeaders();
+  const apiBaseUrl = await getApiBaseUrl();
 
-  const response = await fetch(
-    `${API_BASE_URL}${API_PATH}/parties/${partyId}`,
-    {
-      method: "GET",
-      headers: authHeaders,
-      cache: "no-store",
-    }
-  );
+  const response = await fetch(`${apiBaseUrl}${API_PATH}/parties/${partyId}`, {
+    method: "GET",
+    headers: authHeaders,
+    cache: "no-store",
+  });
 
   if (!response.ok) {
     if (response.status === 401) {
@@ -110,9 +152,10 @@ export async function fetchPartyBySlug(slug: string): Promise<Party | null> {
  */
 export async function fetchRsvp(partyId: string): Promise<Rsvp> {
   const authHeaders = await getAuthHeaders();
+  const apiBaseUrl = await getApiBaseUrl();
 
   const response = await fetch(
-    `${API_BASE_URL}${API_PATH}/parties/${partyId}/rsvp`,
+    `${apiBaseUrl}${API_PATH}/parties/${partyId}/rsvp`,
     {
       method: "POST",
       headers: authHeaders,
@@ -147,8 +190,9 @@ export async function updateRsvp(
   updateRequest: UpdateRsvpRequest
 ): Promise<Rsvp> {
   const authHeaders = await getAuthHeaders();
+  const apiBaseUrl = await getApiBaseUrl();
 
-  const response = await fetch(`${API_BASE_URL}${API_PATH}/rsvps`, {
+  const response = await fetch(`${apiBaseUrl}${API_PATH}/rsvps`, {
     method: "PUT",
     headers: authHeaders,
     body: JSON.stringify(updateRequest),

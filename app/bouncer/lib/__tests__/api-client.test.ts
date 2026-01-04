@@ -56,6 +56,8 @@ describe("api-client", () => {
     mockHeaders.mockResolvedValue(
       new Headers({
         cookie: "better-auth.session_token=test-token",
+        host: "localhost:3000",
+        "x-forwarded-proto": "http",
       }) as any
     );
 
