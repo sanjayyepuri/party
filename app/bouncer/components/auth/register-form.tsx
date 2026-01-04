@@ -13,12 +13,17 @@ function isValidEmail(email: string): boolean {
   return EMAIL_REGEX.test(email.trim());
 }
 
+function normalizePhone(phone: string): string {
+  // Remove all non-digit characters except + for consistent formatting
+  return phone.trim().replace(/[^\d+]/g, "");
+}
+
 function isValidPhone(phone: string): boolean {
   const trimmed = phone.trim();
   if (!trimmed) return false;
 
   // Remove all non-digit characters except + for validation
-  const cleaned = trimmed.replace(/[^\d+]/g, "");
+  const cleaned = normalizePhone(trimmed);
 
   // Must have at least 10 digits (US minimum) and at most 15 digits (E.164 max)
   // Allow + at the start for international format
@@ -147,10 +152,11 @@ export function RegisterForm() {
 
       // Step 3: Update user name and phone (since signIn doesn't set these)
       // Both name and phone are required
-      const trimmedPhone = phone.trim();
+      // Normalize phone to store only digits and + (removes formatting like spaces, parentheses, dashes)
+      const normalizedPhone = normalizePhone(phone);
       const updateData: { name: string; phone: string } = {
         name: trimmedName,
-        phone: trimmedPhone,
+        phone: normalizedPhone,
       };
 
       const updateResult = await updateUser(updateData);
