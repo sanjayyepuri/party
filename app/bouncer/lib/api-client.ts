@@ -20,13 +20,13 @@ async function getApiBaseUrl(): Promise<string> {
     if (process.env.NEXT_PUBLIC_API_URL) {
       return process.env.NEXT_PUBLIC_API_URL;
     }
-    
+
     // Otherwise, try to get the origin from request headers
     try {
       const headersList = await headers();
       const host = headersList.get("host");
       const protocol = headersList.get("x-forwarded-proto") || "https";
-      
+
       if (host) {
         // Construct URL from request headers (works in Vercel/production)
         return `${protocol}://${host}`;
@@ -34,7 +34,7 @@ async function getApiBaseUrl(): Promise<string> {
     } catch {
       // If headers() fails, fall back to base URL
     }
-    
+
     // Fallback to base URL from auth config
     return getBaseURL();
   }
@@ -110,14 +110,11 @@ export async function fetchPartyById(partyId: string): Promise<Party | null> {
   const authHeaders = await getAuthHeaders();
   const apiBaseUrl = await getApiBaseUrl();
 
-  const response = await fetch(
-    `${apiBaseUrl}${API_PATH}/parties/${partyId}`,
-    {
-      method: "GET",
-      headers: authHeaders,
-      cache: "no-store",
-    }
-  );
+  const response = await fetch(`${apiBaseUrl}${API_PATH}/parties/${partyId}`, {
+    method: "GET",
+    headers: authHeaders,
+    cache: "no-store",
+  });
 
   if (!response.ok) {
     if (response.status === 401) {
