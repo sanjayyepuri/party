@@ -181,9 +181,7 @@ describe("RsvpForm", () => {
     const updatedRsvp = { ...mockRsvp, status: "accepted" };
     (updateRsvpClient as jest.Mock).mockResolvedValue(updatedRsvp);
 
-    const { rerender } = render(
-      <RsvpForm initialRsvp={mockRsvp} />
-    );
+    const { rerender } = render(<RsvpForm initialRsvp={mockRsvp} />);
 
     const acceptedButton = screen
       .getAllByText("Accepted")

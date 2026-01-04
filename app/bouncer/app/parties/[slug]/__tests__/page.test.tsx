@@ -40,9 +40,7 @@ jest.mock("next/headers", () => ({
 
 jest.mock("../rsvp-form", () => ({
   RsvpForm: ({ initialRsvp }: any) => (
-    <div data-testid="rsvp-form">
-      RSVP Form - Status: {initialRsvp.status}
-    </div>
+    <div data-testid="rsvp-form">RSVP Form - Status: {initialRsvp.status}</div>
   ),
 }));
 

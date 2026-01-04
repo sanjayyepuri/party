@@ -116,9 +116,7 @@ export default async function PartyPage({ params }: PartyPageProps) {
             <p className="text-sm">{rsvpError}</p>
           </div>
         )}
-        {!rsvpError && rsvp && (
-          <RsvpForm initialRsvp={rsvp} />
-        )}
+        {!rsvpError && rsvp && <RsvpForm initialRsvp={rsvp} />}
         {!rsvpError && !rsvp && (
           <div className="p-4 bg-gray-50 border border-gray-200 rounded text-gray-600">
             <p>Loading RSVP...</p>
