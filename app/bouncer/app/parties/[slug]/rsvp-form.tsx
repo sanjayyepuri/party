@@ -6,10 +6,9 @@ import { updateRsvpClient } from "@/lib/api-client-client";
 
 interface RsvpFormProps {
   initialRsvp: Rsvp;
-  partyId: string;
 }
 
-export function RsvpForm({ initialRsvp, partyId }: RsvpFormProps) {
+export function RsvpForm({ initialRsvp }: RsvpFormProps) {
   const [rsvp, setRsvp] = useState<Rsvp>(initialRsvp);
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);

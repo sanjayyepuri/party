@@ -29,7 +29,7 @@ describe("RsvpForm", () => {
   });
 
   it("displays current RSVP status", () => {
-    render(<RsvpForm initialRsvp={mockRsvp} partyId="party-123" />);
+    render(<RsvpForm initialRsvp={mockRsvp} />);
 
     expect(screen.getByText(/Current Status/i)).toBeInTheDocument();
     // Check for status in the status display area (not the button)
@@ -42,7 +42,7 @@ describe("RsvpForm", () => {
   });
 
   it("displays status options for updating", () => {
-    render(<RsvpForm initialRsvp={mockRsvp} partyId="party-123" />);
+    render(<RsvpForm initialRsvp={mockRsvp} />);
 
     // Check that all status buttons are present
     const buttons = screen.getAllByRole("button");
@@ -53,7 +53,7 @@ describe("RsvpForm", () => {
   });
 
   it("disables current status button", () => {
-    render(<RsvpForm initialRsvp={mockRsvp} partyId="party-123" />);
+    render(<RsvpForm initialRsvp={mockRsvp} />);
 
     const pendingButton = screen
       .getAllByText("Pending")
@@ -66,7 +66,7 @@ describe("RsvpForm", () => {
     const updatedRsvp = { ...mockRsvp, status: "accepted" };
     (updateRsvpClient as jest.Mock).mockResolvedValue(updatedRsvp);
 
-    render(<RsvpForm initialRsvp={mockRsvp} partyId="party-123" />);
+    render(<RsvpForm initialRsvp={mockRsvp} />);
 
     const acceptedButton = screen
       .getAllByText("Accepted")
@@ -91,7 +91,7 @@ describe("RsvpForm", () => {
     const updatedRsvp = { ...mockRsvp, status: "accepted" };
     (updateRsvpClient as jest.Mock).mockResolvedValue(updatedRsvp);
 
-    render(<RsvpForm initialRsvp={mockRsvp} partyId="party-123" />);
+    render(<RsvpForm initialRsvp={mockRsvp} />);
 
     const acceptedButton = screen
       .getAllByText("Accepted")
@@ -112,7 +112,7 @@ describe("RsvpForm", () => {
       new Error("Network error")
     );
 
-    render(<RsvpForm initialRsvp={mockRsvp} partyId="party-123" />);
+    render(<RsvpForm initialRsvp={mockRsvp} />);
 
     const acceptedButton = screen
       .getAllByText("Accepted")
@@ -140,7 +140,7 @@ describe("RsvpForm", () => {
     });
     (updateRsvpClient as jest.Mock).mockReturnValue(updatePromise);
 
-    render(<RsvpForm initialRsvp={mockRsvp} partyId="party-123" />);
+    render(<RsvpForm initialRsvp={mockRsvp} />);
 
     const acceptedButton = screen
       .getAllByText("Accepted")
@@ -162,7 +162,7 @@ describe("RsvpForm", () => {
   it("does not update if clicking current status", async () => {
     const user = userEvent.setup();
 
-    render(<RsvpForm initialRsvp={mockRsvp} partyId="party-123" />);
+    render(<RsvpForm initialRsvp={mockRsvp} />);
 
     const pendingButton = screen
       .getAllByText("Pending")
@@ -182,7 +182,7 @@ describe("RsvpForm", () => {
     (updateRsvpClient as jest.Mock).mockResolvedValue(updatedRsvp);
 
     const { rerender } = render(
-      <RsvpForm initialRsvp={mockRsvp} partyId="party-123" />
+      <RsvpForm initialRsvp={mockRsvp} />
     );
 
     const acceptedButton = screen
@@ -197,7 +197,7 @@ describe("RsvpForm", () => {
     });
 
     // Re-render with updated RSVP to simulate state update
-    rerender(<RsvpForm initialRsvp={updatedRsvp} partyId="party-123" />);
+    rerender(<RsvpForm initialRsvp={updatedRsvp} />);
 
     // Accepted button should now be disabled
     const newAcceptedButton = screen
@@ -219,7 +219,7 @@ describe("RsvpForm", () => {
   });
 
   it("displays correct status colors", () => {
-    render(<RsvpForm initialRsvp={mockRsvp} partyId="party-123" />);
+    render(<RsvpForm initialRsvp={mockRsvp} />);
 
     // Check that status display has appropriate styling
     const statusDisplay = screen

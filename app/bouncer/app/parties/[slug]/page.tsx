@@ -117,7 +117,7 @@ export default async function PartyPage({ params }: PartyPageProps) {
           </div>
         )}
         {!rsvpError && rsvp && (
-          <RsvpForm initialRsvp={rsvp} partyId={party.party_id} />
+          <RsvpForm initialRsvp={rsvp} />
         )}
         {!rsvpError && !rsvp && (
           <div className="p-4 bg-gray-50 border border-gray-200 rounded text-gray-600">

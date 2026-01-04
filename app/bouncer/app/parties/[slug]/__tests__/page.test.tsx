@@ -39,9 +39,9 @@ jest.mock("next/headers", () => ({
 }));
 
 jest.mock("../rsvp-form", () => ({
-  RsvpForm: ({ initialRsvp, partyId }: any) => (
+  RsvpForm: ({ initialRsvp }: any) => (
     <div data-testid="rsvp-form">
-      RSVP Form - Party: {partyId}, Status: {initialRsvp.status}
+      RSVP Form - Status: {initialRsvp.status}
     </div>
   ),
 }));
@@ -160,7 +160,6 @@ describe("PartyPage", () => {
 
     const rsvpForm = screen.getByTestId("rsvp-form");
     expect(rsvpForm).toBeInTheDocument();
-    expect(rsvpForm.textContent).toContain("party-123");
     expect(rsvpForm.textContent).toContain("pending");
   });
 
