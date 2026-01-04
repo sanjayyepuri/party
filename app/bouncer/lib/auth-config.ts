@@ -129,16 +129,39 @@ export const getPasskeyOrigin = (): string => {
   // Priority 2: Use first trusted origin if available (should be production domain)
   const trustedOrigins = getTrustedOrigins();
   if (trustedOrigins.length > 0) {
-    // Prefer non-www over www if both exist
-    const nonWww = trustedOrigins.find((origin) => {
+    // Filter out invalid URLs first
+    const validOrigins = trustedOrigins.filter((origin) => {
       try {
-        const url = new URL(origin);
-        return !url.hostname.startsWith("www.");
+        new URL(origin);
+        return true;
       } catch {
         return false;
       }
     });
-    return nonWww || trustedOrigins[0];
+
+    if (validOrigins.length === 0) {
+      // No valid origins, fall back to baseURL
+      return getBaseURL();
+    }
+
+    // Prefer root domain (no subdomain) over www if both exist
+    // Only consider root domains like "sanjay.party", not subdomains like "app.sanjay.party"
+    const rootDomain = validOrigins.find((origin) => {
+      try {
+        const url = new URL(origin);
+        const hostname = url.hostname;
+        // Check if it's a root domain (no subdomain before the main domain)
+        // e.g., "sanjay.party" is root, "www.sanjay.party" and "app.sanjay.party" are not
+        const parts = hostname.split(".");
+        // Root domain has exactly 2 parts (domain + TLD) or is localhost
+        return parts.length === 2 || hostname === "localhost";
+      } catch {
+        return false;
+      }
+    });
+
+    // If no root domain exists, return first valid origin
+    return rootDomain || validOrigins[0];
   }
 
   // Priority 3: Fall back to baseURL

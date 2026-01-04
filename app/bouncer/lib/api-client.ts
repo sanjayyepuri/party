@@ -1,0 +1,173 @@
+/**
+ * API client for communicating with the pregame backend
+ * Handles authentication and error handling for party and RSVP operations
+ */
+
+import { headers } from "next/headers";
+import type { Party, Rsvp, UpdateRsvpRequest } from "./types";
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+const API_PATH = "/api/bouncer";
+
+/**
+ * Get authentication headers from the current request
+ * Forwards cookies to maintain session authentication
+ */
+async function getAuthHeaders(): Promise<HeadersInit> {
+  const headersList = await headers();
+  const cookie = headersList.get("cookie");
+
+  const authHeaders: HeadersInit = {
+    "Content-Type": "application/json",
+  };
+
+  if (cookie) {
+    authHeaders["Cookie"] = cookie;
+  }
+
+  return authHeaders;
+}
+
+/**
+ * Fetch all parties for the authenticated user
+ * @returns Array of Party objects
+ * @throws Error if the request fails or user is not authenticated
+ */
+export async function fetchParties(): Promise<Party[]> {
+  const authHeaders = await getAuthHeaders();
+
+  const response = await fetch(`${API_BASE_URL}${API_PATH}/parties`, {
+    method: "GET",
+    headers: authHeaders,
+    cache: "no-store", // Always fetch fresh data
+  });
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      throw new Error("Unauthorized: Please log in to view parties");
+    }
+    if (response.status === 500) {
+      throw new Error("Server error: Unable to fetch parties");
+    }
+    throw new Error(`Failed to fetch parties: ${response.statusText}`);
+  }
+
+  const parties: Party[] = await response.json();
+  return parties;
+}
+
+/**
+ * Fetch a single party by ID
+ * @param partyId - The party ID
+ * @returns Party object or null if not found
+ * @throws Error if the request fails or user is not authenticated
+ */
+export async function fetchPartyById(partyId: string): Promise<Party | null> {
+  const authHeaders = await getAuthHeaders();
+
+  const response = await fetch(
+    `${API_BASE_URL}${API_PATH}/parties/${partyId}`,
+    {
+      method: "GET",
+      headers: authHeaders,
+      cache: "no-store",
+    }
+  );
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      throw new Error("Unauthorized: Please log in to view party details");
+    }
+    if (response.status === 404) {
+      return null;
+    }
+    if (response.status === 500) {
+      throw new Error("Server error: Unable to fetch party");
+    }
+    throw new Error(`Failed to fetch party: ${response.statusText}`);
+  }
+
+  const party: Party = await response.json();
+  return party;
+}
+
+/**
+ * Find a party by slug from the list of all parties
+ * @param slug - The party slug
+ * @returns Party object or null if not found
+ * @throws Error if fetching parties fails
+ */
+export async function fetchPartyBySlug(slug: string): Promise<Party | null> {
+  const parties = await fetchParties();
+  return parties.find((party) => party.slug === slug) || null;
+}
+
+/**
+ * Get or create an RSVP for the authenticated user for a specific party
+ * @param partyId - The party ID
+ * @returns RSVP object
+ * @throws Error if the request fails or user is not authenticated
+ */
+export async function fetchRsvp(partyId: string): Promise<Rsvp> {
+  const authHeaders = await getAuthHeaders();
+
+  const response = await fetch(
+    `${API_BASE_URL}${API_PATH}/parties/${partyId}/rsvp`,
+    {
+      method: "POST",
+      headers: authHeaders,
+      cache: "no-store",
+    }
+  );
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      throw new Error("Unauthorized: Please log in to manage RSVP");
+    }
+    if (response.status === 404) {
+      throw new Error("Party or user not found");
+    }
+    if (response.status === 500) {
+      throw new Error("Server error: Unable to fetch RSVP");
+    }
+    throw new Error(`Failed to fetch RSVP: ${response.statusText}`);
+  }
+
+  const rsvp: Rsvp = await response.json();
+  return rsvp;
+}
+
+/**
+ * Update an RSVP status
+ * @param updateRequest - The RSVP update request with rsvp_id and status
+ * @returns Updated RSVP object
+ * @throws Error if the request fails or user is not authenticated
+ */
+export async function updateRsvp(
+  updateRequest: UpdateRsvpRequest
+): Promise<Rsvp> {
+  const authHeaders = await getAuthHeaders();
+
+  const response = await fetch(`${API_BASE_URL}${API_PATH}/rsvps`, {
+    method: "PUT",
+    headers: authHeaders,
+    body: JSON.stringify(updateRequest),
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      throw new Error("Unauthorized: Please log in to update RSVP");
+    }
+    if (response.status === 404) {
+      throw new Error("RSVP not found");
+    }
+    if (response.status === 500) {
+      throw new Error("Server error: Unable to update RSVP");
+    }
+    throw new Error(`Failed to update RSVP: ${response.statusText}`);
+  }
+
+  const rsvp: Rsvp = await response.json();
+  return rsvp;
+}
