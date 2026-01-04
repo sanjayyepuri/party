@@ -16,10 +16,10 @@ function isValidEmail(email: string): boolean {
 function isValidPhone(phone: string): boolean {
   const trimmed = phone.trim();
   if (!trimmed) return false;
-  
+
   // Remove all non-digit characters except + for validation
   const cleaned = trimmed.replace(/[^\d+]/g, "");
-  
+
   // Must have at least 10 digits (US minimum) and at most 15 digits (E.164 max)
   // Allow + at the start for international format
   if (cleaned.startsWith("+")) {
@@ -27,7 +27,7 @@ function isValidPhone(phone: string): boolean {
     // Minimum: +1 + 10 digits = 11 characters, Maximum: + followed by up to 15 digits = 16 characters
     return cleaned.length >= 11 && cleaned.length <= 16;
   }
-  
+
   // Domestic format: 10-15 digits
   return cleaned.length >= 10 && cleaned.length <= 15;
 }

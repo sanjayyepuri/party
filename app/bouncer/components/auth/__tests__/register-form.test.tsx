@@ -147,7 +147,9 @@ describe("RegisterForm", () => {
 
       const nameInput = screen.getByLabelText(/name/i);
       const emailInput = screen.getByLabelText(/email/i);
-      const phoneInput = screen.getByLabelText(/phone number/i) as HTMLInputElement;
+      const phoneInput = screen.getByLabelText(
+        /phone number/i
+      ) as HTMLInputElement;
 
       await user.type(nameInput, "Test User");
       await user.type(emailInput, "test@example.com");
@@ -161,7 +163,9 @@ describe("RegisterForm", () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByText("Phone number is required")).toBeInTheDocument();
+        expect(
+          screen.getByText("Phone number is required")
+        ).toBeInTheDocument();
       });
     });
 
@@ -179,14 +183,16 @@ describe("RegisterForm", () => {
 
       // Remove HTML5 validation by removing type="email" temporarily
       (emailInput as HTMLInputElement).type = "text";
-      
+
       const button = screen.getByRole("button", {
         name: /send verification code/i,
       });
       await user.click(button);
 
       await waitFor(() => {
-        expect(screen.getByText("Please enter a valid email address")).toBeInTheDocument();
+        expect(
+          screen.getByText("Please enter a valid email address")
+        ).toBeInTheDocument();
       });
     });
 
@@ -208,7 +214,9 @@ describe("RegisterForm", () => {
       await user.click(button);
 
       await waitFor(() => {
-        expect(screen.getByText("Please enter a valid phone number")).toBeInTheDocument();
+        expect(
+          screen.getByText("Please enter a valid phone number")
+        ).toBeInTheDocument();
       });
     });
 
@@ -352,7 +360,9 @@ describe("RegisterForm", () => {
       const user = userEvent.setup();
       render(<RegisterForm />);
 
-      const phoneInput = screen.getByLabelText(/phone number/i) as HTMLInputElement;
+      const phoneInput = screen.getByLabelText(
+        /phone number/i
+      ) as HTMLInputElement;
       await user.type(phoneInput, "+1 (555) 123-4567");
 
       expect(phoneInput.value).toBe("+1 (555) 123-4567");
@@ -681,7 +691,9 @@ describe("RegisterForm", () => {
       await user.type(otpInput, "123456");
 
       // Get all verify buttons and use the last one (newly rendered form)
-      const verifyButtons = screen.getAllByRole("button", { name: /verify code/i });
+      const verifyButtons = screen.getAllByRole("button", {
+        name: /verify code/i,
+      });
       const verifyButton = verifyButtons[verifyButtons.length - 1];
       await user.click(verifyButton);
 
@@ -692,7 +704,6 @@ describe("RegisterForm", () => {
         });
       });
     });
-
 
     it("trims phone number before calling updateUser", async () => {
       const user = userEvent.setup();
@@ -731,7 +742,9 @@ describe("RegisterForm", () => {
       await user.type(otpInput, "123456");
 
       // Get all verify buttons and use the last one (newly rendered form)
-      const verifyButtons = screen.getAllByRole("button", { name: /verify code/i });
+      const verifyButtons = screen.getAllByRole("button", {
+        name: /verify code/i,
+      });
       const verifyButton = verifyButtons[verifyButtons.length - 1];
       await user.click(verifyButton);
 
