@@ -4,8 +4,8 @@
  */
 
 import type { Rsvp, UpdateRsvpRequest } from "./types";
+import { getClientApiBaseUrl } from "./api-url";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 const API_PATH = "/api/bouncer";
 
 /**
@@ -17,7 +17,8 @@ const API_PATH = "/api/bouncer";
 export async function updateRsvpClient(
   updateRequest: UpdateRsvpRequest
 ): Promise<Rsvp> {
-  const response = await fetch(`${API_BASE_URL}${API_PATH}/rsvps`, {
+  const apiBaseUrl = getClientApiBaseUrl();
+  const response = await fetch(`${apiBaseUrl}${API_PATH}/rsvps`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",

@@ -5,42 +5,9 @@
 
 import { headers } from "next/headers";
 import type { Party, Rsvp, UpdateRsvpRequest } from "./types";
-import { getBaseURL } from "./auth-config";
+import { getServerApiBaseUrl } from "./api-url";
 
 const API_PATH = "/api/bouncer";
-
-/**
- * Get the API base URL for server-side requests
- * Uses the same origin as the current request in production
- */
-async function getApiBaseUrl(): Promise<string> {
-  // In production/server-side, construct URL from request headers
-  if (typeof window === "undefined") {
-    // Server-side: use environment variable if set
-    if (process.env.NEXT_PUBLIC_API_URL) {
-      return process.env.NEXT_PUBLIC_API_URL;
-    }
-
-    // Otherwise, try to get the origin from request headers
-    try {
-      const headersList = await headers();
-      const host = headersList.get("host");
-      const protocol = headersList.get("x-forwarded-proto") || "https";
-
-      if (host) {
-        // Construct URL from request headers (works in Vercel/production)
-        return `${protocol}://${host}`;
-      }
-    } catch {
-      // If headers() fails, fall back to base URL
-    }
-
-    // Fallback to base URL from auth config
-    return getBaseURL();
-  }
-  // Client-side: use environment variable or current origin
-  return process.env.NEXT_PUBLIC_API_URL || window.location.origin;
-}
 
 /**
  * Get authentication headers from the current request
@@ -68,7 +35,7 @@ async function getAuthHeaders(): Promise<HeadersInit> {
  */
 export async function fetchParties(): Promise<Party[]> {
   const authHeaders = await getAuthHeaders();
-  const apiBaseUrl = await getApiBaseUrl();
+  const apiBaseUrl = await getServerApiBaseUrl();
 
   try {
     const response = await fetch(`${apiBaseUrl}${API_PATH}/parties`, {
@@ -108,7 +75,7 @@ export async function fetchParties(): Promise<Party[]> {
  */
 export async function fetchPartyById(partyId: string): Promise<Party | null> {
   const authHeaders = await getAuthHeaders();
-  const apiBaseUrl = await getApiBaseUrl();
+  const apiBaseUrl = await getServerApiBaseUrl();
 
   const response = await fetch(`${apiBaseUrl}${API_PATH}/parties/${partyId}`, {
     method: "GET",
@@ -152,7 +119,7 @@ export async function fetchPartyBySlug(slug: string): Promise<Party | null> {
  */
 export async function fetchRsvp(partyId: string): Promise<Rsvp> {
   const authHeaders = await getAuthHeaders();
-  const apiBaseUrl = await getApiBaseUrl();
+  const apiBaseUrl = await getServerApiBaseUrl();
 
   const response = await fetch(
     `${apiBaseUrl}${API_PATH}/parties/${partyId}/rsvp`,
@@ -190,7 +157,7 @@ export async function updateRsvp(
   updateRequest: UpdateRsvpRequest
 ): Promise<Rsvp> {
   const authHeaders = await getAuthHeaders();
-  const apiBaseUrl = await getApiBaseUrl();
+  const apiBaseUrl = await getServerApiBaseUrl();
 
   const response = await fetch(`${apiBaseUrl}${API_PATH}/rsvps`, {
     method: "PUT",

@@ -28,6 +28,14 @@ describe("api-client-client", () => {
     process.env = { ...originalEnv };
     process.env.NEXT_PUBLIC_API_URL = "http://localhost:3000";
 
+    // Mock window.location.origin for tests
+    Object.defineProperty(window, "location", {
+      value: {
+        origin: "https://www.sanjay.party",
+      },
+      writable: true,
+    });
+
     mockFetch = global.fetch as jest.MockedFunction<typeof fetch>;
   });
 
@@ -131,6 +139,36 @@ describe("api-client-client", () => {
         expect.any(String),
         expect.objectContaining({
           credentials: "include",
+        })
+      );
+    });
+
+    it("uses window.location.origin when NEXT_PUBLIC_API_URL is not set", async () => {
+      // Remove the environment variable
+      delete process.env.NEXT_PUBLIC_API_URL;
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockRsvp,
+      } as Response);
+
+      const updateRequest: UpdateRsvpRequest = {
+        rsvp_id: "rsvp-123",
+        status: "accepted",
+      };
+
+      await updateRsvpClient(updateRequest);
+
+      // Should use window.location.origin instead of localhost
+      expect(mockFetch).toHaveBeenCalledWith(
+        "https://www.sanjay.party/api/bouncer/rsvps",
+        expect.objectContaining({
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify(updateRequest),
         })
       );
     });
