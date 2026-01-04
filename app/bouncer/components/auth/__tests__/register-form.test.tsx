@@ -647,7 +647,7 @@ describe("RegisterForm", () => {
       await waitFor(() => {
         expect(mockUpdateUser).toHaveBeenCalledWith({
           name: "John Doe",
-          phone: "+1 (555) 123-4567",
+          phone: "+15551234567",
         });
       });
     });
@@ -700,12 +700,12 @@ describe("RegisterForm", () => {
       await waitFor(() => {
         expect(mockUpdateUser).toHaveBeenCalledWith({
           name: "Jane Smith",
-          phone: "+1 (555) 987-6543",
+          phone: "+15559876543",
         });
       });
     });
 
-    it("trims phone number before calling updateUser", async () => {
+    it("normalizes phone number before calling updateUser", async () => {
       const user = userEvent.setup();
       const mockSignIn = signIn.emailOtp as jest.Mock;
       const mockUpdateUser = updateUser as jest.Mock;
@@ -751,7 +751,7 @@ describe("RegisterForm", () => {
       await waitFor(() => {
         expect(mockUpdateUser).toHaveBeenCalledWith({
           name: "Test User",
-          phone: "+1 (555) 111-2222", // Should be trimmed
+          phone: "+15551112222", // Should be normalized (digits and + only)
         });
       });
     });
