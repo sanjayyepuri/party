@@ -1,0 +1,8 @@
+# Rust
+target/
+**/target/
+
+# Vercel / Next
+.vercel/
+.next/
+node_modules/

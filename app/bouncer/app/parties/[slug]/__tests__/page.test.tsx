@@ -208,4 +208,3 @@ describe("PartyPage", () => {
     expect(container.textContent).toContain("Where:");
   });
 });
-

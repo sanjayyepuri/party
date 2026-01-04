@@ -5,8 +5,7 @@
 
 import type { Rsvp, UpdateRsvpRequest } from "./types";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 const API_PATH = "/api/bouncer";
 
 /**
@@ -43,4 +42,3 @@ export async function updateRsvpClient(
   const rsvp: Rsvp = await response.json();
   return rsvp;
 }
-

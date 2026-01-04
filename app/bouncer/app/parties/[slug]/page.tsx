@@ -64,8 +64,7 @@ export default async function PartyPage({ params }: PartyPageProps) {
   try {
     rsvp = await fetchRsvp(party.party_id);
   } catch (error) {
-    rsvpError =
-      error instanceof Error ? error.message : "Failed to load RSVP";
+    rsvpError = error instanceof Error ? error.message : "Failed to load RSVP";
   }
 
   const partyDate = new Date(party.time);
@@ -129,4 +128,3 @@ export default async function PartyPage({ params }: PartyPageProps) {
     </div>
   );
 }
-

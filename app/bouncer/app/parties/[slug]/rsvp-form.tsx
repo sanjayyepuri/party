@@ -33,9 +33,7 @@ export function RsvpForm({ initialRsvp, partyId }: RsvpFormProps) {
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to update RSVP"
-      );
+      setError(err instanceof Error ? err.message : "Failed to update RSVP");
     } finally {
       setIsUpdating(false);
     }
@@ -111,4 +109,3 @@ export function RsvpForm({ initialRsvp, partyId }: RsvpFormProps) {
     </div>
   );
 }
-

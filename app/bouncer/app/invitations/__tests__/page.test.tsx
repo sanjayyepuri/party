@@ -176,4 +176,3 @@ describe("InvitationsPage", () => {
     expect(settingsLink.closest("a")).toHaveAttribute("href", "/settings");
   });
 });
-

@@ -159,7 +159,7 @@ export const getPasskeyOrigin = (): string => {
         return false;
       }
     });
-    
+
     // If no root domain exists, return first valid origin
     return rootDomain || validOrigins[0];
   }

@@ -80,7 +80,9 @@ describe("RsvpForm", () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText(/RSVP updated successfully/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/RSVP updated successfully/i)
+      ).toBeInTheDocument();
     });
   });
 
@@ -98,7 +100,9 @@ describe("RsvpForm", () => {
     await user.click(acceptedButton);
 
     await waitFor(() => {
-      expect(screen.getByText(/RSVP updated successfully/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/RSVP updated successfully/i)
+      ).toBeInTheDocument();
     });
   });
 
@@ -120,9 +124,11 @@ describe("RsvpForm", () => {
       // Check for error message text specifically
       expect(screen.getByText("Network error")).toBeInTheDocument();
     });
-    
+
     // Verify error container is present
-    const errorContainer = screen.getByText("Network error").closest(".bg-red-50");
+    const errorContainer = screen
+      .getByText("Network error")
+      .closest(".bg-red-50");
     expect(errorContainer).toBeInTheDocument();
   });
 
@@ -225,4 +231,3 @@ describe("RsvpForm", () => {
     expect(statusDisplay).toHaveClass("text-yellow-600");
   });
 });
-

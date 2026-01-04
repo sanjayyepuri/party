@@ -29,4 +29,3 @@ export interface UpdateRsvpRequest {
   rsvp_id: string;
   status: string;
 }
-
