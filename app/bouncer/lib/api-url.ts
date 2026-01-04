@@ -68,4 +68,3 @@ export async function getApiBaseUrl(): Promise<string> {
   // Client-side: use environment variable or current origin
   return getClientApiBaseUrl();
 }
-
