@@ -5,8 +5,26 @@
 
 import type { Rsvp, UpdateRsvpRequest } from "./types";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 const API_PATH = "/api/bouncer";
+
+/**
+ * Get the API base URL for client-side requests
+ * Uses environment variable if set, otherwise uses the current origin
+ */
+function getApiBaseUrl(): string {
+  // Use environment variable if set
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL;
+  }
+
+  // Fallback to current origin (works in both development and production)
+  if (typeof window !== "undefined") {
+    return window.location.origin;
+  }
+
+  // This should never happen in a client component, but provide a fallback
+  return "http://localhost:3000";
+}
 
 /**
  * Update an RSVP status (client-side)
@@ -17,7 +35,8 @@ const API_PATH = "/api/bouncer";
 export async function updateRsvpClient(
   updateRequest: UpdateRsvpRequest
 ): Promise<Rsvp> {
-  const response = await fetch(`${API_BASE_URL}${API_PATH}/rsvps`, {
+  const apiBaseUrl = getApiBaseUrl();
+  const response = await fetch(`${apiBaseUrl}${API_PATH}/rsvps`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
