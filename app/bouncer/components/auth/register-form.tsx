@@ -14,7 +14,7 @@ function isValidEmail(email: string): boolean {
 }
 
 function normalizePhone(phone: string): string {
-  // Remove all non-digit characters except + for storage
+  // Remove all non-digit characters except + for consistent formatting
   return phone.trim().replace(/[^\d+]/g, "");
 }
 
