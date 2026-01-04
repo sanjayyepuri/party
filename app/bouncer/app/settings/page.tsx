@@ -15,6 +15,7 @@ export default async function SettingsPage() {
 
   const userName = session.user.name || "User";
   const userEmail = session.user.email;
+  const userPhone = (session.user as any).phone || null;
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -35,6 +36,12 @@ export default async function SettingsPage() {
                 Email
               </label>
               <p className="text-lg">{userEmail}</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-600 mb-1">
+                Phone Number
+              </label>
+              <p className="text-lg">{userPhone || "Not provided"}</p>
             </div>
           </div>
         </div>
