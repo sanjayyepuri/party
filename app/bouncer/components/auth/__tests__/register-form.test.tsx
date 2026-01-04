@@ -1,8 +1,8 @@
-import { render, screen, waitFor, act } from "@testing-library/react";
+import { render, screen, waitFor, act, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useRouter } from "next/navigation";
 import { RegisterForm } from "../register-form";
-import { emailOtp, signIn, passkey } from "@/lib/auth-client";
+import { emailOtp, signIn, passkey, updateUser } from "@/lib/auth-client";
 
 // Mock next/navigation
 jest.mock("next/navigation", () => ({
@@ -20,6 +20,7 @@ jest.mock("@/lib/auth-client", () => ({
   passkey: {
     addPasskey: jest.fn(),
   },
+  updateUser: jest.fn(),
 }));
 
 describe("RegisterForm", () => {
@@ -60,6 +61,15 @@ describe("RegisterForm", () => {
       expect(emailInput).toHaveAttribute("type", "email");
     });
 
+    it("renders phone number input field", () => {
+      render(<RegisterForm />);
+      const phoneInput = screen.getByLabelText(/phone number/i);
+      expect(phoneInput).toBeInTheDocument();
+      expect(phoneInput).toHaveAttribute("type", "tel");
+      expect(phoneInput).toHaveAttribute("placeholder", "+1 (555) 123-4567");
+      expect(phoneInput).toHaveAttribute("required");
+    });
+
     it("renders the send verification code button", () => {
       render(<RegisterForm />);
       expect(
@@ -89,9 +99,11 @@ describe("RegisterForm", () => {
 
       const nameInput = screen.getByLabelText(/name/i) as HTMLInputElement;
       const emailInput = screen.getByLabelText(/email/i);
+      const phoneInput = screen.getByLabelText(/phone number/i);
 
       await user.clear(nameInput);
       await user.type(emailInput, "test@example.com");
+      await user.type(phoneInput, "+1 (555) 123-4567");
 
       nameInput.removeAttribute("required");
 
@@ -111,9 +123,11 @@ describe("RegisterForm", () => {
 
       const nameInput = screen.getByLabelText(/name/i);
       const emailInput = screen.getByLabelText(/email/i) as HTMLInputElement;
+      const phoneInput = screen.getByLabelText(/phone number/i);
 
       await user.type(nameInput, "Test User");
       await user.clear(emailInput);
+      await user.type(phoneInput, "+1 (555) 123-4567");
 
       emailInput.removeAttribute("required");
 
@@ -125,6 +139,140 @@ describe("RegisterForm", () => {
       await waitFor(() => {
         expect(screen.getByText("Email is required")).toBeInTheDocument();
       });
+    });
+
+    it("shows error when phone is empty", async () => {
+      const user = userEvent.setup();
+      const { container } = render(<RegisterForm />);
+
+      const nameInput = screen.getByLabelText(/name/i);
+      const emailInput = screen.getByLabelText(/email/i);
+      const phoneInput = screen.getByLabelText(/phone number/i) as HTMLInputElement;
+
+      await user.type(nameInput, "Test User");
+      await user.type(emailInput, "test@example.com");
+      await user.clear(phoneInput);
+
+      phoneInput.removeAttribute("required");
+
+      const form = container.querySelector("form") as HTMLFormElement;
+      await act(async () => {
+        form.requestSubmit();
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText("Phone number is required")).toBeInTheDocument();
+      });
+    });
+
+    it("shows error when email format is invalid", async () => {
+      const user = userEvent.setup();
+      render(<RegisterForm />);
+
+      const nameInput = screen.getByLabelText(/name/i);
+      const emailInput = screen.getByLabelText(/email/i);
+      const phoneInput = screen.getByLabelText(/phone number/i);
+
+      await user.type(nameInput, "Test User");
+      await user.type(emailInput, "invalid-email");
+      await user.type(phoneInput, "+1 (555) 123-4567");
+
+      // Remove HTML5 validation by removing type="email" temporarily
+      (emailInput as HTMLInputElement).type = "text";
+      
+      const button = screen.getByRole("button", {
+        name: /send verification code/i,
+      });
+      await user.click(button);
+
+      await waitFor(() => {
+        expect(screen.getByText("Please enter a valid email address")).toBeInTheDocument();
+      });
+    });
+
+    it("shows error when phone format is invalid", async () => {
+      const user = userEvent.setup();
+      render(<RegisterForm />);
+
+      const nameInput = screen.getByLabelText(/name/i);
+      const emailInput = screen.getByLabelText(/email/i);
+      const phoneInput = screen.getByLabelText(/phone number/i);
+
+      await user.type(nameInput, "Test User");
+      await user.type(emailInput, "test@example.com");
+      await user.type(phoneInput, "123"); // Too short
+
+      const button = screen.getByRole("button", {
+        name: /send verification code/i,
+      });
+      await user.click(button);
+
+      await waitFor(() => {
+        expect(screen.getByText("Please enter a valid phone number")).toBeInTheDocument();
+      });
+    });
+
+    it("accepts valid email formats", async () => {
+      const user = userEvent.setup();
+      const mockSendOtp = emailOtp.sendVerificationOtp as jest.Mock;
+      mockSendOtp.mockResolvedValue({ data: { success: true } });
+
+      render(<RegisterForm />);
+
+      const nameInput = screen.getByLabelText(/name/i);
+      const emailInput = screen.getByLabelText(/email/i);
+      const phoneInput = screen.getByLabelText(/phone number/i);
+
+      await user.type(nameInput, "Test User");
+      await user.type(emailInput, "user.name+tag@example.co.uk");
+      await user.type(phoneInput, "+1 (555) 123-4567");
+
+      const button = screen.getByRole("button", {
+        name: /send verification code/i,
+      });
+      await user.click(button);
+
+      await waitFor(() => {
+        expect(mockSendOtp).toHaveBeenCalled();
+      });
+    });
+
+    it("accepts valid phone number formats", async () => {
+      const user = userEvent.setup();
+      const mockSendOtp = emailOtp.sendVerificationOtp as jest.Mock;
+      mockSendOtp.mockResolvedValue({ data: { success: true } });
+
+      const validPhones = [
+        "+1 (555) 123-4567",
+        "555-123-4567",
+        "5551234567",
+        "+44 20 1234 5678",
+        "(555) 123-4567",
+      ];
+
+      for (const phoneNumber of validPhones) {
+        jest.clearAllMocks();
+        const { unmount } = render(<RegisterForm />);
+
+        const nameInput = screen.getByLabelText(/name/i);
+        const emailInput = screen.getByLabelText(/email/i);
+        const phoneInput = screen.getByLabelText(/phone number/i);
+
+        await user.type(nameInput, "Test User");
+        await user.type(emailInput, "test@example.com");
+        await user.type(phoneInput, phoneNumber);
+
+        const button = screen.getByRole("button", {
+          name: /send verification code/i,
+        });
+        await user.click(button);
+
+        await waitFor(() => {
+          expect(mockSendOtp).toHaveBeenCalled();
+        });
+
+        unmount();
+      }
     });
 
     it("does not call sendVerificationOtp when validation fails", async () => {
@@ -153,9 +301,11 @@ describe("RegisterForm", () => {
 
       const nameInput = screen.getByLabelText(/name/i);
       const emailInput = screen.getByLabelText(/email/i);
+      const phoneInput = screen.getByLabelText(/phone number/i);
 
       await user.type(nameInput, "John Doe");
       await user.type(emailInput, "john@example.com");
+      await user.type(phoneInput, "+1 (555) 123-4567");
 
       const button = screen.getByRole("button", {
         name: /send verification code/i,
@@ -179,9 +329,11 @@ describe("RegisterForm", () => {
 
       const nameInput = screen.getByLabelText(/name/i);
       const emailInput = screen.getByLabelText(/email/i);
+      const phoneInput = screen.getByLabelText(/phone number/i);
 
       await user.type(nameInput, "  John Doe  ");
       await user.type(emailInput, "  john@example.com  ");
+      await user.type(phoneInput, "+1 (555) 123-4567");
 
       const button = screen.getByRole("button", {
         name: /send verification code/i,
@@ -193,6 +345,41 @@ describe("RegisterForm", () => {
           email: "john@example.com", // Should be trimmed
           type: "sign-in",
         });
+      });
+    });
+
+    it("allows phone number input", async () => {
+      const user = userEvent.setup();
+      render(<RegisterForm />);
+
+      const phoneInput = screen.getByLabelText(/phone number/i) as HTMLInputElement;
+      await user.type(phoneInput, "+1 (555) 123-4567");
+
+      expect(phoneInput.value).toBe("+1 (555) 123-4567");
+    });
+
+    it("requires phone number field", async () => {
+      const user = userEvent.setup();
+      const mockSendOtp = emailOtp.sendVerificationOtp as jest.Mock;
+      mockSendOtp.mockResolvedValue({ data: { success: true } });
+
+      render(<RegisterForm />);
+
+      const nameInput = screen.getByLabelText(/name/i);
+      const emailInput = screen.getByLabelText(/email/i);
+      const phoneInput = screen.getByLabelText(/phone number/i);
+
+      await user.type(nameInput, "John Doe");
+      await user.type(emailInput, "john@example.com");
+      await user.type(phoneInput, "+1 (555) 123-4567");
+
+      const button = screen.getByRole("button", {
+        name: /send verification code/i,
+      });
+      await user.click(button);
+
+      await waitFor(() => {
+        expect(mockSendOtp).toHaveBeenCalled();
       });
     });
 
@@ -211,9 +398,11 @@ describe("RegisterForm", () => {
 
       const nameInput = screen.getByLabelText(/name/i);
       const emailInput = screen.getByLabelText(/email/i);
+      const phoneInput = screen.getByLabelText(/phone number/i);
 
       await user.type(nameInput, "John Doe");
       await user.type(emailInput, "john@example.com");
+      await user.type(phoneInput, "+1 (555) 123-4567");
 
       const button = screen.getByRole("button", {
         name: /send verification code/i,
@@ -238,9 +427,11 @@ describe("RegisterForm", () => {
 
       const nameInput = screen.getByLabelText(/name/i);
       const emailInput = screen.getByLabelText(/email/i);
+      const phoneInput = screen.getByLabelText(/phone number/i);
 
       await user.type(nameInput, "John Doe");
       await user.type(emailInput, "john@example.com");
+      await user.type(phoneInput, "+1 (555) 123-4567");
 
       const button = screen.getByRole("button", {
         name: /send verification code/i,
@@ -266,9 +457,11 @@ describe("RegisterForm", () => {
 
       const nameInput = screen.getByLabelText(/name/i);
       const emailInput = screen.getByLabelText(/email/i);
+      const phoneInput = screen.getByLabelText(/phone number/i);
 
       await user.type(nameInput, "John Doe");
       await user.type(emailInput, "john@example.com");
+      await user.type(phoneInput, "+1 (555) 123-4567");
 
       const button = screen.getByRole("button", {
         name: /send verification code/i,
@@ -285,15 +478,19 @@ describe("RegisterForm", () => {
     beforeEach(async () => {
       const user = userEvent.setup();
       const mockSendOtp = emailOtp.sendVerificationOtp as jest.Mock;
+      const mockUpdateUser = updateUser as jest.Mock;
       mockSendOtp.mockResolvedValue({ data: { success: true } });
+      mockUpdateUser.mockResolvedValue({ data: { user: {} } });
 
       render(<RegisterForm />);
 
       const nameInput = screen.getByLabelText(/name/i);
       const emailInput = screen.getByLabelText(/email/i);
+      const phoneInput = screen.getByLabelText(/phone number/i);
 
       await user.type(nameInput, "John Doe");
       await user.type(emailInput, "john@example.com");
+      await user.type(phoneInput, "+1 (555) 123-4567");
 
       const button = screen.getByRole("button", {
         name: /send verification code/i,
@@ -406,7 +603,9 @@ describe("RegisterForm", () => {
     it("transitions to passkey step on successful verification", async () => {
       const user = userEvent.setup();
       const mockSignIn = signIn.emailOtp as jest.Mock;
+      const mockUpdateUser = updateUser as jest.Mock;
       mockSignIn.mockResolvedValue({ data: { user: {} } });
+      mockUpdateUser.mockResolvedValue({ data: { user: {} } });
 
       const otpInput = screen.getByLabelText(/verification code/i);
       await user.type(otpInput, "123456");
@@ -420,6 +619,155 @@ describe("RegisterForm", () => {
           screen.getByRole("button", { name: /create passkey/i })
         ).toBeInTheDocument();
       });
+    });
+
+    it("calls updateUser with name and phone after successful OTP verification", async () => {
+      const user = userEvent.setup();
+      const mockSignIn = signIn.emailOtp as jest.Mock;
+      const mockUpdateUser = updateUser as jest.Mock;
+      mockSignIn.mockResolvedValue({ data: { user: {} } });
+      mockUpdateUser.mockResolvedValue({ data: { user: {} } });
+
+      const otpInput = screen.getByLabelText(/verification code/i);
+      await user.type(otpInput, "123456");
+
+      const button = screen.getByRole("button", { name: /verify code/i });
+      await user.click(button);
+
+      await waitFor(() => {
+        expect(mockUpdateUser).toHaveBeenCalledWith({
+          name: "John Doe",
+          phone: "+1 (555) 123-4567",
+        });
+      });
+    });
+
+    it("calls updateUser with name and phone when phone is provided", async () => {
+      const user = userEvent.setup();
+      const mockSignIn = signIn.emailOtp as jest.Mock;
+      const mockUpdateUser = updateUser as jest.Mock;
+      mockSignIn.mockResolvedValue({ data: { user: {} } });
+      mockUpdateUser.mockResolvedValue({ data: { user: {} } });
+
+      // Go back to email step to add phone number
+      // We need to re-render and go through the flow with phone
+      const mockSendOtp = emailOtp.sendVerificationOtp as jest.Mock;
+      mockSendOtp.mockResolvedValue({ data: { success: true } });
+
+      // Clean up the previous render from beforeEach
+      cleanup();
+      render(<RegisterForm />);
+
+      const nameInput = screen.getByLabelText(/name/i);
+      const emailInput = screen.getByLabelText(/email/i);
+      const phoneInput = screen.getByLabelText(/phone number/i);
+
+      await user.type(nameInput, "Jane Smith");
+      await user.type(emailInput, "jane@example.com");
+      await user.type(phoneInput, "+1 (555) 987-6543");
+
+      const sendButton = screen.getByRole("button", {
+        name: /send verification code/i,
+      });
+      await user.click(sendButton);
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/verification code/i)).toBeInTheDocument();
+      });
+
+      // Get all OTP inputs and use the last one (newly rendered form)
+      const otpInputs = screen.getAllByLabelText(/verification code/i);
+      const otpInput = otpInputs[otpInputs.length - 1];
+      await user.type(otpInput, "123456");
+
+      // Get all verify buttons and use the last one (newly rendered form)
+      const verifyButtons = screen.getAllByRole("button", { name: /verify code/i });
+      const verifyButton = verifyButtons[verifyButtons.length - 1];
+      await user.click(verifyButton);
+
+      await waitFor(() => {
+        expect(mockUpdateUser).toHaveBeenCalledWith({
+          name: "Jane Smith",
+          phone: "+1 (555) 987-6543",
+        });
+      });
+    });
+
+
+    it("trims phone number before calling updateUser", async () => {
+      const user = userEvent.setup();
+      const mockSignIn = signIn.emailOtp as jest.Mock;
+      const mockUpdateUser = updateUser as jest.Mock;
+      mockSignIn.mockResolvedValue({ data: { user: {} } });
+      mockUpdateUser.mockResolvedValue({ data: { user: {} } });
+
+      const mockSendOtp = emailOtp.sendVerificationOtp as jest.Mock;
+      mockSendOtp.mockResolvedValue({ data: { success: true } });
+
+      // Clean up the previous render from beforeEach
+      cleanup();
+      render(<RegisterForm />);
+
+      const nameInput = screen.getByLabelText(/name/i);
+      const emailInput = screen.getByLabelText(/email/i);
+      const phoneInput = screen.getByLabelText(/phone number/i);
+
+      await user.type(nameInput, "Test User");
+      await user.type(emailInput, "test@example.com");
+      await user.type(phoneInput, "  +1 (555) 111-2222  ");
+
+      const sendButton = screen.getByRole("button", {
+        name: /send verification code/i,
+      });
+      await user.click(sendButton);
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/verification code/i)).toBeInTheDocument();
+      });
+
+      // Get all OTP inputs and use the last one (newly rendered form)
+      const otpInputs = screen.getAllByLabelText(/verification code/i);
+      const otpInput = otpInputs[otpInputs.length - 1];
+      await user.type(otpInput, "123456");
+
+      // Get all verify buttons and use the last one (newly rendered form)
+      const verifyButtons = screen.getAllByRole("button", { name: /verify code/i });
+      const verifyButton = verifyButtons[verifyButtons.length - 1];
+      await user.click(verifyButton);
+
+      await waitFor(() => {
+        expect(mockUpdateUser).toHaveBeenCalledWith({
+          name: "Test User",
+          phone: "+1 (555) 111-2222", // Should be trimmed
+        });
+      });
+    });
+
+    it("does not block flow when updateUser fails", async () => {
+      const user = userEvent.setup();
+      const mockSignIn = signIn.emailOtp as jest.Mock;
+      const mockUpdateUser = updateUser as jest.Mock;
+      mockSignIn.mockResolvedValue({ data: { user: {} } });
+      mockUpdateUser.mockResolvedValue({
+        error: { message: "Failed to update user" },
+      });
+
+      const otpInput = screen.getByLabelText(/verification code/i);
+      await user.type(otpInput, "123456");
+
+      const button = screen.getByRole("button", { name: /verify code/i });
+      await user.click(button);
+
+      // Should still transition to passkey step even if updateUser fails
+      await waitFor(() => {
+        expect(screen.getByText(/Email verified!/i)).toBeInTheDocument();
+        expect(
+          screen.getByRole("button", { name: /create passkey/i })
+        ).toBeInTheDocument();
+      });
+
+      // updateUser should have been called
+      expect(mockUpdateUser).toHaveBeenCalled();
     });
 
     it("displays error for invalid OTP", async () => {
@@ -489,9 +837,11 @@ describe("RegisterForm", () => {
 
       const nameInput = screen.getByLabelText(/name/i);
       const emailInput = screen.getByLabelText(/email/i);
+      const phoneInput = screen.getByLabelText(/phone number/i);
 
       await user.type(nameInput, "John Doe");
       await user.type(emailInput, "john@example.com");
+      await user.type(phoneInput, "+1 (555) 123-4567");
 
       const sendButton = screen.getByRole("button", {
         name: /send verification code/i,
@@ -637,9 +987,11 @@ describe("RegisterForm", () => {
 
       const nameInput = screen.getByLabelText(/name/i);
       const emailInput = screen.getByLabelText(/email/i);
+      const phoneInput = screen.getByLabelText(/phone number/i);
 
       await user.type(nameInput, "John Doe");
       await user.type(emailInput, "john@example.com");
+      await user.type(phoneInput, "+1 (555) 123-4567");
 
       const sendButton = screen.getByRole("button", {
         name: /send verification code/i,
@@ -677,9 +1029,11 @@ describe("RegisterForm", () => {
 
       const nameInput = screen.getByLabelText(/name/i);
       const emailInput = screen.getByLabelText(/email/i);
+      const phoneInput = screen.getByLabelText(/phone number/i);
 
       await user.type(nameInput, "John Doe");
       await user.type(emailInput, "john@example.com");
+      await user.type(phoneInput, "+1 (555) 123-4567");
 
       const button = screen.getByRole("button", {
         name: /send verification code/i,

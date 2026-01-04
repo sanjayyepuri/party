@@ -1,16 +1,43 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { passkey, signIn, emailOtp } from "@/lib/auth-client";
+import { passkey, signIn, emailOtp, updateUser } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 
 type Step = "email" | "otp" | "passkey";
+
+// Email validation regex - standard email format
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function isValidEmail(email: string): boolean {
+  return EMAIL_REGEX.test(email.trim());
+}
+
+function isValidPhone(phone: string): boolean {
+  const trimmed = phone.trim();
+  if (!trimmed) return false;
+  
+  // Remove all non-digit characters except + for validation
+  const cleaned = trimmed.replace(/[^\d+]/g, "");
+  
+  // Must have at least 10 digits (US minimum) and at most 15 digits (E.164 max)
+  // Allow + at the start for international format
+  if (cleaned.startsWith("+")) {
+    // International format: + followed by country code and number
+    // Minimum: +1 + 10 digits = 11 characters, Maximum: + followed by up to 15 digits = 16 characters
+    return cleaned.length >= 11 && cleaned.length <= 16;
+  }
+  
+  // Domestic format: 10-15 digits
+  return cleaned.length >= 10 && cleaned.length <= 15;
+}
 
 export function RegisterForm() {
   const router = useRouter();
   const [step, setStep] = useState<Step>("email");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -20,9 +47,10 @@ export function RegisterForm() {
     e.preventDefault();
     setError("");
 
-    // Validate name and email before proceeding
+    // Validate name, email, and phone before proceeding
     const trimmedName = name.trim();
     const trimmedEmail = email.trim();
+    const trimmedPhone = phone.trim();
 
     if (!trimmedName) {
       setError("Name is required");
@@ -30,6 +58,18 @@ export function RegisterForm() {
     }
     if (!trimmedEmail) {
       setError("Email is required");
+      return;
+    }
+    if (!isValidEmail(trimmedEmail)) {
+      setError("Please enter a valid email address");
+      return;
+    }
+    if (!trimmedPhone) {
+      setError("Phone number is required");
+      return;
+    }
+    if (!isValidPhone(trimmedPhone)) {
+      setError("Please enter a valid phone number");
       return;
     }
 
@@ -105,9 +145,19 @@ export function RegisterForm() {
         return;
       }
 
-      // Step 3: Update user name if provided (since signIn doesn't set name)
-      // Note: This might require a separate API call if better-auth doesn't support it
-      // For now, we'll proceed to passkey creation
+      // Step 3: Update user name and phone (since signIn doesn't set these)
+      // Both name and phone are required
+      const trimmedPhone = phone.trim();
+      const updateData: { name: string; phone: string } = {
+        name: trimmedName,
+        phone: trimmedPhone,
+      };
+
+      const updateResult = await updateUser(updateData);
+      if (updateResult.error) {
+        console.error("Failed to update user:", updateResult.error);
+        // Don't block the flow if update fails, but log it
+      }
 
       // Step 4: Move to passkey creation step
       setStep("passkey");
@@ -251,6 +301,22 @@ export function RegisterForm() {
               required
               className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
               disabled={loading}
+            />
+          </div>
+
+          <div>
+            <label htmlFor="phone" className="block text-sm font-medium mb-1">
+              Phone Number
+            </label>
+            <input
+              id="phone"
+              type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              required
+              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              disabled={loading}
+              placeholder="+1 (555) 123-4567"
             />
           </div>
 
