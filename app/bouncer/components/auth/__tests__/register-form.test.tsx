@@ -652,7 +652,7 @@ describe("RegisterForm", () => {
       });
     });
 
-    it("calls updateUser with name and phone when phone is provided", async () => {
+    it("calls updateUser with submitted name and phone after registration", async () => {
       const user = userEvent.setup();
       const mockSignIn = signIn.emailOtp as jest.Mock;
       const mockUpdateUser = updateUser as jest.Mock;
@@ -685,16 +685,14 @@ describe("RegisterForm", () => {
         expect(screen.getByLabelText(/verification code/i)).toBeInTheDocument();
       });
 
-      // Get all OTP inputs and use the last one (newly rendered form)
-      const otpInputs = screen.getAllByLabelText(/verification code/i);
-      const otpInput = otpInputs[otpInputs.length - 1];
+      // Enter the verification code in the newly rendered form
+      const otpInput = screen.getByLabelText(/verification code/i);
       await user.type(otpInput, "123456");
 
-      // Get all verify buttons and use the last one (newly rendered form)
-      const verifyButtons = screen.getAllByRole("button", {
+      // Click the verify button in the newly rendered form
+      const verifyButton = screen.getByRole("button", {
         name: /verify code/i,
       });
-      const verifyButton = verifyButtons[verifyButtons.length - 1];
       await user.click(verifyButton);
 
       await waitFor(() => {
@@ -736,18 +734,13 @@ describe("RegisterForm", () => {
         expect(screen.getByLabelText(/verification code/i)).toBeInTheDocument();
       });
 
-      // Get all OTP inputs and use the last one (newly rendered form)
-      const otpInputs = screen.getAllByLabelText(/verification code/i);
-      const otpInput = otpInputs[otpInputs.length - 1];
+      const otpInput = screen.getByLabelText(/verification code/i);
       await user.type(otpInput, "123456");
 
-      // Get all verify buttons and use the last one (newly rendered form)
-      const verifyButtons = screen.getAllByRole("button", {
+      const verifyButton = screen.getByRole("button", {
         name: /verify code/i,
       });
-      const verifyButton = verifyButtons[verifyButtons.length - 1];
       await user.click(verifyButton);
-
       await waitFor(() => {
         expect(mockUpdateUser).toHaveBeenCalledWith({
           name: "Test User",
