@@ -19,4 +19,5 @@ export const {
   getSession,
   passkey,
   emailOtp,
+  updateUser,
 } = authClient;
