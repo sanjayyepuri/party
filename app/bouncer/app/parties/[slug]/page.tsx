@@ -1,7 +1,7 @@
 import { redirect, notFound } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-import { fetchPartyBySlug, fetchRsvp, updateRsvp } from "@/lib/api-client";
+import { fetchPartyBySlug, fetchRsvp } from "@/lib/api-client";
 import Link from "next/link";
 import { RsvpForm } from "./rsvp-form";
 
