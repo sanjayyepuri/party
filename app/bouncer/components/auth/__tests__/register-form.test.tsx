@@ -734,7 +734,6 @@ describe("RegisterForm", () => {
         expect(screen.getByLabelText(/verification code/i)).toBeInTheDocument();
       });
 
-<<<<<<< HEAD
       const otpInput = screen.getByLabelText(/verification code/i);
       await user.type(otpInput, "123456");
 
