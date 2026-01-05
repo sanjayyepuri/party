@@ -12,9 +12,9 @@ export default async function InvitationsPage() {
     headers: await headers(),
   });
 
-  // If no session, redirect to login page
+  // If no session, redirect to home page
   if (!session) {
-    redirect("/auth/login");
+    redirect("/");
   }
 
   // User is authenticated, show welcome message

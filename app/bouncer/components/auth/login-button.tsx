@@ -42,20 +42,20 @@ export function LoginButton() {
             router.push("/invitations");
           },
           onError: (ctx: { error?: { message?: string } }) => {
-            // On any error, redirect to login page
-            router.push("/auth/login");
+            // On any error, redirect to home page
+            router.push("/");
           },
         }
       );
 
       // Fallback error handling
       if (result?.error) {
-        // On any error, redirect to login page
-        router.push("/auth/login");
+        // On any error, redirect to home page
+        router.push("/");
       }
     } catch (err) {
-      // On any error, redirect to login page
-      router.push("/auth/login");
+      // On any error, redirect to home page
+      router.push("/");
     } finally {
       setLoading(false);
     }

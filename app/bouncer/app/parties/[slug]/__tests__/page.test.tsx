@@ -83,14 +83,14 @@ describe("PartyPage", () => {
     auth.api.getSession.mockResolvedValue(mockSession);
   });
 
-  it("redirects to login when user is not authenticated", async () => {
+  it("redirects to home page when user is not authenticated", async () => {
     const { auth } = require("@/lib/auth");
     auth.api.getSession.mockResolvedValue(null);
 
     await expect(
       PartyPage({ params: Promise.resolve({ slug: "test-party" }) })
     ).rejects.toThrow("NEXT_REDIRECT");
-    expect(redirect).toHaveBeenCalledWith("/auth/login");
+    expect(redirect).toHaveBeenCalledWith("/");
   });
 
   it("calls notFound when party is not found", async () => {

@@ -36,10 +36,8 @@ export async function middleware(request: NextRequest) {
     request.cookies.get("better-auth.session_token");
 
   if (!sessionCookie) {
-    // Redirect to login if no session cookie is present at all
-    const loginUrl = new URL("/auth/login", request.url);
-    loginUrl.searchParams.set("redirect", pathname);
-    return NextResponse.redirect(loginUrl);
+    // Redirect to home page if no session cookie is present at all
+    return NextResponse.redirect(new URL("/", request.url));
   }
 
   // Cookie is present; allow the request to proceed to server-side handlers,

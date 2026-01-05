@@ -15,9 +15,9 @@ export default async function PartyPage({ params }: PartyPageProps) {
     headers: await headers(),
   });
 
-  // If no session, redirect to login page
+  // If no session, redirect to home page
   if (!session) {
-    redirect("/auth/login");
+    redirect("/");
   }
 
   // Get slug from params

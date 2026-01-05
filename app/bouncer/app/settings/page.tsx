@@ -8,9 +8,9 @@ export default async function SettingsPage() {
     headers: await headers(),
   });
 
-  // If no session, redirect to login page
+  // If no session, redirect to home page
   if (!session) {
-    redirect("/auth/login");
+    redirect("/");
   }
 
   const userName = session.user.name || "User";

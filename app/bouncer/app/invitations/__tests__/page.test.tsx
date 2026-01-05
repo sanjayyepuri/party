@@ -83,12 +83,12 @@ describe("InvitationsPage", () => {
     auth.api.getSession.mockResolvedValue(mockSession);
   });
 
-  it("redirects to login when user is not authenticated", async () => {
+  it("redirects to home page when user is not authenticated", async () => {
     const { auth } = require("@/lib/auth");
     auth.api.getSession.mockResolvedValue(null);
 
     await expect(InvitationsPage()).rejects.toThrow("NEXT_REDIRECT");
-    expect(redirect).toHaveBeenCalledWith("/auth/login");
+    expect(redirect).toHaveBeenCalledWith("/");
   });
 
   describe("display name behavior", () => {
