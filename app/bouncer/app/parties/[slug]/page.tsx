@@ -1,9 +1,10 @@
 import { redirect, notFound } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-import { fetchPartyBySlug, fetchRsvp } from "@/lib/api-client";
+import { fetchPartyBySlug, fetchRsvp, fetchPartyRsvps } from "@/lib/api-client";
 import Link from "next/link";
 import { RsvpForm } from "./rsvp-form";
+import { GuestList } from "./guest-list";
 
 interface PartyPageProps {
   params: Promise<{ slug: string }>;
@@ -67,6 +68,16 @@ export default async function PartyPage({ params }: PartyPageProps) {
     rsvpError = error instanceof Error ? error.message : "Failed to load RSVP";
   }
 
+  // Fetch all RSVPs for this party
+  let partyRsvps;
+  let partyRsvpsError: string | null = null;
+  try {
+    partyRsvps = await fetchPartyRsvps(party.party_id);
+  } catch (error) {
+    partyRsvpsError =
+      error instanceof Error ? error.message : "Failed to load party RSVPs";
+  }
+
   const partyDate = new Date(party.time);
   const formattedDate = partyDate.toLocaleDateString("en-US", {
     weekday: "long",
@@ -120,6 +131,23 @@ export default async function PartyPage({ params }: PartyPageProps) {
         {!rsvpError && !rsvp && (
           <div className="p-4 bg-gray-50 border border-gray-200 rounded text-gray-600">
             <p>Loading RSVP...</p>
+          </div>
+        )}
+      </div>
+
+      <div className="mb-8">
+        {partyRsvpsError && (
+          <div className="p-4 bg-red-50 border border-red-200 rounded text-red-800">
+            <p className="font-medium">Error loading guest list</p>
+            <p className="text-sm">{partyRsvpsError}</p>
+          </div>
+        )}
+        {!partyRsvpsError && partyRsvps && (
+          <GuestList rsvps={partyRsvps} currentUserId={session.user.id} />
+        )}
+        {!partyRsvpsError && !partyRsvps && (
+          <div className="p-4 bg-gray-50 border border-gray-200 rounded text-gray-600">
+            <p>Loading guest list...</p>
           </div>
         )}
       </div>

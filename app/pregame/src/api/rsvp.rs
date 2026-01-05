@@ -9,7 +9,7 @@ use std::sync::Arc;
 
 use crate::api::ApiState;
 use crate::auth::BetterAuthSession;
-use crate::model::Rsvp;
+use crate::model::{Rsvp, RsvpWithUser};
 
 /// Get RSVPs for a specific party
 pub async fn get_party_rsvps(
@@ -25,13 +25,14 @@ pub async fn get_party_rsvps(
 async fn get_party_rsvps_impl(
     api_state: Arc<ApiState>,
     party_id: String,
-) -> Result<Vec<Rsvp>, axum::response::Response> {
+) -> Result<Vec<RsvpWithUser>, axum::response::Response> {
     let rows = api_state
     .db_state
     .client
     .query(
-      "SELECT r.rsvp_id, r.party_id, r.user_id, r.status, r.created_at, r.updated_at, r.deleted_at
+      "SELECT r.rsvp_id, r.party_id, r.user_id, r.status, r.created_at, r.updated_at, r.deleted_at, u.name as user_name
              FROM rsvp r
+             JOIN \"user\" u ON r.user_id = u.id
              WHERE r.party_id = $1 AND r.deleted_at IS NULL
              ORDER BY r.created_at ASC;",
       &[&party_id],
@@ -47,8 +48,8 @@ async fn get_party_rsvps_impl(
     })?;
 
     rows.into_iter()
-        .map(|row| Rsvp::from_row(&row))
-        .collect::<Result<Vec<Rsvp>, _>>()
+        .map(|row| RsvpWithUser::from_row(&row))
+        .collect::<Result<Vec<RsvpWithUser>, _>>()
         .map_err(|err| {
             tracing::error!("Failed to parse RSVP from row: {:?}", err);
             (

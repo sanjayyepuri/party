@@ -25,6 +25,10 @@ export interface Rsvp {
   deleted_at: string | null; // ISO 8601 datetime string or null
 }
 
+export interface RsvpWithUser extends Rsvp {
+  user_name: string | null;
+}
+
 export interface UpdateRsvpRequest {
   rsvp_id: string;
   status: string;
