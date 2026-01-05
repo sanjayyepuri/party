@@ -56,6 +56,8 @@ export async function fetchParties(): Promise<Party[]> {
   const authHeaders = await getAuthHeaders();
   const apiBaseUrl = await getApiBaseUrl();
 
+  console.log(`Fetching parties from ${apiBaseUrl}${API_PATH}/parties`);
+
   try {
     const response = await fetch(`${apiBaseUrl}${API_PATH}/parties`, {
       method: "GET",
