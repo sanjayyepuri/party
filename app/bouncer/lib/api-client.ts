@@ -11,20 +11,14 @@ const API_PATH = "/api/bouncer";
 
 /**
  * Get the API base URL for server-side requests
- * Uses the same origin as the current request in production
+ * Uses VERCEL_ENV to determine the correct URL for the environment
+ * In production, uses VERCEL_PROJECT_PRODUCTION_URL (custom domain) to avoid CORS issues
  */
 async function getApiBaseUrl(): Promise<string> {
-  // Server-side: use environment variable if set
-  const envBaseUrl = process.env.NEXT_PUBLIC_VERCEL_URL;
-  if (envBaseUrl) {
-    // Vercel provides this without protocol; ensure we return a fully qualified URL
-    if (envBaseUrl.startsWith("http://") || envBaseUrl.startsWith("https://")) {
-      return envBaseUrl;
-    }
-    return `https://${envBaseUrl}`;
-  }
-
-  // Fallback to base URL from auth config
+  // Use getBaseURL() which handles all environment detection correctly:
+  // - Production: Uses VERCEL_PROJECT_PRODUCTION_URL (custom domain) to avoid CORS
+  // - Preview: Uses VERCEL_URL or VERCEL_BRANCH_URL
+  // - Development: Uses localhost
   return getBaseURL();
 }
 

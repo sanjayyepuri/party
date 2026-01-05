@@ -91,15 +91,173 @@ describe("InvitationsPage", () => {
     expect(redirect).toHaveBeenCalledWith("/auth/login");
   });
 
-  it("displays welcome message with user email", async () => {
-    const { fetchParties } = require("@/lib/api-client");
-    fetchParties.mockResolvedValue([]);
+  describe("display name behavior", () => {
+    beforeEach(() => {
+      const { fetchParties } = require("@/lib/api-client");
+      fetchParties.mockResolvedValue([]);
+    });
 
-    const component = await InvitationsPage();
-    const { container } = render(component);
+    it("displays welcome message with user email when name is not provided", async () => {
+      const { auth } = require("@/lib/auth");
+      auth.api.getSession.mockResolvedValue({
+        user: {
+          email: "[email protected]",
+          id: "user-123",
+        },
+      });
 
-    expect(container.textContent).toContain("hey [email protected]");
-    expect(container.textContent).toContain("welcome to the party");
+      const component = await InvitationsPage();
+      const { container } = render(component);
+
+      expect(container.textContent).toContain("hey [email protected]");
+      expect(container.textContent).toContain("welcome to the party");
+    });
+
+    it("uses first word of name (lowercased) when name is provided", async () => {
+      const { auth } = require("@/lib/auth");
+      auth.api.getSession.mockResolvedValue({
+        user: {
+          name: "John Doe",
+          email: "[email protected]",
+          id: "user-123",
+        },
+      });
+
+      const component = await InvitationsPage();
+      const { container } = render(component);
+
+      expect(container.textContent).toContain("hey john.");
+      expect(container.textContent).not.toContain("hey [email protected]");
+    });
+
+    it("uses first word of name even when name has multiple words", async () => {
+      const { auth } = require("@/lib/auth");
+      auth.api.getSession.mockResolvedValue({
+        user: {
+          name: "Mary Jane Watson",
+          email: "[email protected]",
+          id: "user-123",
+        },
+      });
+
+      const component = await InvitationsPage();
+      const { container } = render(component);
+
+      expect(container.textContent).toContain("hey mary.");
+      expect(container.textContent).not.toContain("hey mary jane");
+    });
+
+    it("converts name to lowercase", async () => {
+      const { auth } = require("@/lib/auth");
+      auth.api.getSession.mockResolvedValue({
+        user: {
+          name: "ALICE",
+          email: "[email protected]",
+          id: "user-123",
+        },
+      });
+
+      const component = await InvitationsPage();
+      const { container } = render(component);
+
+      expect(container.textContent).toContain("hey alice.");
+      expect(container.textContent).not.toContain("hey ALICE");
+    });
+
+    it("falls back to email when name is empty string", async () => {
+      const { auth } = require("@/lib/auth");
+      auth.api.getSession.mockResolvedValue({
+        user: {
+          name: "",
+          email: "[email protected]",
+          id: "user-123",
+        },
+      });
+
+      const component = await InvitationsPage();
+      const { container } = render(component);
+
+      expect(container.textContent).toContain("hey [email protected]");
+    });
+
+    it("falls back to email when name is only whitespace", async () => {
+      const { auth } = require("@/lib/auth");
+      auth.api.getSession.mockResolvedValue({
+        user: {
+          name: "   ",
+          email: "[email protected]",
+          id: "user-123",
+        },
+      });
+
+      const component = await InvitationsPage();
+      const { container } = render(component);
+
+      expect(container.textContent).toContain("hey [email protected]");
+    });
+
+    it("falls back to 'there' when neither name nor email is provided", async () => {
+      const { auth } = require("@/lib/auth");
+      auth.api.getSession.mockResolvedValue({
+        user: {
+          id: "user-123",
+        },
+      });
+
+      const component = await InvitationsPage();
+      const { container } = render(component);
+
+      expect(container.textContent).toContain("hey there.");
+    });
+
+    it("falls back to 'there' when email is empty string", async () => {
+      const { auth } = require("@/lib/auth");
+      auth.api.getSession.mockResolvedValue({
+        user: {
+          name: "",
+          email: "",
+          id: "user-123",
+        },
+      });
+
+      const component = await InvitationsPage();
+      const { container } = render(component);
+
+      expect(container.textContent).toContain("hey there.");
+    });
+
+    it("falls back to 'there' when email is only whitespace", async () => {
+      const { auth } = require("@/lib/auth");
+      auth.api.getSession.mockResolvedValue({
+        user: {
+          name: "",
+          email: "   ",
+          id: "user-123",
+        },
+      });
+
+      const component = await InvitationsPage();
+      const { container } = render(component);
+
+      expect(container.textContent).toContain("hey there.");
+    });
+
+    it("prioritizes name over email when both are provided", async () => {
+      const { auth } = require("@/lib/auth");
+      auth.api.getSession.mockResolvedValue({
+        user: {
+          name: "Bob",
+          email: "[email protected]",
+          id: "user-123",
+        },
+      });
+
+      const component = await InvitationsPage();
+      const { container } = render(component);
+
+      expect(container.textContent).toContain("hey bob.");
+      expect(container.textContent).not.toContain("hey [email protected]");
+    });
   });
 
   it("displays party list when parties are available", async () => {

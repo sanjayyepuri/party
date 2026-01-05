@@ -11,11 +11,16 @@
  * **Environment Variable Handling:**
  * - NEXT_PUBLIC_APP_URL: Optional custom override (available in both server and client if set)
  *   https://nextjs.org/docs/pages/building-your-application/configuring/environment-variables
- * - NEXT_PUBLIC_VERCEL_URL: Automatically set by Vercel (available in both server and client)
+ * - VERCEL_ENV: Canonical environment indicator ('production', 'preview', 'development', or undefined)
  *   https://vercel.com/docs/projects/environment-variables/system-environment-variables
- * - VERCEL_URL: Only available on the server (not exposed to client bundle)
+ * - VERCEL_PROJECT_PRODUCTION_URL: Production domain (custom domain or vercel.app fallback)
+ *   Always set, even in preview deployments. Used in production to avoid CORS issues.
  *   https://vercel.com/docs/projects/environment-variables/system-environment-variables
- * - Next.js does NOT add any prefixes or modify environment variable values during build
+ * - VERCEL_URL: Deployment URL (.vercel.app domain, NOT custom domain)
+ *   Only available on the server. Should NOT be used in production to avoid CORS issues.
+ *   https://vercel.com/docs/projects/environment-variables/system-environment-variables
+ * - VERCEL_BRANCH_URL: Git branch URL for preview deployments
+ *   https://vercel.com/docs/projects/environment-variables/system-environment-variables
  * - Client-side code should pass window.location.origin via the origin parameter
  */
 export const getBaseURL = (origin?: string): string => {
@@ -29,43 +34,53 @@ export const getBaseURL = (origin?: string): string => {
     return origin;
   }
 
-  // Priority 3: NEXT_PUBLIC_VERCEL_URL (automatically set by Vercel, available on client and server)
-  if (process.env.NEXT_PUBLIC_VERCEL_URL) {
-    const host = process.env.NEXT_PUBLIC_VERCEL_URL;
+  // Priority 3: Environment-based detection using VERCEL_ENV
+  const vercelEnv = process.env.VERCEL_ENV;
 
-    // If the URL already includes a protocol, return it as-is
-    if (host.startsWith("http://") || host.startsWith("https://")) {
-      return host;
+  if (vercelEnv === "production") {
+    // Production: Use VERCEL_PROJECT_PRODUCTION_URL (custom domain) to avoid CORS issues
+    // DO NOT use VERCEL_URL in production (it's the .vercel.app domain, not custom domain)
+    if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+      const host = process.env.VERCEL_PROJECT_PRODUCTION_URL;
+      // If the URL already includes a protocol, return it as-is
+      if (host.startsWith("http://") || host.startsWith("https://")) {
+        return host;
+      }
+      // VERCEL_PROJECT_PRODUCTION_URL does not include protocol, always use https in production
+      return `https://${host}`;
     }
-
-    // NEXT_PUBLIC_VERCEL_URL does not include the protocol according to Vercel docs
-    // Check if it's localhost - use http:// for localhost, https:// for production
-    if (host.startsWith("localhost") || host.includes("localhost:")) {
-      return `http://${host}`;
+    // Fallback: if VERCEL_PROJECT_PRODUCTION_URL is not set (shouldn't happen), use VERCEL_URL
+    // This is a safety fallback, but VERCEL_PROJECT_PRODUCTION_URL should always be set
+    if (process.env.VERCEL_URL) {
+      const host = process.env.VERCEL_URL;
+      if (host.startsWith("http://") || host.startsWith("https://")) {
+        return host;
+      }
+      return `https://${host}`;
     }
-    return `https://${host}`;
+  } else if (vercelEnv === "preview") {
+    // Preview: Use VERCEL_BRANCH_URL if available (stable branch URL), otherwise VERCEL_URL
+    if (process.env.VERCEL_BRANCH_URL) {
+      const host = process.env.VERCEL_BRANCH_URL;
+      if (host.startsWith("http://") || host.startsWith("https://")) {
+        return host;
+      }
+      return `https://${host}`;
+    }
+    if (process.env.VERCEL_URL) {
+      const host = process.env.VERCEL_URL;
+      if (host.startsWith("http://") || host.startsWith("https://")) {
+        return host;
+      }
+      return `https://${host}`;
+    }
+  } else {
+    // Development or local: Use localhost
+    // VERCEL_ENV can be 'development' or undefined (local development)
+    return "http://localhost:3000";
   }
 
-  // Priority 4: VERCEL_URL (server-side only fallback)
-  if (process.env.VERCEL_URL) {
-    // VERCEL_URL does not include the protocol according to Vercel docs
-    // https://vercel.com/docs/projects/environment-variables/system-environment-variables
-    // However, we handle the case defensively in case it's already prefixed
-    const host = process.env.VERCEL_URL; // Guaranteed to be defined by the if condition above
-
-    // If the URL already includes a protocol, return it as-is
-    if (host.startsWith("http://") || host.startsWith("https://")) {
-      return host;
-    }
-
-    // Check if it's localhost - use http:// for localhost, https:// for production
-    if (host.startsWith("localhost") || host.includes("localhost:")) {
-      return `http://${host}`;
-    }
-    return `https://${host}`;
-  }
-
-  // Priority 5: Localhost fallback
+  // Final fallback: Localhost (for local development when VERCEL_ENV is not set)
   return "http://localhost:3000";
 };
 

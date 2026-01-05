@@ -10,6 +10,7 @@ const API_PATH = "/api/bouncer";
 /**
  * Get the API base URL for client-side requests
  * Uses environment variable if set, otherwise uses the current origin
+ * For client-side, window.location.origin is the most reliable source
  */
 function getApiBaseUrl(): string {
   // Use environment variable if set
@@ -18,11 +19,20 @@ function getApiBaseUrl(): string {
   }
 
   // Fallback to current origin (works in both development and production)
+  // This is the most reliable approach for client-side code as it always
+  // matches the actual origin the page is loaded from
   if (typeof window !== "undefined") {
     return window.location.origin;
   }
 
   // This should never happen in a client component, but provide a fallback
+  // Check VERCEL_ENV for better localhost detection during SSR edge cases
+  const vercelEnv = process.env.VERCEL_ENV;
+  if (!vercelEnv || vercelEnv === "development") {
+    return "http://localhost:3000";
+  }
+
+  // Fallback for other cases (shouldn't happen in client components)
   return "http://localhost:3000";
 }
 
