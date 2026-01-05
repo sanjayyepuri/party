@@ -4,7 +4,7 @@
  */
 
 import { headers } from "next/headers";
-import type { Party, Rsvp, UpdateRsvpRequest } from "./types";
+import type { Party, Rsvp, RsvpWithUser, UpdateRsvpRequest } from "./types";
 import { getBaseURL } from "./auth-config";
 
 const API_PATH = "/api/bouncer";
@@ -160,6 +160,44 @@ export async function fetchRsvp(partyId: string): Promise<Rsvp> {
 
   const rsvp: Rsvp = await response.json();
   return rsvp;
+}
+
+/**
+ * Fetch all RSVPs for a specific party
+ * @param partyId - The party ID
+ * @returns Array of RsvpWithUser objects
+ * @throws Error if the request fails or user is not authenticated
+ */
+export async function fetchPartyRsvps(
+  partyId: string
+): Promise<RsvpWithUser[]> {
+  const authHeaders = await getAuthHeaders();
+  const apiBaseUrl = await getApiBaseUrl();
+
+  const response = await fetch(
+    `${apiBaseUrl}${API_PATH}/parties/${partyId}/rsvps`,
+    {
+      method: "GET",
+      headers: authHeaders,
+      cache: "no-store",
+    }
+  );
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      throw new Error("Unauthorized: Please log in to view party RSVPs");
+    }
+    if (response.status === 404) {
+      throw new Error("Party not found");
+    }
+    if (response.status === 500) {
+      throw new Error("Server error: Unable to fetch party RSVPs");
+    }
+    throw new Error(`Failed to fetch party RSVPs: ${response.statusText}`);
+  }
+
+  const rsvps: RsvpWithUser[] = await response.json();
+  return rsvps;
 }
 
 /**

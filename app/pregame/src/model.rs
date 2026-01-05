@@ -55,3 +55,30 @@ impl Rsvp {
         })
     }
 }
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct RsvpWithUser {
+    pub rsvp_id: String,
+    pub party_id: String,
+    pub user_id: String,
+    pub status: String,
+    pub created_at: chrono::DateTime<chrono::Utc>,
+    pub updated_at: chrono::DateTime<chrono::Utc>,
+    pub deleted_at: Option<chrono::DateTime<chrono::Utc>>,
+    pub user_name: Option<String>,
+}
+
+impl RsvpWithUser {
+    pub fn from_row(row: &Row) -> Result<Self, tokio_postgres::Error> {
+        Ok(RsvpWithUser {
+            rsvp_id: row.try_get("rsvp_id")?,
+            party_id: row.try_get("party_id")?,
+            user_id: row.try_get("user_id")?,
+            status: row.try_get("status")?,
+            created_at: row.try_get("created_at")?,
+            updated_at: row.try_get("updated_at")?,
+            deleted_at: row.try_get("deleted_at")?,
+            user_name: row.try_get("user_name")?,
+        })
+    }
+}

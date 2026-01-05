@@ -8,9 +8,10 @@ import {
   fetchPartyById,
   fetchPartyBySlug,
   fetchRsvp,
+  fetchPartyRsvps,
   updateRsvp,
 } from "../api-client";
-import type { Party, Rsvp } from "../types";
+import type { Party, Rsvp, RsvpWithUser } from "../types";
 
 // Mock next/headers
 jest.mock("next/headers", () => ({
@@ -252,6 +253,108 @@ describe("api-client", () => {
 
       await expect(fetchRsvp("party-123")).rejects.toThrow(
         "Party or user not found"
+      );
+    });
+  });
+
+  describe("fetchPartyRsvps", () => {
+    const mockRsvpWithUser1: RsvpWithUser = {
+      rsvp_id: "rsvp-123",
+      party_id: "party-123",
+      user_id: "user-123",
+      status: "accepted",
+      created_at: "2024-01-01T00:00:00Z",
+      updated_at: "2024-01-01T00:00:00Z",
+      deleted_at: null,
+      user_name: "John Doe",
+    };
+
+    const mockRsvpWithUser2: RsvpWithUser = {
+      rsvp_id: "rsvp-456",
+      party_id: "party-123",
+      user_id: "user-456",
+      status: "pending",
+      created_at: "2024-01-01T00:00:00Z",
+      updated_at: "2024-01-01T00:00:00Z",
+      deleted_at: null,
+      user_name: "Jane Smith",
+    };
+
+    it("fetches party RSVPs successfully", async () => {
+      const mockRsvps = [mockRsvpWithUser1, mockRsvpWithUser2];
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockRsvps,
+      } as Response);
+
+      const rsvps = await fetchPartyRsvps("party-123");
+
+      expect(rsvps).toEqual(mockRsvps);
+      expect(mockFetch).toHaveBeenCalledWith(
+        "http://localhost:3000/api/bouncer/parties/party-123/rsvps",
+        expect.objectContaining({
+          method: "GET",
+          headers: expect.objectContaining({
+            Cookie: "better-auth.session_token=test-token",
+          }),
+          cache: "no-store",
+        })
+      );
+    });
+
+    it("handles 401 unauthorized error", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 401,
+        statusText: "Unauthorized",
+      } as Response);
+
+      await expect(fetchPartyRsvps("party-123")).rejects.toThrow(
+        "Unauthorized: Please log in to view party RSVPs"
+      );
+    });
+
+    it("handles 404 not found error", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+        statusText: "Not Found",
+      } as Response);
+
+      await expect(fetchPartyRsvps("party-123")).rejects.toThrow(
+        "Party not found"
+      );
+    });
+
+    it("handles 500 server error", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        statusText: "Internal Server Error",
+      } as Response);
+
+      await expect(fetchPartyRsvps("party-123")).rejects.toThrow(
+        "Server error: Unable to fetch party RSVPs"
+      );
+    });
+
+    it("handles other errors", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 400,
+        statusText: "Bad Request",
+      } as Response);
+
+      await expect(fetchPartyRsvps("party-123")).rejects.toThrow(
+        "Failed to fetch party RSVPs: Bad Request"
+      );
+    });
+
+    it("handles network errors", async () => {
+      mockFetch.mockRejectedValueOnce(new Error("Network error"));
+
+      await expect(fetchPartyRsvps("party-123")).rejects.toThrow(
+        "Network error"
       );
     });
   });
