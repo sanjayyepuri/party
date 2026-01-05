@@ -1,3 +1,5 @@
+import { LoginButton } from "@/components/auth/login-button";
+
 export default async function HomePage() {
   return (
     <div className="">
@@ -21,9 +23,7 @@ export default async function HomePage() {
         events I host.
       </p>
       <div className="mt-8">
-        <p className="mt-3 text-sm text-gray-600">
-          🚧 Currently under construction
-        </p>
+        <LoginButton />
       </div>
     </div>
   );

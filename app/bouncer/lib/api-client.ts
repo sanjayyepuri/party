@@ -15,22 +15,8 @@ const API_PATH = "/api/bouncer";
  */
 async function getApiBaseUrl(): Promise<string> {
   // Server-side: use environment variable if set
-  if (process.env.NEXT_PUBLIC_API_URL) {
-    return process.env.NEXT_PUBLIC_API_URL;
-  }
-
-  // Otherwise, try to get the origin from request headers
-  try {
-    const headersList = await headers();
-    const host = headersList.get("host");
-    const protocol = headersList.get("x-forwarded-proto") || "https";
-
-    if (host) {
-      // Construct URL from request headers (works in Vercel/production)
-      return `${protocol}://${host}`;
-    }
-  } catch {
-    // If headers() fails, fall back to base URL
+  if (process.env.NEXT_PUBLIC_VERCEL_URL) {
+    return process.env.NEXT_PUBLIC_VERCEL_URL;
   }
 
   // Fallback to base URL from auth config
@@ -64,6 +50,9 @@ async function getAuthHeaders(): Promise<HeadersInit> {
 export async function fetchParties(): Promise<Party[]> {
   const authHeaders = await getAuthHeaders();
   const apiBaseUrl = await getApiBaseUrl();
+  console.log(`env: ${process.env.NEXT_PUBLIC_VERCEL_URL}`);
+
+  console.log(`API Base URL: ${apiBaseUrl}`);
 
   try {
     const response = await fetch(`${apiBaseUrl}${API_PATH}/parties`, {

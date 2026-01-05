@@ -18,7 +18,7 @@ export default async function InvitationsPage() {
   }
 
   // User is authenticated, show welcome message
-  const userEmail = session.user.email || "there";
+  const userName = session.user.name.split(" ")[0].toLowerCase() || "there";
 
   // Fetch parties
   let parties: Party[] = [];
@@ -34,8 +34,19 @@ export default async function InvitationsPage() {
   return (
     <div className="">
       <div className="flex-1">
-        <h1 className="text-4xl mb-6">hey {userEmail}.</h1>
+        <h1 className="lowercase text-4xl mb-6 ">hey {userName}.</h1>
         <p className="text-lg opacity-80 mb-8">welcome to the party.</p>
+        <div className="space-y-4 pt-6 border-t border-white/20 mt-8">
+          <a
+            href="/settings"
+            className="inline-block hover:underline transition-all"
+          >
+            manage your account →
+          </a>
+          <br />
+
+          <LogoutButton />
+        </div>
 
         {/* Parties Section */}
         <div className="mb-12">
@@ -86,18 +97,6 @@ export default async function InvitationsPage() {
               })}
             </div>
           )}
-
-          <div className="space-y-4 pt-6 border-t border-white/20 mt-8">
-            <a
-              href="/settings"
-              className="inline-block hover:underline transition-all"
-            >
-              manage your account →
-            </a>
-            <br />
-
-            <LogoutButton />
-          </div>
         </div>
       </div>
     </div>
