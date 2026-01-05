@@ -50,9 +50,6 @@ async function getAuthHeaders(): Promise<HeadersInit> {
 export async function fetchParties(): Promise<Party[]> {
   const authHeaders = await getAuthHeaders();
   const apiBaseUrl = await getApiBaseUrl();
-  console.log(`env: ${process.env.NEXT_PUBLIC_VERCEL_URL}`);
-
-  console.log(`API Base URL: ${apiBaseUrl}`);
 
   try {
     const response = await fetch(`${apiBaseUrl}${API_PATH}/parties`, {

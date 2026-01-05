@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { signIn, authClient, useSession } from "@/lib/auth-client";
+import { signIn, useSession } from "@/lib/auth-client";
 
 export function LoginButton() {
   const router = useRouter();
@@ -39,7 +39,7 @@ export function LoginButton() {
           },
           onSuccess: () => {
             // Success - redirect will be handled by callbackURL
-            window.location.href = "/invitations";
+            router.push("/invitations");
           },
           onError: (ctx: { error?: { message?: string } }) => {
             // On any error, redirect to login page
@@ -56,6 +56,8 @@ export function LoginButton() {
     } catch (err) {
       // On any error, redirect to login page
       router.push("/auth/login");
+    } finally {
+      setLoading(false);
     }
   };
 
