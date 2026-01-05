@@ -18,7 +18,11 @@ export default async function InvitationsPage() {
   }
 
   // User is authenticated, show welcome message
-  const userName = session.user.name.split(" ")[0].toLowerCase() || "there";
+  const rawName = session.user?.name;
+  const userName =
+    typeof rawName === "string" && rawName.trim()
+      ? rawName.trim().split(" ")[0].toLowerCase()
+      : "there";
 
   // Fetch parties
   let parties: Party[] = [];
