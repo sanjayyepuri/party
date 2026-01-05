@@ -75,9 +75,7 @@ export default async function PartyPage({ params }: PartyPageProps) {
     partyRsvps = await fetchPartyRsvps(party.party_id);
   } catch (error) {
     partyRsvpsError =
-      error instanceof Error
-        ? error.message
-        : "Failed to load party RSVPs";
+      error instanceof Error ? error.message : "Failed to load party RSVPs";
   }
 
   const partyDate = new Date(party.time);

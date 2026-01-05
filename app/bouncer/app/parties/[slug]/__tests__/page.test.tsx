@@ -113,8 +113,11 @@ describe("PartyPage", () => {
   });
 
   it("displays party details when party is found", async () => {
-    const { fetchPartyBySlug, fetchRsvp, fetchPartyRsvps } =
-      require("@/lib/api-client");
+    const {
+      fetchPartyBySlug,
+      fetchRsvp,
+      fetchPartyRsvps,
+    } = require("@/lib/api-client");
     fetchPartyBySlug.mockResolvedValue(mockParty);
     fetchRsvp.mockResolvedValue(mockRsvp);
     fetchPartyRsvps.mockResolvedValue([]);
@@ -143,8 +146,11 @@ describe("PartyPage", () => {
   });
 
   it("displays back to invitations link", async () => {
-    const { fetchPartyBySlug, fetchRsvp, fetchPartyRsvps } =
-      require("@/lib/api-client");
+    const {
+      fetchPartyBySlug,
+      fetchRsvp,
+      fetchPartyRsvps,
+    } = require("@/lib/api-client");
     fetchPartyBySlug.mockResolvedValue(mockParty);
     fetchRsvp.mockResolvedValue(mockRsvp);
     fetchPartyRsvps.mockResolvedValue([]);
@@ -160,8 +166,11 @@ describe("PartyPage", () => {
   });
 
   it("displays RSVP form when RSVP is fetched successfully", async () => {
-    const { fetchPartyBySlug, fetchRsvp, fetchPartyRsvps } =
-      require("@/lib/api-client");
+    const {
+      fetchPartyBySlug,
+      fetchRsvp,
+      fetchPartyRsvps,
+    } = require("@/lib/api-client");
     fetchPartyBySlug.mockResolvedValue(mockParty);
     fetchRsvp.mockResolvedValue(mockRsvp);
     fetchPartyRsvps.mockResolvedValue([]);
@@ -177,8 +186,11 @@ describe("PartyPage", () => {
   });
 
   it("displays error message when fetching RSVP fails", async () => {
-    const { fetchPartyBySlug, fetchRsvp, fetchPartyRsvps } =
-      require("@/lib/api-client");
+    const {
+      fetchPartyBySlug,
+      fetchRsvp,
+      fetchPartyRsvps,
+    } = require("@/lib/api-client");
     fetchPartyBySlug.mockResolvedValue(mockParty);
     fetchRsvp.mockRejectedValue(new Error("RSVP error"));
     fetchPartyRsvps.mockResolvedValue([]);
@@ -194,8 +206,11 @@ describe("PartyPage", () => {
 
   it("handles party without description", async () => {
     const partyWithoutDescription = { ...mockParty, description: "" };
-    const { fetchPartyBySlug, fetchRsvp, fetchPartyRsvps } =
-      require("@/lib/api-client");
+    const {
+      fetchPartyBySlug,
+      fetchRsvp,
+      fetchPartyRsvps,
+    } = require("@/lib/api-client");
     fetchPartyBySlug.mockResolvedValue(partyWithoutDescription);
     fetchRsvp.mockResolvedValue(mockRsvp);
     fetchPartyRsvps.mockResolvedValue([]);
@@ -210,8 +225,11 @@ describe("PartyPage", () => {
   });
 
   it("formats party date and time correctly", async () => {
-    const { fetchPartyBySlug, fetchRsvp, fetchPartyRsvps } =
-      require("@/lib/api-client");
+    const {
+      fetchPartyBySlug,
+      fetchRsvp,
+      fetchPartyRsvps,
+    } = require("@/lib/api-client");
     fetchPartyBySlug.mockResolvedValue(mockParty);
     fetchRsvp.mockResolvedValue(mockRsvp);
     fetchPartyRsvps.mockResolvedValue([]);
@@ -239,8 +257,11 @@ describe("PartyPage", () => {
         user_name: "John Doe",
       },
     ];
-    const { fetchPartyBySlug, fetchRsvp, fetchPartyRsvps } =
-      require("@/lib/api-client");
+    const {
+      fetchPartyBySlug,
+      fetchRsvp,
+      fetchPartyRsvps,
+    } = require("@/lib/api-client");
     fetchPartyBySlug.mockResolvedValue(mockParty);
     fetchRsvp.mockResolvedValue(mockRsvp);
     fetchPartyRsvps.mockResolvedValue(mockPartyRsvps);
@@ -257,8 +278,11 @@ describe("PartyPage", () => {
   });
 
   it("displays error message when fetching party RSVPs fails", async () => {
-    const { fetchPartyBySlug, fetchRsvp, fetchPartyRsvps } =
-      require("@/lib/api-client");
+    const {
+      fetchPartyBySlug,
+      fetchRsvp,
+      fetchPartyRsvps,
+    } = require("@/lib/api-client");
     fetchPartyBySlug.mockResolvedValue(mockParty);
     fetchRsvp.mockResolvedValue(mockRsvp);
     fetchPartyRsvps.mockRejectedValue(new Error("RSVPs error"));
@@ -274,8 +298,11 @@ describe("PartyPage", () => {
 
   it("passes current user ID to guest list component", async () => {
     const mockPartyRsvps: any[] = [];
-    const { fetchPartyBySlug, fetchRsvp, fetchPartyRsvps } =
-      require("@/lib/api-client");
+    const {
+      fetchPartyBySlug,
+      fetchRsvp,
+      fetchPartyRsvps,
+    } = require("@/lib/api-client");
     fetchPartyBySlug.mockResolvedValue(mockParty);
     fetchRsvp.mockResolvedValue(mockRsvp);
     fetchPartyRsvps.mockResolvedValue(mockPartyRsvps);

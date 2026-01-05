@@ -37,4 +37,3 @@ export function GuestList({ rsvps, currentUserId }: GuestListProps) {
     </div>
   );
 }
-
