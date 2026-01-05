@@ -15,8 +15,13 @@ const API_PATH = "/api/bouncer";
  */
 async function getApiBaseUrl(): Promise<string> {
   // Server-side: use environment variable if set
-  if (process.env.NEXT_PUBLIC_VERCEL_URL) {
-    return process.env.NEXT_PUBLIC_VERCEL_URL;
+  const envBaseUrl = process.env.NEXT_PUBLIC_VERCEL_URL;
+  if (envBaseUrl) {
+    // Vercel provides this without protocol; ensure we return a fully qualified URL
+    if (envBaseUrl.startsWith("http://") || envBaseUrl.startsWith("https://")) {
+      return envBaseUrl;
+    }
+    return `https://${envBaseUrl}`;
   }
 
   // Fallback to base URL from auth config
