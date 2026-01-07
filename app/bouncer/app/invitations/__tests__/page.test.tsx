@@ -317,7 +317,9 @@ describe("InvitationsPage", () => {
     );
 
     expect(partyLinks.length).toBe(2);
-    expect(partyLinks[0]?.getAttribute("href")).toBe("/parties/new-years-party");
+    expect(partyLinks[0]?.getAttribute("href")).toBe(
+      "/parties/new-years-party"
+    );
     expect(partyLinks[1]?.getAttribute("href")).toBe("/parties/summer-bbq");
   });
 
@@ -344,7 +346,7 @@ describe("InvitationsPage", () => {
     const linkElement = settingsLink.closest("a");
     expect(linkElement).toBeTruthy();
     expect(linkElement?.getAttribute("href")).toBe("/settings");
-    
+
     // Check that the link has an icon (SVG)
     expect(linkElement?.querySelector("svg")).toBeTruthy();
   });
@@ -358,7 +360,7 @@ describe("InvitationsPage", () => {
 
     const logoutButton = screen.getByTestId("logout-button");
     expect(logoutButton).toBeTruthy();
-    
+
     // Check that logout button has an icon
     const logoutIcon = screen.getByTestId("logout-icon");
     expect(logoutIcon).toBeTruthy();
@@ -373,11 +375,11 @@ describe("InvitationsPage", () => {
 
     const settingsLink = screen.getByText(/manage account/i);
     const logoutButton = screen.getByTestId("logout-button");
-    
+
     // Both should be present
     expect(settingsLink).toBeTruthy();
     expect(logoutButton).toBeTruthy();
-    
+
     // They should be in a flex column container
     const actionsContainer = settingsLink.closest("div");
     expect(actionsContainer).toBeTruthy();
@@ -394,14 +396,14 @@ describe("InvitationsPage", () => {
 
     const welcomeText = screen.getByText(/welcome to the party/i);
     const settingsLink = screen.getByText(/manage account/i);
-    
+
     expect(welcomeText).toBeTruthy();
     expect(settingsLink).toBeTruthy();
-    
+
     // Check that actions come after welcome message in the DOM
     const welcomeElement = welcomeText.closest("p");
     const actionsContainer = settingsLink.closest("div");
-    
+
     expect(welcomeElement?.nextElementSibling).toBe(actionsContainer);
   });
 
@@ -414,15 +416,15 @@ describe("InvitationsPage", () => {
 
     const settingsLink = screen.getByText(/manage account/i);
     const logoutButton = screen.getByTestId("logout-button");
-    
+
     // Verify both are rendered
     expect(settingsLink).toBeTruthy();
     expect(logoutButton).toBeTruthy();
-    
+
     // Verify settings link has icon
     const settingsIcon = settingsLink.closest("a")?.querySelector("svg");
     expect(settingsIcon).toBeTruthy();
-    
+
     // Verify logout button has icon
     const logoutIcon = screen.getByTestId("logout-icon");
     expect(logoutIcon).toBeTruthy();

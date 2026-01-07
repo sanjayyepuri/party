@@ -76,7 +76,7 @@ describe("LogoutButton", () => {
   it("handles logout errors gracefully", async () => {
     const { signOut } = require("@/lib/auth-client");
     const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation();
-    
+
     signOut.mockRejectedValue(new Error("Logout failed"));
 
     render(<LogoutButton />);
@@ -85,7 +85,10 @@ describe("LogoutButton", () => {
     await userEvent.click(button);
 
     await waitFor(() => {
-      expect(consoleErrorSpy).toHaveBeenCalledWith("Logout failed:", expect.any(Error));
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        "Logout failed:",
+        expect.any(Error)
+      );
       // Button should be re-enabled after error
       expect(button.hasAttribute("disabled")).toBe(false);
     });
@@ -103,4 +106,3 @@ describe("LogoutButton", () => {
     expect(button.className).toContain("text-sm");
   });
 });
-
