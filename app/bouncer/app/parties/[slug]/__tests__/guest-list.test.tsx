@@ -182,3 +182,4 @@ describe("GuestList", () => {
     expect(screen.queryByText("Current User")).not.toBeInTheDocument();
   });
 });
+

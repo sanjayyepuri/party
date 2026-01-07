@@ -2,9 +2,8 @@ import { redirect, notFound } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { fetchPartyBySlug, fetchRsvp, fetchPartyRsvps } from "@/lib/api-client";
+import { PartyDetailWrapper } from "./party-detail-wrapper";
 import Link from "next/link";
-import { RsvpForm } from "./rsvp-form";
-import { GuestList } from "./guest-list";
 
 interface PartyPageProps {
   params: Promise<{ slug: string }>;
@@ -60,7 +59,7 @@ export default async function PartyPage({ params }: PartyPageProps) {
   }
 
   // Fetch user's RSVP for this party
-  let rsvp;
+  let rsvp = null;
   let rsvpError: string | null = null;
   try {
     rsvp = await fetchRsvp(party.party_id);
@@ -69,7 +68,7 @@ export default async function PartyPage({ params }: PartyPageProps) {
   }
 
   // Fetch all RSVPs for this party
-  let partyRsvps;
+  let partyRsvps: Awaited<ReturnType<typeof fetchPartyRsvps>> | null = null;
   let partyRsvpsError: string | null = null;
   try {
     partyRsvps = await fetchPartyRsvps(party.party_id);
@@ -78,79 +77,14 @@ export default async function PartyPage({ params }: PartyPageProps) {
       error instanceof Error ? error.message : "Failed to load party RSVPs";
   }
 
-  const partyDate = new Date(party.time);
-  const formattedDate = partyDate.toLocaleDateString("en-US", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-  const formattedTime = partyDate.toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-  });
-
   return (
-    <div className="">
-      <div className="mb-6">
-        <Link
-          href="/invitations"
-          className="text-sm opacity-80 hover:opacity-100 transition-opacity"
-        >
-          ← Back to invitations
-        </Link>
-      </div>
-
-      <div className="mb-8">
-        <h1 className="text-4xl mb-4">{party.name}</h1>
-        <div className="space-y-2 text-lg opacity-80">
-          <p>
-            <strong>When:</strong> {formattedDate} at {formattedTime}
-          </p>
-          <p>
-            <strong>Where:</strong> {party.location}
-          </p>
-        </div>
-      </div>
-
-      {party.description && (
-        <div className="mb-8 p-4 bg-white/5 rounded border border-white/10">
-          <p className="whitespace-pre-wrap">{party.description}</p>
-        </div>
-      )}
-
-      <div className="mb-8">
-        <h2 className="text-2xl mb-4">RSVP</h2>
-        {rsvpError && (
-          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded text-red-800">
-            <p className="font-medium">Error loading RSVP</p>
-            <p className="text-sm">{rsvpError}</p>
-          </div>
-        )}
-        {!rsvpError && rsvp && <RsvpForm initialRsvp={rsvp} />}
-        {!rsvpError && !rsvp && (
-          <div className="p-4 bg-gray-50 border border-gray-200 rounded text-gray-600">
-            <p>Loading RSVP...</p>
-          </div>
-        )}
-      </div>
-
-      <div className="mb-8">
-        {partyRsvpsError && (
-          <div className="p-4 bg-red-50 border border-red-200 rounded text-red-800">
-            <p className="font-medium">Error loading guest list</p>
-            <p className="text-sm">{partyRsvpsError}</p>
-          </div>
-        )}
-        {!partyRsvpsError && partyRsvps && (
-          <GuestList rsvps={partyRsvps} currentUserId={session.user.id} />
-        )}
-        {!partyRsvpsError && !partyRsvps && (
-          <div className="p-4 bg-gray-50 border border-gray-200 rounded text-gray-600">
-            <p>Loading guest list...</p>
-          </div>
-        )}
-      </div>
-    </div>
+    <PartyDetailWrapper
+      party={party}
+      rsvp={rsvp}
+      rsvpError={rsvpError}
+      partyRsvps={partyRsvps}
+      partyRsvpsError={partyRsvpsError}
+      currentUserId={session.user.id}
+    />
   );
 }
