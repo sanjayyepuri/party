@@ -40,7 +40,7 @@ async fn auth_middleware_impl(
     let session_token = extract_session_token(&headers)
         .ok_or_else(|| (StatusCode::UNAUTHORIZED, Json("Unauthorized")).into_response())?;
 
-    let session = match validate_session_token(&api_state.db_state.client, &session_token).await {
+    let session = match validate_session_token(&api_state.db_state.pool, &session_token).await {
         Ok(session) => session,
         Err(AuthError::InternalServerError(message)) => {
             tracing::error!("Internal server error: {}", message);
