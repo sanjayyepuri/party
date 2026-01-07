@@ -4,7 +4,7 @@ use postgres_openssl::MakeTlsConnector;
 
 /// Database state for the pregame application.
 /// Contains a connection pool for interacting with the database.
-/// 
+///
 /// Using a connection pool instead of a single connection provides:
 /// - Automatic reconnection when connections are closed
 /// - Better handling of serverless environments where connections can be terminated
@@ -19,14 +19,14 @@ impl DbState {
         // The Config struct can be created with a URL string
         let mut config = Config::new();
         config.url = Some(connection_string);
-        
+
         // Configure the pool for serverless environments
         // Set reasonable pool sizes for serverless (smaller pools)
         config.pool = Some(deadpool_postgres::PoolConfig {
             max_size: 10,
             ..Default::default()
         });
-        
+
         // Configure manager to handle connection recycling
         // Use Verified recycling to test connections before returning them
         // This helps detect closed connections in serverless environments

@@ -26,19 +26,14 @@ async fn get_party_rsvps_impl(
     api_state: Arc<ApiState>,
     party_id: String,
 ) -> Result<Vec<RsvpWithUser>, axum::response::Response> {
-    let client = api_state
-        .db_state
-        .pool
-        .get()
-        .await
-        .map_err(|err| {
-            tracing::error!("Failed to get database connection: {:?}", err);
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json("Internal Server Error"),
-            )
-                .into_response()
-        })?;
+    let client = api_state.db_state.pool.get().await.map_err(|err| {
+        tracing::error!("Failed to get database connection: {:?}", err);
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json("Internal Server Error"),
+        )
+            .into_response()
+    })?;
 
     let rows = client
         .query(
@@ -95,19 +90,14 @@ async fn get_rsvp_impl(
     let default_status = "pending";
 
     // Get a connection from the pool
-    let client = api_state
-        .db_state
-        .pool
-        .get()
-        .await
-        .map_err(|err| {
-            tracing::error!("Failed to get database connection: {:?}", err);
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json("Internal Server Error"),
-            )
-                .into_response()
-        })?;
+    let client = api_state.db_state.pool.get().await.map_err(|err| {
+        tracing::error!("Failed to get database connection: {:?}", err);
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json("Internal Server Error"),
+        )
+            .into_response()
+    })?;
 
     // Single query: validate party exists, insert if not exists, then select the RSVP
     let row = client
@@ -200,19 +190,14 @@ async fn update_rsvp_impl(
     let now = chrono::Utc::now();
 
     // Get a connection from the pool
-    let client = api_state
-        .db_state
-        .pool
-        .get()
-        .await
-        .map_err(|err| {
-            tracing::error!("Failed to get database connection: {:?}", err);
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json("Internal Server Error"),
-            )
-                .into_response()
-        })?;
+    let client = api_state.db_state.pool.get().await.map_err(|err| {
+        tracing::error!("Failed to get database connection: {:?}", err);
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json("Internal Server Error"),
+        )
+            .into_response()
+    })?;
 
     // Only allow users to update their own RSVPs
     let row = client
@@ -267,19 +252,14 @@ async fn delete_rsvp_impl(
     let now = chrono::Utc::now();
 
     // Get a connection from the pool
-    let client = api_state
-        .db_state
-        .pool
-        .get()
-        .await
-        .map_err(|err| {
-            tracing::error!("Failed to get database connection: {:?}", err);
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json("Internal Server Error"),
-            )
-                .into_response()
-        })?;
+    let client = api_state.db_state.pool.get().await.map_err(|err| {
+        tracing::error!("Failed to get database connection: {:?}", err);
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json("Internal Server Error"),
+        )
+            .into_response()
+    })?;
 
     let rows_affected = client
         .execute(
