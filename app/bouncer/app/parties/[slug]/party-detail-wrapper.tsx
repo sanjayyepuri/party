@@ -46,7 +46,7 @@ export function PartyDetailWrapper({
     >
       {/* Inner shadow for depth */}
       <div className="absolute inset-0 rounded-lg bg-gradient-to-b from-white/40 to-transparent pointer-events-none z-0" />
-      
+
       {/* Content */}
       <div className="relative z-10">
         <div className="mb-6">
@@ -72,7 +72,9 @@ export function PartyDetailWrapper({
 
         {party.description && (
           <div className="mb-8 p-4 bg-white/50 rounded border border-black/5">
-            <p className="whitespace-pre-wrap text-black/80">{party.description}</p>
+            <p className="whitespace-pre-wrap text-black/80">
+              {party.description}
+            </p>
           </div>
         )}
 
@@ -115,4 +117,3 @@ export function PartyDetailWrapper({
     </motion.div>
   );
 }
-

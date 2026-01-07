@@ -27,15 +27,14 @@ export function PartyCard({ party }: PartyCardProps) {
       whileHover={{ y: -4, transition: { duration: 0.2 } }}
       className="group"
     >
-      <Link
-        href={`/parties/${party.slug}`}
-        className="block"
-        prefetch={true}
-      >
-        <div className="relative bg-white/90 backdrop-blur-sm rounded-lg p-6 border-2 border-black/10 shadow-[0_4px_6px_rgba(0,0,0,0.1),0_8px_16px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.9)] transition-all duration-300 group-hover:shadow-[0_8px_12px_rgba(0,0,0,0.15),0_16px_24px_rgba(0,0,0,0.12),inset_0_1px_0_rgba(255,255,255,0.95)] group-hover:border-black/20 cursor-pointer flex flex-col overflow-hidden" style={{ width: "240px", height: "320px" }}>
+      <Link href={`/parties/${party.slug}`} className="block" prefetch={true}>
+        <div
+          className="relative bg-white/90 backdrop-blur-sm rounded-lg p-6 border-2 border-black/10 shadow-[0_4px_6px_rgba(0,0,0,0.1),0_8px_16px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.9)] transition-all duration-300 group-hover:shadow-[0_8px_12px_rgba(0,0,0,0.15),0_16px_24px_rgba(0,0,0,0.12),inset_0_1px_0_rgba(255,255,255,0.95)] group-hover:border-black/20 cursor-pointer flex flex-col overflow-hidden"
+          style={{ width: "240px", height: "320px" }}
+        >
           {/* Inner shadow for depth */}
           <div className="absolute inset-0 rounded-lg bg-gradient-to-b from-white/40 to-transparent pointer-events-none z-0" />
-          
+
           {/* Content */}
           <div className="relative z-10 flex flex-col h-full justify-start">
             <h3 className="text-xl font-semibold mb-4 text-black/90 group-hover:text-black transition-colors text-left line-clamp-3">
@@ -53,4 +52,3 @@ export function PartyCard({ party }: PartyCardProps) {
     </motion.div>
   );
 }
-

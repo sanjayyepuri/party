@@ -3,4 +3,3 @@
   "*.{json,css,md}": ["prettier --write"],
   "*.rs": ["cargo fmt --"]
 }
-
