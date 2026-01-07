@@ -3,8 +3,8 @@
 // tokens by querying the database directly.
 
 use axum::http::HeaderMap;
+use deadpool_postgres::Pool;
 use percent_encoding::percent_decode_str;
-use tokio_postgres::Client;
 
 /// Represents a validated Better Auth session with user information.
 ///
@@ -92,7 +92,7 @@ pub fn extract_session_token(headers: &HeaderMap) -> Option<String> {
 /// 4. Returns a BetterAuthSession if valid
 ///
 /// # Arguments
-/// * `db_client` - Database connection from DbState
+/// * `db_pool` - Database connection pool from DbState
 /// * `session_token` - The session token from the cookie
 ///
 /// # Returns
@@ -100,9 +100,14 @@ pub fn extract_session_token(headers: &HeaderMap) -> Option<String> {
 /// * `Err(AuthError::Unauthorized)` if the session is invalid or expired
 /// * `Err(AuthError::InternalServerError)` for database errors
 pub async fn validate_session_token(
-    db_client: &Client,
+    db_pool: &Pool,
     session_token: &str,
 ) -> Result<BetterAuthSession, AuthError> {
+    // Get a connection from the pool
+    let client = db_pool.get().await.map_err(|e| {
+        AuthError::InternalServerError(format!("Failed to get database connection: {}", e))
+    })?;
+
     // Query session and join with user table
     let query = r#"
         SELECT
@@ -117,7 +122,7 @@ pub async fn validate_session_token(
         WHERE s.token = $1
     "#;
 
-    let row = db_client
+    let row = client
         .query_opt(query, &[&session_token])
         .await?
         .ok_or(AuthError::Unauthorized)?;

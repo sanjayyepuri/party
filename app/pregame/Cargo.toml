@@ -12,6 +12,7 @@ url = "2.5.7"
 axum = "0.8.7"
 tracing = "0.1"
 tokio-postgres = { version = "0.7.15", features = ["with-chrono-0_4"] }
+deadpool-postgres = { version = "0.12", features = ["serde"] }
 openssl = "0.10.75"
 postgres-openssl = "0.5.2"
 tower = "0.5.2"
