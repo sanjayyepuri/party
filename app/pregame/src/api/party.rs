@@ -19,14 +19,7 @@ pub async fn list_parties(State(api_state): State<Arc<ApiState>>) -> impl IntoRe
 async fn list_parties_impl(
     api_state: Arc<ApiState>,
 ) -> Result<Vec<Party>, axum::response::Response> {
-    let client = api_state.db_state.pool.get().await.map_err(|err| {
-        tracing::error!("Failed to get database connection: {:?}", err);
-        (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json("Internal Server Error"),
-        )
-            .into_response()
-    })?;
+    let client = api_state.db_state.get_connection().await?;
 
     let rows = client
         .query(
@@ -74,14 +67,7 @@ async fn get_party_impl(
     api_state: Arc<ApiState>,
     party_id: String,
 ) -> Result<Option<Party>, axum::response::Response> {
-    let client = api_state.db_state.pool.get().await.map_err(|err| {
-        tracing::error!("Failed to get database connection: {:?}", err);
-        (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json("Internal Server Error"),
-        )
-            .into_response()
-    })?;
+    let client = api_state.db_state.get_connection().await?;
 
     let rows = client
         .query(
