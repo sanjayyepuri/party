@@ -136,7 +136,7 @@ describe("RsvpForm", () => {
 
     // Buttons should be disabled during update
     expect(acceptedButton).toBeDisabled();
-    
+
     // "Updating RSVP..." should appear in the status display area
     expect(screen.getByText("Updating RSVP...")).toBeInTheDocument();
     const statusDisplay = screen
