@@ -79,30 +79,16 @@ describe("RsvpForm", () => {
       status: "accepted",
     });
 
+    // Wait for the update to complete and status to change
     await waitFor(() => {
-      expect(
-        screen.getByText(/RSVP updated successfully/i)
-      ).toBeInTheDocument();
-    });
-  });
-
-  it("displays success message after successful update", async () => {
-    const user = userEvent.setup();
-    const updatedRsvp = { ...mockRsvp, status: "accepted" };
-    (updateRsvpClient as jest.Mock).mockResolvedValue(updatedRsvp);
-
-    render(<RsvpForm initialRsvp={mockRsvp} />);
-
-    const acceptedButton = screen
-      .getAllByText("Accepted")
-      .find((el) => el.tagName === "BUTTON") as HTMLButtonElement;
-
-    await user.click(acceptedButton);
-
-    await waitFor(() => {
-      expect(
-        screen.getByText(/RSVP updated successfully/i)
-      ).toBeInTheDocument();
+      // First check that "Updating RSVP..." is gone
+      expect(screen.queryByText("Updating RSVP...")).not.toBeInTheDocument();
+      // Then check that status updated to Accepted
+      const statusDisplay = screen
+        .getByText(/Current Status/i)
+        .closest("div")
+        ?.querySelector("p.text-lg");
+      expect(statusDisplay).toHaveTextContent("Accepted");
     });
   });
 
@@ -132,7 +118,7 @@ describe("RsvpForm", () => {
     expect(errorContainer).toBeInTheDocument();
   });
 
-  it("disables buttons while updating", async () => {
+  it("disables buttons while updating and shows updating state in status display", async () => {
     const user = userEvent.setup();
     let resolveUpdate: (value: any) => void;
     const updatePromise = new Promise((resolve) => {
@@ -150,12 +136,28 @@ describe("RsvpForm", () => {
 
     // Buttons should be disabled during update
     expect(acceptedButton).toBeDisabled();
-    expect(screen.getByText(/Updating RSVP/i)).toBeInTheDocument();
+
+    // "Updating RSVP..." should appear in the status display area
+    expect(screen.getByText("Updating RSVP...")).toBeInTheDocument();
+    const statusDisplay = screen
+      .getByText(/Current Status/i)
+      .closest("div")
+      ?.querySelector("p.text-lg");
+    expect(statusDisplay).toHaveTextContent("Updating RSVP...");
+    expect(statusDisplay).toHaveClass("text-gray-400");
 
     // Resolve the update
     resolveUpdate!({ ...mockRsvp, status: "accepted" });
     await waitFor(() => {
-      expect(screen.queryByText(/Updating RSVP/i)).not.toBeInTheDocument();
+      // Status should update back to the actual status
+      expect(screen.queryByText("Updating RSVP...")).not.toBeInTheDocument();
+      // Check the status display specifically
+      const statusDisplay = screen
+        .getByText(/Current Status/i)
+        .closest("div")
+        ?.querySelector("p.text-lg");
+      expect(statusDisplay).toHaveTextContent("Accepted");
+      expect(statusDisplay).toHaveClass("text-green-600");
     });
   });
 
@@ -181,7 +183,7 @@ describe("RsvpForm", () => {
     const updatedRsvp = { ...mockRsvp, status: "accepted" };
     (updateRsvpClient as jest.Mock).mockResolvedValue(updatedRsvp);
 
-    const { rerender } = render(<RsvpForm initialRsvp={mockRsvp} />);
+    render(<RsvpForm initialRsvp={mockRsvp} />);
 
     const acceptedButton = screen
       .getAllByText("Accepted")
@@ -194,19 +196,27 @@ describe("RsvpForm", () => {
       expect(updateRsvpClient).toHaveBeenCalled();
     });
 
-    // Re-render with updated RSVP to simulate state update
-    rerender(<RsvpForm initialRsvp={updatedRsvp} />);
+    // Wait for the status to update in the display
+    await waitFor(() => {
+      const statusDisplay = screen
+        .getByText(/Current Status/i)
+        .closest("div")
+        ?.querySelector("p.text-lg");
+      expect(statusDisplay).toHaveTextContent("Accepted");
+    });
 
-    // Accepted button should now be disabled
-    const newAcceptedButton = screen
-      .getAllByText("Accepted")
-      .find((el) => el.tagName === "BUTTON") as HTMLButtonElement;
-    expect(newAcceptedButton).toBeDisabled();
+    // Accepted button should now be disabled after state update
+    await waitFor(() => {
+      const newAcceptedButton = screen
+        .getAllByText("Accepted")
+        .find((el) => el.tagName === "BUTTON") as HTMLButtonElement;
+      expect(newAcceptedButton).toBeDisabled();
+    });
   });
 
   it("handles different initial statuses correctly", () => {
     const acceptedRsvp = { ...mockRsvp, status: "accepted" };
-    render(<RsvpForm initialRsvp={acceptedRsvp} partyId="party-123" />);
+    render(<RsvpForm initialRsvp={acceptedRsvp} />);
 
     // Check for status in the status display area
     const statusDisplay = screen
