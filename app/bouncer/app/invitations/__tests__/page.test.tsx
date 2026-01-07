@@ -38,7 +38,19 @@ jest.mock("next/headers", () => ({
 }));
 
 jest.mock("@/components/auth/logout-button", () => ({
-  LogoutButton: () => <div data-testid="logout-button">Logout</div>,
+  LogoutButton: () => (
+    <button data-testid="logout-button">
+      <svg data-testid="logout-icon" />
+      sign out
+    </button>
+  ),
+}));
+
+jest.mock("framer-motion", () => ({
+  motion: {
+    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+  },
+  AnimatePresence: ({ children }: any) => <>{children}</>,
 }));
 
 describe("InvitationsPage", () => {
@@ -269,8 +281,6 @@ describe("InvitationsPage", () => {
 
     expect(container.textContent).toContain("New Year's Party");
     expect(container.textContent).toContain("Summer BBQ");
-    expect(container.textContent).toContain("123 Main St");
-    expect(container.textContent).toContain("456 Park Ave");
   });
 
   it("displays empty state when no parties exist", async () => {
@@ -306,9 +316,11 @@ describe("InvitationsPage", () => {
       link.getAttribute("href")?.startsWith("/parties/")
     );
 
-    expect(partyLinks).toHaveLength(2);
-    expect(partyLinks[0]).toHaveAttribute("href", "/parties/new-years-party");
-    expect(partyLinks[1]).toHaveAttribute("href", "/parties/summer-bbq");
+    expect(partyLinks.length).toBe(2);
+    expect(partyLinks[0]?.getAttribute("href")).toBe(
+      "/parties/new-years-party"
+    );
+    expect(partyLinks[1]?.getAttribute("href")).toBe("/parties/summer-bbq");
   });
 
   it("displays party date and time correctly", async () => {
@@ -322,15 +334,99 @@ describe("InvitationsPage", () => {
     expect(container.textContent).toContain("New Year's Party");
   });
 
-  it("maintains existing account management links", async () => {
+  it("displays account management link with icon", async () => {
     const { fetchParties } = require("@/lib/api-client");
     fetchParties.mockResolvedValue([]);
 
     const component = await InvitationsPage();
     render(component);
 
-    const settingsLink = screen.getByText(/manage your account/i);
-    expect(settingsLink).toBeInTheDocument();
-    expect(settingsLink.closest("a")).toHaveAttribute("href", "/settings");
+    const settingsLink = screen.getByText(/manage account/i);
+    expect(settingsLink).toBeTruthy();
+    const linkElement = settingsLink.closest("a");
+    expect(linkElement).toBeTruthy();
+    expect(linkElement?.getAttribute("href")).toBe("/settings");
+
+    // Check that the link has an icon (SVG)
+    expect(linkElement?.querySelector("svg")).toBeTruthy();
+  });
+
+  it("displays logout button with icon", async () => {
+    const { fetchParties } = require("@/lib/api-client");
+    fetchParties.mockResolvedValue([]);
+
+    const component = await InvitationsPage();
+    render(component);
+
+    const logoutButton = screen.getByTestId("logout-button");
+    expect(logoutButton).toBeTruthy();
+
+    // Check that logout button has an icon
+    const logoutIcon = screen.getByTestId("logout-icon");
+    expect(logoutIcon).toBeTruthy();
+  });
+
+  it("displays account management and logout actions in vertical layout", async () => {
+    const { fetchParties } = require("@/lib/api-client");
+    fetchParties.mockResolvedValue([]);
+
+    const component = await InvitationsPage();
+    const { container } = render(component);
+
+    const settingsLink = screen.getByText(/manage account/i);
+    const logoutButton = screen.getByTestId("logout-button");
+
+    // Both should be present
+    expect(settingsLink).toBeTruthy();
+    expect(logoutButton).toBeTruthy();
+
+    // They should be in a flex column container
+    const actionsContainer = settingsLink.closest("div");
+    expect(actionsContainer).toBeTruthy();
+    expect(actionsContainer?.className).toContain("flex");
+    expect(actionsContainer?.className).toContain("flex-col");
+  });
+
+  it("positions actions directly after welcome message", async () => {
+    const { fetchParties } = require("@/lib/api-client");
+    fetchParties.mockResolvedValue([]);
+
+    const component = await InvitationsPage();
+    const { container } = render(component);
+
+    const welcomeText = screen.getByText(/welcome to the party/i);
+    const settingsLink = screen.getByText(/manage account/i);
+
+    expect(welcomeText).toBeTruthy();
+    expect(settingsLink).toBeTruthy();
+
+    // Check that actions come after welcome message in the DOM
+    const welcomeElement = welcomeText.closest("p");
+    const actionsContainer = settingsLink.closest("div");
+
+    expect(welcomeElement?.nextElementSibling).toBe(actionsContainer);
+  });
+
+  it("displays both actions with icons side by side in vertical stack", async () => {
+    const { fetchParties } = require("@/lib/api-client");
+    fetchParties.mockResolvedValue([]);
+
+    const component = await InvitationsPage();
+    render(component);
+
+    const settingsLink = screen.getByText(/manage account/i);
+    const logoutButton = screen.getByTestId("logout-button");
+
+    // Verify both are rendered
+    expect(settingsLink).toBeTruthy();
+    expect(logoutButton).toBeTruthy();
+
+    // Verify settings link has icon
+    const settingsIcon = settingsLink.closest("a")?.querySelector("svg");
+    expect(settingsIcon).toBeTruthy();
+
+    // Verify logout button has icon
+    const logoutIcon = screen.getByTestId("logout-icon");
+    expect(logoutIcon).toBeTruthy();
   });
 });

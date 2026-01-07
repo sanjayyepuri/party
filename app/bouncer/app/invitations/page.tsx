@@ -5,6 +5,7 @@ import { LogoutButton } from "@/components/auth/logout-button";
 import { fetchParties } from "@/lib/api-client";
 import type { Party } from "@/lib/types";
 import Link from "next/link";
+import { PartyCardList } from "./party-card-list";
 
 export default async function InvitationsPage() {
   // Check if user is authenticated
@@ -42,15 +43,27 @@ export default async function InvitationsPage() {
     <div className="">
       <div className="flex-1">
         <h1 className="lowercase text-4xl mb-6 ">hey {userName}.</h1>
-        <p className="text-lg opacity-80 mb-8">welcome to the party.</p>
-        <div className="space-y-4 pt-6 border-t border-white/20 mt-8">
+        <p className="text-lg opacity-80 mb-4">welcome to the party.</p>
+        <div className="flex flex-col gap-2 mb-8">
           <a
             href="/settings"
-            className="inline-block hover:underline transition-all"
+            className="flex items-center gap-2 hover:opacity-100 opacity-80 transition-opacity text-sm"
           >
-            manage your account →
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1Z" />
+            </svg>
+            manage account
           </a>
-          <br />
 
           <LogoutButton />
         </div>
@@ -73,35 +86,8 @@ export default async function InvitationsPage() {
           )}
 
           {!partiesError && parties.length > 0 && (
-            <div className="space-y-4 pt-6 border-t border-white/20">
-              {parties.map((party) => {
-                const partyDate = new Date(party.time);
-                const formattedDate = partyDate.toLocaleDateString("en-US", {
-                  weekday: "long",
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                });
-                const formattedTime = partyDate.toLocaleTimeString("en-US", {
-                  hour: "numeric",
-                  minute: "2-digit",
-                });
-                return (
-                  <Link
-                    key={party.party_id}
-                    href={`/parties/${party.slug}`}
-                    className="block p-4 border border-white/20 rounded hover:border-white/40 transition-all hover:bg-white/5"
-                  >
-                    <h3 className="text-xl font-semibold mb-2">{party.name}</h3>
-                    <div className="space-y-1 text-sm opacity-80">
-                      <p>
-                        {formattedDate} at {formattedTime}
-                      </p>
-                      <p>{party.location}</p>
-                    </div>
-                  </Link>
-                );
-              })}
+            <div className="pt-6 border-t border-white/20">
+              <PartyCardList parties={parties} />
             </div>
           )}
         </div>
