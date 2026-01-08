@@ -89,7 +89,6 @@ export function ReceiptCanvas({
         <color attach="background" args={["#ffffff"]} />
         <ambientLight intensity={0.2} />
         <directionalLight position={[5, 10, -5]} intensity={8.0} />
-        <OrbitControls></OrbitControls>
         <ReceiptScene pixelSize={pixelSize} scale={scale} />
       </Suspense>
     </Canvas>
