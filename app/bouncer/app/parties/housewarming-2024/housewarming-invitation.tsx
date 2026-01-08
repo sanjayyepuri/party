@@ -44,7 +44,7 @@ export function HousewarmingInvitation({
 
       {/* Content overlay */}
       <div className="relative z-10 min-h-screen">
-        <div className="container mx-auto px-4 py-8 max-w-4xl">
+        <div className="container mx-auto px-4 md:px-6 py-4 md:py-8 max-w-4xl">
           {/* Back link */}
           <div className="mb-6">
             <Link
@@ -56,9 +56,11 @@ export function HousewarmingInvitation({
           </div>
 
           {/* Party details card */}
-          <div className="mb-8 backdrop-blur-md rounded-2xl p-8 border border-black/30">
-            <h1 className="text-5xl font-bold mb-6 text-black">{party.name}</h1>
-            <div className="space-y-3 text-lg text-black/90">
+          <div className="mb-4 md:mb-8 backdrop-blur-md rounded-2xl p-4 md:p-8 border border-black/30">
+            <h1 className="text-2xl md:text-5xl font-bold mb-4 md:mb-6 text-black">
+              {party.name}
+            </h1>
+            <div className="space-y-2 md:space-y-3 text-base md:text-lg text-black/90">
               <p>
                 <strong className="text-black">When:</strong> {formattedDate} at{" "}
                 {formattedTime}
@@ -69,8 +71,8 @@ export function HousewarmingInvitation({
             </div>
 
             {party.description && (
-              <div className="mt-6 p-4 rounded-lg border border-black/20">
-                <p className="whitespace-pre-wrap text-black">
+              <div className="mt-4 md:mt-6 p-3 md:p-4 rounded-lg border border-black/20">
+                <p className="whitespace-pre-wrap text-black text-sm md:text-base">
                   {party.description}
                 </p>
               </div>
@@ -78,8 +80,10 @@ export function HousewarmingInvitation({
           </div>
 
           {/* RSVP section */}
-          <div className="mb-8 backdrop-blur-md rounded-2xl p-8 border border-black/30">
-            <h2 className="text-3xl font-bold mb-6 text-black">RSVP</h2>
+          <div className="mb-4 md:mb-8 backdrop-blur-md rounded-2xl p-4 md:p-8 border border-black/30">
+            <h2 className="text-xl md:text-3xl font-bold mb-4 md:mb-6 text-black">
+              RSVP
+            </h2>
             {rsvpError && (
               <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded text-red-800">
                 <p className="font-medium">Error loading RSVP</p>
@@ -95,7 +99,7 @@ export function HousewarmingInvitation({
           </div>
 
           {/* Guest list section */}
-          <div className="mb-8 backdrop-blur-md rounded-2xl p-8 border border-black/30">
+          <div className="mb-4 md:mb-8 backdrop-blur-md rounded-2xl p-4 md:p-8 border border-black/30">
             {partyRsvpsError && (
               <div className="p-4 bg-red-50 border border-red-200 rounded text-red-800">
                 <p className="font-medium">Error loading guest list</p>
