@@ -1,4 +1,4 @@
-use axum::{http::StatusCode, response::IntoResponse, Json};
+use axum::{Json, http::StatusCode, response::IntoResponse};
 use deadpool_postgres::{Config, ManagerConfig, Pool, RecyclingMethod, Runtime};
 use openssl::ssl::{SslConnector, SslMethod};
 use postgres_openssl::MakeTlsConnector;
@@ -78,8 +78,9 @@ mod tests {
     async fn test_get_connection_error_handling() {
         // Create a DbState with an invalid connection string to test error handling
         // We use an invalid URL to trigger a connection error
-        let result = DbState::new("postgresql://invalid:invalid@localhost:5432/invalid".to_string()).await;
-        
+        let result =
+            DbState::new("postgresql://invalid:invalid@localhost:5432/invalid".to_string()).await;
+
         // The DbState creation might fail, but that's okay for this test
         // We're primarily testing that the error handling structure is correct
         assert!(result.is_ok() || result.is_err());
@@ -91,7 +92,7 @@ mod tests {
         // This test verifies that get_connection is a public async method
         // and has the correct signature. The actual connection behavior is tested
         // through integration tests when a database is available.
-        
+
         // We can't easily create a DbState without a valid connection string
         // in a unit test, but we can verify the method exists and is accessible
         // by checking that this compiles.
@@ -100,4 +101,3 @@ mod tests {
         };
     }
 }
-
