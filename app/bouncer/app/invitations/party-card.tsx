@@ -29,7 +29,11 @@ export function PartyCard({ party }: PartyCardProps) {
           {/* Canvas preview for housewarming */}
           {isHousewarming && (
             <div className="absolute inset-0 rounded-lg overflow-hidden z-0 backdrop-blur-sm">
-              <ReceiptCanvas className="w-full h-full" pixelSize={8.0} scale={0.5} />
+              <ReceiptCanvas
+                className="w-full h-full"
+                pixelSize={8.0}
+                scale={0.5}
+              />
             </div>
           )}
 
@@ -42,7 +46,6 @@ export function PartyCard({ party }: PartyCardProps) {
               {formattedDate}
             </p>
           </div>
-
         </div>
       </Link>
     </div>

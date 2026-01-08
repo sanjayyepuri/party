@@ -32,7 +32,13 @@ function RotatingKnot({ scale = 1.0 }: { scale?: number }) {
   );
 }
 
-function ReceiptScene({ pixelSize = 8.0, scale = 1.0 }: { pixelSize?: number; scale?: number }) {
+function ReceiptScene({
+  pixelSize = 8.0,
+  scale = 1.0,
+}: {
+  pixelSize?: number;
+  scale?: number;
+}) {
   const { size, gl } = useThree();
   const composerRef = useRef<PostEffectComposer | null>(null);
 
@@ -71,7 +77,7 @@ export function ReceiptCanvas({
   return (
     <Canvas
       className={className}
-      style={{ width: '100%', height: '100%', display: 'block' }}
+      style={{ width: "100%", height: "100%", display: "block" }}
       shadows
       gl={{
         alpha: true,

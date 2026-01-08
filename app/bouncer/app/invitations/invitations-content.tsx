@@ -18,12 +18,8 @@ export function InvitationsContent({
   return (
     <div className="">
       <div className="flex-1">
-        <h1 className="lowercase text-4xl mb-6">
-          hey {userName}.
-        </h1>
-        <p className="text-lg opacity-80 mb-4">
-          welcome to the party.
-        </p>
+        <h1 className="lowercase text-4xl mb-6">hey {userName}.</h1>
+        <p className="text-lg opacity-80 mb-4">welcome to the party.</p>
         <div className="flex flex-col gap-2 mb-8">
           <a
             href="/settings"

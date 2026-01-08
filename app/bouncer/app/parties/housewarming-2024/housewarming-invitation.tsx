@@ -57,13 +57,11 @@ export function HousewarmingInvitation({
 
           {/* Party details card */}
           <div className="mb-8 backdrop-blur-md bg-black/60 rounded-2xl p-8 border border-white/30">
-            <h1 className="text-5xl font-bold mb-6 text-black">
-              {party.name}
-            </h1>
+            <h1 className="text-5xl font-bold mb-6 text-black">{party.name}</h1>
             <div className="space-y-3 text-lg text-black/90">
               <p>
-                <strong className="text-black">When:</strong>{" "}
-                {formattedDate} at {formattedTime}
+                <strong className="text-black">When:</strong> {formattedDate} at{" "}
+                {formattedTime}
               </p>
               <p>
                 <strong className="text-black">Where:</strong> {party.location}
