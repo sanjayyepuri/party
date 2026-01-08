@@ -20,11 +20,10 @@ export function PartyCard({ party }: PartyCardProps) {
   const isHousewarming = party.slug === "housewarming-2024";
 
   return (
-    <div className="group">
+    <div className="group w-[calc(50%-0.5rem)] md:w-auto">
       <Link href={`/parties/${party.slug}`} className="block" prefetch={true}>
         <div
-          className="relative backdrop-blur-md rounded-lg p-6 border-2 border-black transition-all duration-300 group-hover:border-black cursor-pointer flex flex-col overflow-hidden"
-          style={{ width: "240px", height: "320px" }}
+          className="relative backdrop-blur-md rounded-lg p-6 border-2 border-black transition-all duration-300 group-hover:border-black cursor-pointer flex flex-col overflow-hidden aspect-[3/4] md:w-[240px] md:h-[320px]"
         >
           {/* Canvas preview for housewarming */}
           {isHousewarming && (
