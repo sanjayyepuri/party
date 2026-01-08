@@ -80,6 +80,7 @@ class CustomReceiptEffectImpl extends Effect {
       uniforms,
     });
 
+    // @ts-expect-error TODO (sanjay) review why this is a read-only property.
     this.uniforms = uniforms;
     this.pixelSize = pixelSize;
   }
