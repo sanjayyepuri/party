@@ -8,19 +8,11 @@ import * as THREE from "three";
 const fragmentShader = `
 uniform float pixelSize;
 
-float random(vec2 st) {
-  return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
-}
 
-vec3 sat(vec3 rgb, float adjustment) {
-  const vec3 W = vec3(0.2125, 0.7154, 0.0721);
-  vec3 intensity = vec3(dot(rgb, W));
-  return mix(intensity, rgb, adjustment);
-}
 
 void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor) {
   vec2 normalizedPixelSize = pixelSize / resolution;
-  float rowIndex = floor(uv.x / normalizedPixelSize.x);
+
   vec2 uvPixel = normalizedPixelSize * floor(uv / normalizedPixelSize);
 
   vec4 color = texture2D(inputBuffer, uvPixel);
@@ -58,7 +50,7 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
   float yEnd = 0.95;
 
   if (cellUV.y > yStart && cellUV.y < yEnd && cellUV.x > 0.0 && cellUV.x < lineWidth) {
-    color = vec4(0.0, 0.0, 255.0, 1.0);
+    color = vec4(0.0, 0.0, 0.0, 1.0);
   } else {
     color = vec4(0.70,0.74,0.73, 1.0);
   }
@@ -67,8 +59,6 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
 }
 `;
 
-// (252, 129, 74)
-// vec4()
 
 class CustomReceiptEffectImpl extends Effect {
   pixelSize: number;
