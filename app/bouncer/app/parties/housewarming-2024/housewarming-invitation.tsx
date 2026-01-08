@@ -49,14 +49,14 @@ export function HousewarmingInvitation({
           <div className="mb-6">
             <Link
               href="/invitations"
-              className="text-black/90 hover:text-black transition-opacity text-sm inline-flex items-center gap-2 backdrop-blur-sm bg-black/30 px-4 py-2 rounded-lg"
+              className="text-black/90 hover:text-black transition-opacity text-sm inline-flex items-center gap-2 backdrop-blur-sm px-4 py-2 rounded-lg"
             >
               ← Back to invitations
             </Link>
           </div>
 
           {/* Party details card */}
-          <div className="mb-8 backdrop-blur-md bg-black/60 rounded-2xl p-8 border border-white/30">
+          <div className="mb-8 backdrop-blur-md rounded-2xl p-8 border border-black/30">
             <h1 className="text-5xl font-bold mb-6 text-black">{party.name}</h1>
             <div className="space-y-3 text-lg text-black/90">
               <p>
@@ -69,7 +69,7 @@ export function HousewarmingInvitation({
             </div>
 
             {party.description && (
-              <div className="mt-6 p-4 bg-black/40 rounded-lg border border-white/20">
+              <div className="mt-6 p-4 rounded-lg border border-black/20">
                 <p className="whitespace-pre-wrap text-black">
                   {party.description}
                 </p>
@@ -78,7 +78,7 @@ export function HousewarmingInvitation({
           </div>
 
           {/* RSVP section */}
-          <div className="mb-8 backdrop-blur-md bg-black/60 rounded-2xl p-8 border border-white/30">
+          <div className="mb-8 backdrop-blur-md rounded-2xl p-8 border border-black/30">
             <h2 className="text-3xl font-bold mb-6 text-black">RSVP</h2>
             {rsvpError && (
               <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded text-red-800">
@@ -95,7 +95,7 @@ export function HousewarmingInvitation({
           </div>
 
           {/* Guest list section */}
-          <div className="mb-8 backdrop-blur-md bg-black/60 rounded-2xl p-8 border border-white/30">
+          <div className="mb-8 backdrop-blur-md rounded-2xl p-8 border border-black/30">
             {partyRsvpsError && (
               <div className="p-4 bg-red-50 border border-red-200 rounded text-red-800">
                 <p className="font-medium">Error loading guest list</p>
