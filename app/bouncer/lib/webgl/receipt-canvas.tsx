@@ -1,6 +1,6 @@
 "use client";
 
-import { OrthographicCamera } from "@react-three/drei";
+import { OrthographicCamera, OrbitControls } from "@react-three/drei";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { EffectComposer } from "@react-three/postprocessing";
 import { EffectComposer as PostEffectComposer } from "postprocessing";
@@ -89,6 +89,7 @@ export function ReceiptCanvas({
         <color attach="background" args={["#ffffff"]} />
         <ambientLight intensity={0.2} />
         <directionalLight position={[5, 10, -5]} intensity={8.0} />
+        <OrbitControls></OrbitControls>
         <ReceiptScene pixelSize={pixelSize} scale={scale} />
       </Suspense>
     </Canvas>
