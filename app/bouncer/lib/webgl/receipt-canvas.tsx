@@ -88,7 +88,7 @@ export function ReceiptCanvas({
       <Suspense fallback={null}>
         <color attach="background" args={["#ffffff"]} />
         <ambientLight intensity={0.2} />
-        <directionalLight position={[5, 10, -5]} intensity={8.0} />
+        <directionalLight position={[-5, 0, 5]} intensity={8.0} />
         <ReceiptScene pixelSize={pixelSize} scale={scale} />
       </Suspense>
     </Canvas>
