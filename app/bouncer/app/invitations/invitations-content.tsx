@@ -19,7 +19,6 @@ export function InvitationsContent({
         <h1 className="lowercase text-4xl mb-6">hey {userName}.</h1>
         <p className="text-lg opacity-80 mb-4">welcome to the party.</p>
 
-
         {/* Parties Section */}
         <div className="mb-12">
           <h2 className="text-2xl mb-4">your invitations</h2>
