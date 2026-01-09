@@ -37,13 +37,16 @@ describe("RsvpForm", () => {
       expect(screen.getByText(/Current Status/i)).toBeInTheDocument();
     });
 
-    // Check for status in the status display area (not the button)
-    // The status is in a p tag with class "text-lg font-semibold"
-    const statusDisplay = screen
-      .getByText(/Current Status/i)
-      .closest("div")
-      ?.querySelector("p.text-lg");
-    expect(statusDisplay).toHaveTextContent("Pending");
+    // Wait for loading to complete and status to be displayed
+    await waitFor(() => {
+      // Check for status in the status display area (not the button)
+      // The status is in a p tag with class "text-lg font-semibold"
+      const statusDisplay = screen
+        .getByText(/Current Status/i)
+        .closest("div")
+        ?.querySelector("p.text-lg");
+      expect(statusDisplay).toHaveTextContent("Pending");
+    });
   });
 
   it("displays status options for updating", async () => {
@@ -124,15 +127,22 @@ describe("RsvpForm", () => {
     await user.click(acceptedButton);
 
     await waitFor(() => {
-      // Check for error message text specifically
-      expect(screen.getByText("Network error")).toBeInTheDocument();
+      // Check for error message in the status display area
+      const statusDisplay = screen
+        .getByText(/Current Status/i)
+        .closest("div")
+        ?.querySelector("p.text-lg");
+      expect(statusDisplay).toHaveTextContent("Network error");
+      expect(statusDisplay).toHaveClass("text-red-600");
     });
 
-    // Verify error container is present
-    const errorContainer = screen
-      .getByText("Network error")
-      .closest(".bg-red-50");
-    expect(errorContainer).toBeInTheDocument();
+    // Buttons should still be visible and enabled (update errors are recoverable)
+    // Only unrecoverable errors (when RSVP can't be loaded) disable buttons
+    const buttons = screen.getAllByRole("button");
+    expect(buttons.length).toBeGreaterThan(0);
+    // Buttons should be enabled so user can retry
+    const enabledButtons = buttons.filter((button) => !button.disabled);
+    expect(enabledButtons.length).toBeGreaterThan(0);
   });
 
   it("disables buttons while updating and shows updating state in status display", async () => {
@@ -279,7 +289,20 @@ describe("RsvpForm", () => {
     );
     render(<RsvpForm partyId="party-123" />);
 
-    expect(screen.getByText("Loading RSVP...")).toBeInTheDocument();
+    // Loading text should appear in the status display
+    const statusDisplay = screen
+      .getByText(/Current Status/i)
+      .closest("div")
+      ?.querySelector("p.text-lg");
+    expect(statusDisplay).toHaveTextContent("Loading RSVP...");
+    expect(statusDisplay).toHaveClass("text-gray-400");
+
+    // Buttons should be visible but disabled during loading
+    const buttons = screen.getAllByRole("button");
+    expect(buttons.length).toBeGreaterThan(0);
+    buttons.forEach((button) => {
+      expect(button).toBeDisabled();
+    });
   });
 
   it("displays error when RSVP fetch fails", async () => {
@@ -289,7 +312,20 @@ describe("RsvpForm", () => {
     render(<RsvpForm partyId="party-123" />);
 
     await waitFor(() => {
-      expect(screen.getByText("Failed to load RSVP")).toBeInTheDocument();
+      // Error should appear in the status display area
+      const statusDisplay = screen
+        .getByText(/Current Status/i)
+        .closest("div")
+        ?.querySelector("p.text-lg");
+      expect(statusDisplay).toHaveTextContent("Failed to load RSVP");
+      expect(statusDisplay).toHaveClass("text-red-600");
+    });
+
+    // Buttons should still be visible but disabled due to unrecoverable error
+    const buttons = screen.getAllByRole("button");
+    expect(buttons.length).toBeGreaterThan(0);
+    buttons.forEach((button) => {
+      expect(button).toBeDisabled();
     });
   });
 });
