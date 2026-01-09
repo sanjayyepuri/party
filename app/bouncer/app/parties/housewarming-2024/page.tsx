@@ -5,6 +5,9 @@ import { fetchPartyBySlug, fetchRsvp, fetchPartyRsvps } from "@/lib/api-client";
 import { HousewarmingInvitation } from "./housewarming-invitation";
 import Link from "next/link";
 
+// Force dynamic rendering to ensure fresh RSVP data on every visit
+export const dynamic = "force-dynamic";
+
 export default async function HousewarmingPartyPage() {
   // Check if user is authenticated
   const session = await auth.api.getSession({
