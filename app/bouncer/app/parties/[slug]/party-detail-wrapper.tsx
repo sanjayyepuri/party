@@ -29,9 +29,7 @@ export function PartyDetailWrapper({
   });
 
   return (
-    <div
-      className="relative bg-white/90 backdrop-blur-sm rounded-lg p-8 border-2 border-black/10 shadow-[0_4px_6px_rgba(0,0,0,0.1),0_8px_16px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.9)] overflow-hidden"
-    >
+    <div className="relative bg-white/90 backdrop-blur-sm rounded-lg p-8 border-2 border-black/10 shadow-[0_4px_6px_rgba(0,0,0,0.1),0_8px_16px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.9)] overflow-hidden">
       {/* Inner shadow for depth */}
       <div className="absolute inset-0 rounded-lg bg-gradient-to-b from-white/40 to-transparent pointer-events-none z-0" />
 
