@@ -1,12 +1,9 @@
 import { redirect, notFound } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-import { fetchPartyBySlug, fetchRsvp, fetchPartyRsvps } from "@/lib/api-client";
+import { fetchPartyBySlug, fetchPartyRsvps } from "@/lib/api-client";
 import { HousewarmingInvitation } from "./housewarming-invitation";
 import Link from "next/link";
-
-// Force dynamic rendering to ensure fresh RSVP data on every visit
-export const dynamic = "force-dynamic";
 
 export default async function HousewarmingPartyPage() {
   // Check if user is authenticated
@@ -54,15 +51,6 @@ export default async function HousewarmingPartyPage() {
     );
   }
 
-  // Fetch user's RSVP for this party
-  let rsvp = null;
-  let rsvpError: string | null = null;
-  try {
-    rsvp = await fetchRsvp(party.party_id);
-  } catch (error) {
-    rsvpError = error instanceof Error ? error.message : "Failed to load RSVP";
-  }
-
   // Fetch all RSVPs for this party
   let partyRsvps: Awaited<ReturnType<typeof fetchPartyRsvps>> | null = null;
   let partyRsvpsError: string | null = null;
@@ -76,8 +64,6 @@ export default async function HousewarmingPartyPage() {
   return (
     <HousewarmingInvitation
       party={party}
-      rsvp={rsvp}
-      rsvpError={rsvpError}
       partyRsvps={partyRsvps}
       partyRsvpsError={partyRsvpsError}
       currentUserId={session.user.id}

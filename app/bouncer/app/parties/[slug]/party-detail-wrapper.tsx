@@ -1,15 +1,10 @@
-"use client";
-
-import { motion } from "framer-motion";
 import Link from "next/link";
-import type { Party, Rsvp, RsvpWithUser } from "@/lib/types";
+import type { Party, RsvpWithUser } from "@/lib/types";
 import { RsvpForm } from "./rsvp-form";
 import { GuestList } from "./guest-list";
 
 interface PartyDetailWrapperProps {
   party: Party;
-  rsvp: Rsvp | null;
-  rsvpError: string | null;
   partyRsvps: RsvpWithUser[] | null;
   partyRsvpsError: string | null;
   currentUserId: string;
@@ -17,8 +12,6 @@ interface PartyDetailWrapperProps {
 
 export function PartyDetailWrapper({
   party,
-  rsvp,
-  rsvpError,
   partyRsvps,
   partyRsvpsError,
   currentUserId,
@@ -36,12 +29,7 @@ export function PartyDetailWrapper({
   });
 
   return (
-    <motion.div
-      layoutId={`party-card-${party.party_id}`}
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      transition={{ duration: 0.4, ease: "easeInOut" }}
+    <div
       className="relative bg-white/90 backdrop-blur-sm rounded-lg p-8 border-2 border-black/10 shadow-[0_4px_6px_rgba(0,0,0,0.1),0_8px_16px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.9)] overflow-hidden"
     >
       {/* Inner shadow for depth */}
@@ -80,18 +68,7 @@ export function PartyDetailWrapper({
 
         <div className="mb-8">
           <h2 className="text-2xl mb-4 text-black/90">RSVP</h2>
-          {rsvpError && (
-            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded text-red-800">
-              <p className="font-medium">Error loading RSVP</p>
-              <p className="text-sm">{rsvpError}</p>
-            </div>
-          )}
-          {!rsvpError && rsvp && <RsvpForm initialRsvp={rsvp} />}
-          {!rsvpError && !rsvp && (
-            <div className="p-4 bg-gray-50 border border-gray-200 rounded text-gray-600">
-              <p>Loading RSVP...</p>
-            </div>
-          )}
+          <RsvpForm partyId={party.party_id} />
         </div>
 
         <div className="mb-8">
@@ -114,6 +91,6 @@ export function PartyDetailWrapper({
 
       {/* Decorative corner accent */}
       <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-white/60 to-transparent rounded-bl-full pointer-events-none" />
-    </motion.div>
+    </div>
   );
 }

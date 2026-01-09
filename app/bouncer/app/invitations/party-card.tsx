@@ -1,5 +1,3 @@
-"use client";
-
 import Link from "next/link";
 import type { Party } from "@/lib/types";
 import { ReceiptCanvas } from "@/lib/webgl/receipt-canvas";

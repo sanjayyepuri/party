@@ -31,7 +31,6 @@ jest.mock("@/lib/auth", () => ({
 
 jest.mock("@/lib/api-client", () => ({
   fetchPartyBySlug: jest.fn(),
-  fetchRsvp: jest.fn(),
   fetchPartyRsvps: jest.fn(),
 }));
 
@@ -40,8 +39,8 @@ jest.mock("next/headers", () => ({
 }));
 
 jest.mock("../rsvp-form", () => ({
-  RsvpForm: ({ initialRsvp }: any) => (
-    <div data-testid="rsvp-form">RSVP Form - Status: {initialRsvp.status}</div>
+  RsvpForm: ({ partyId }: any) => (
+    <div data-testid="rsvp-form">RSVP Form - Party ID: {partyId}</div>
   ),
 }));
 
@@ -115,11 +114,9 @@ describe("PartyPage", () => {
   it("displays party details when party is found", async () => {
     const {
       fetchPartyBySlug,
-      fetchRsvp,
       fetchPartyRsvps,
     } = require("@/lib/api-client");
     fetchPartyBySlug.mockResolvedValue(mockParty);
-    fetchRsvp.mockResolvedValue(mockRsvp);
     fetchPartyRsvps.mockResolvedValue([]);
 
     const component = await PartyPage({
@@ -148,11 +145,9 @@ describe("PartyPage", () => {
   it("displays back to invitations link", async () => {
     const {
       fetchPartyBySlug,
-      fetchRsvp,
       fetchPartyRsvps,
     } = require("@/lib/api-client");
     fetchPartyBySlug.mockResolvedValue(mockParty);
-    fetchRsvp.mockResolvedValue(mockRsvp);
     fetchPartyRsvps.mockResolvedValue([]);
 
     const component = await PartyPage({
@@ -168,11 +163,9 @@ describe("PartyPage", () => {
   it("displays RSVP form when RSVP is fetched successfully", async () => {
     const {
       fetchPartyBySlug,
-      fetchRsvp,
       fetchPartyRsvps,
     } = require("@/lib/api-client");
     fetchPartyBySlug.mockResolvedValue(mockParty);
-    fetchRsvp.mockResolvedValue(mockRsvp);
     fetchPartyRsvps.mockResolvedValue([]);
 
     const component = await PartyPage({
@@ -182,37 +175,34 @@ describe("PartyPage", () => {
 
     const rsvpForm = screen.getByTestId("rsvp-form");
     expect(rsvpForm).toBeInTheDocument();
-    expect(rsvpForm.textContent).toContain("pending");
+    expect(rsvpForm.textContent).toContain("party-123");
   });
 
-  it("displays error message when fetching RSVP fails", async () => {
+  it("displays RSVP form even when server-side RSVP fetch fails", async () => {
     const {
       fetchPartyBySlug,
-      fetchRsvp,
       fetchPartyRsvps,
     } = require("@/lib/api-client");
     fetchPartyBySlug.mockResolvedValue(mockParty);
-    fetchRsvp.mockRejectedValue(new Error("RSVP error"));
     fetchPartyRsvps.mockResolvedValue([]);
 
     const component = await PartyPage({
       params: Promise.resolve({ slug: "test-party" }),
     });
-    const { container } = render(component);
+    render(component);
 
-    expect(container.textContent).toContain("Error loading RSVP");
-    expect(container.textContent).toContain("RSVP error");
+    // RSVP form should still be rendered, it will handle its own loading/error states
+    const rsvpForm = screen.getByTestId("rsvp-form");
+    expect(rsvpForm).toBeInTheDocument();
   });
 
   it("handles party without description", async () => {
     const partyWithoutDescription = { ...mockParty, description: "" };
     const {
       fetchPartyBySlug,
-      fetchRsvp,
       fetchPartyRsvps,
     } = require("@/lib/api-client");
     fetchPartyBySlug.mockResolvedValue(partyWithoutDescription);
-    fetchRsvp.mockResolvedValue(mockRsvp);
     fetchPartyRsvps.mockResolvedValue([]);
 
     const component = await PartyPage({
@@ -227,11 +217,9 @@ describe("PartyPage", () => {
   it("formats party date and time correctly", async () => {
     const {
       fetchPartyBySlug,
-      fetchRsvp,
       fetchPartyRsvps,
     } = require("@/lib/api-client");
     fetchPartyBySlug.mockResolvedValue(mockParty);
-    fetchRsvp.mockResolvedValue(mockRsvp);
     fetchPartyRsvps.mockResolvedValue([]);
 
     const component = await PartyPage({
@@ -259,11 +247,9 @@ describe("PartyPage", () => {
     ];
     const {
       fetchPartyBySlug,
-      fetchRsvp,
       fetchPartyRsvps,
     } = require("@/lib/api-client");
     fetchPartyBySlug.mockResolvedValue(mockParty);
-    fetchRsvp.mockResolvedValue(mockRsvp);
     fetchPartyRsvps.mockResolvedValue(mockPartyRsvps);
 
     const component = await PartyPage({
@@ -280,11 +266,9 @@ describe("PartyPage", () => {
   it("displays error message when fetching party RSVPs fails", async () => {
     const {
       fetchPartyBySlug,
-      fetchRsvp,
       fetchPartyRsvps,
     } = require("@/lib/api-client");
     fetchPartyBySlug.mockResolvedValue(mockParty);
-    fetchRsvp.mockResolvedValue(mockRsvp);
     fetchPartyRsvps.mockRejectedValue(new Error("RSVPs error"));
 
     const component = await PartyPage({
@@ -300,11 +284,9 @@ describe("PartyPage", () => {
     const mockPartyRsvps: any[] = [];
     const {
       fetchPartyBySlug,
-      fetchRsvp,
       fetchPartyRsvps,
     } = require("@/lib/api-client");
     fetchPartyBySlug.mockResolvedValue(mockParty);
-    fetchRsvp.mockResolvedValue(mockRsvp);
     fetchPartyRsvps.mockResolvedValue(mockPartyRsvps);
 
     const component = await PartyPage({

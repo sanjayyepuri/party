@@ -37,6 +37,43 @@ function getApiBaseUrl(): string {
 }
 
 /**
+ * Get or create an RSVP for the authenticated user for a specific party (client-side)
+ * @param partyId - The party ID
+ * @returns RSVP object
+ * @throws Error if the request fails or user is not authenticated
+ */
+export async function fetchRsvpClient(partyId: string): Promise<Rsvp> {
+  const apiBaseUrl = getApiBaseUrl();
+  const response = await fetch(
+    `${apiBaseUrl}${API_PATH}/parties/${partyId}/rsvp`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include", // Include cookies for authentication
+      cache: "force-cache", // Use cached data
+    }
+  );
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      throw new Error("Unauthorized: Please log in to manage RSVP");
+    }
+    if (response.status === 404) {
+      throw new Error("Party or user not found");
+    }
+    if (response.status === 500) {
+      throw new Error("Server error: Unable to fetch RSVP");
+    }
+    throw new Error(`Failed to fetch RSVP: ${response.statusText}`);
+  }
+
+  const rsvp: Rsvp = await response.json();
+  return rsvp;
+}
+
+/**
  * Update an RSVP status (client-side)
  * @param updateRequest - The RSVP update request with rsvp_id and status
  * @returns Updated RSVP object

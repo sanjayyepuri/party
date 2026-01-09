@@ -1,15 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import type { Party, Rsvp, RsvpWithUser } from "@/lib/types";
+import type { Party, RsvpWithUser } from "@/lib/types";
 import { RsvpForm } from "../[slug]/rsvp-form";
 import { GuestList } from "../[slug]/guest-list";
 import { ReceiptCanvas } from "@/lib/webgl/receipt-canvas";
 
 interface HousewarmingInvitationProps {
   party: Party;
-  rsvp: Rsvp | null;
-  rsvpError: string | null;
   partyRsvps: RsvpWithUser[] | null;
   partyRsvpsError: string | null;
   currentUserId: string;
@@ -17,8 +15,6 @@ interface HousewarmingInvitationProps {
 
 export function HousewarmingInvitation({
   party,
-  rsvp,
-  rsvpError,
   partyRsvps,
   partyRsvpsError,
   currentUserId,
@@ -84,18 +80,7 @@ export function HousewarmingInvitation({
             <h2 className="text-xl md:text-3xl font-bold mb-4 md:mb-6 text-black">
               RSVP
             </h2>
-            {rsvpError && (
-              <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded text-red-800">
-                <p className="font-medium">Error loading RSVP</p>
-                <p className="text-sm">{rsvpError}</p>
-              </div>
-            )}
-            {!rsvpError && rsvp && <RsvpForm initialRsvp={rsvp} />}
-            {!rsvpError && !rsvp && (
-              <div className="p-4 bg-gray-50 border border-gray-200 rounded text-gray-600">
-                <p>Loading RSVP...</p>
-              </div>
-            )}
+            <RsvpForm partyId={party.party_id} />
           </div>
 
           {/* Guest list section */}

@@ -1,20 +1,39 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { Rsvp } from "@/lib/types";
-import { updateRsvpClient } from "@/lib/api-client-client";
+import { fetchRsvpClient, updateRsvpClient } from "@/lib/api-client-client";
 
 interface RsvpFormProps {
-  initialRsvp: Rsvp;
+  partyId: string;
 }
 
-export function RsvpForm({ initialRsvp }: RsvpFormProps) {
-  const [rsvp, setRsvp] = useState<Rsvp>(initialRsvp);
+export function RsvpForm({ partyId }: RsvpFormProps) {
+  const [rsvp, setRsvp] = useState<Rsvp | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Fetch RSVP data on mount
+  useEffect(() => {
+    async function loadRsvp() {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const fetchedRsvp = await fetchRsvpClient(partyId);
+        setRsvp(fetchedRsvp);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to load RSVP");
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    loadRsvp();
+  }, [partyId]);
+
   const handleStatusChange = async (newStatus: string) => {
-    if (newStatus === rsvp.status) {
+    if (!rsvp || newStatus === rsvp.status) {
       return; // No change needed
     }
 
@@ -51,6 +70,23 @@ export function RsvpForm({ initialRsvp }: RsvpFormProps) {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="p-4 bg-gray-50 border border-gray-200 rounded text-gray-600">
+        <p>Loading RSVP...</p>
+      </div>
+    );
+  }
+
+  if (!rsvp) {
+    return (
+      <div className="p-4 bg-red-50 border border-red-200 rounded text-red-800">
+        <p className="font-medium">Error</p>
+        <p className="text-sm">{error || "Failed to load RSVP"}</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <div className="p-4 bg-white/5 rounded border border-white/10">
@@ -78,8 +114,8 @@ export function RsvpForm({ initialRsvp }: RsvpFormProps) {
                   onClick={() => handleStatusChange(option.value)}
                   disabled={isUpdating || isActive}
                   className={`
-                    flex-1 bg-black text-white py-3 px-4 rounded hover:bg-gray-800 
-                    disabled:bg-gray-400 disabled:cursor-not-allowed 
+                    flex-1 bg-black text-white py-3 px-4 rounded hover:bg-gray-800
+                    disabled:bg-gray-400 disabled:cursor-not-allowed
                     flex items-center justify-center gap-2 transition-all
                     ${isUpdating ? "opacity-50 cursor-not-allowed" : ""}
                   `}

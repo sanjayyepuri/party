@@ -1,5 +1,3 @@
-"use client";
-
 import { PartyCard } from "./party-card";
 import type { Party } from "@/lib/types";
 

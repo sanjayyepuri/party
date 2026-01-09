@@ -1,5 +1,3 @@
-"use client";
-
 import { LogoutButton } from "@/components/auth/logout-button";
 import { PartyCardList } from "./party-card-list";
 import type { Party } from "@/lib/types";
