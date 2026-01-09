@@ -5,6 +5,9 @@ import { fetchPartyBySlug, fetchRsvp, fetchPartyRsvps } from "@/lib/api-client";
 import { PartyDetailWrapper } from "./party-detail-wrapper";
 import Link from "next/link";
 
+// Force dynamic rendering to ensure fresh RSVP data on every visit
+export const dynamic = "force-dynamic";
+
 interface PartyPageProps {
   params: Promise<{ slug: string }>;
 }
