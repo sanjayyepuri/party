@@ -1,5 +1,6 @@
 import { LogoutButton } from "@/components/auth/logout-button";
 import { PartyCardList } from "./party-card-list";
+import { NextPartyHighlight } from "./next-party-highlight";
 import type { Party } from "@/lib/types";
 
 interface InvitationsContentProps {
@@ -13,6 +14,19 @@ export function InvitationsContent({
   parties,
   partiesError,
 }: InvitationsContentProps) {
+  // Find the next party (earliest future party)
+  const now = new Date();
+  const nextParty = parties.find((party) => {
+    const partyTime = new Date(party.time);
+    return partyTime >= now;
+  });
+
+  // Separate previous parties (parties in the past)
+  const previousParties = parties.filter((party) => {
+    const partyTime = new Date(party.time);
+    return partyTime < now;
+  });
+
   return (
     <div className="">
       <div className="flex-1">
@@ -37,9 +51,21 @@ export function InvitationsContent({
           )}
 
           {!partiesError && parties.length > 0 && (
-            <div className="pt-6 border-t border-white/20">
-              <PartyCardList parties={parties} />
-            </div>
+            <>
+              {/* Next Party Highlight */}
+              {nextParty && (
+                <div className="mb-8 pt-6 border-t border-white/20">
+                  <NextPartyHighlight party={nextParty} />
+                </div>
+              )}
+
+              {/* Previous Parties */}
+              {previousParties.length > 0 && (
+                <div className="pt-6 border-t border-white/20">
+                  <PartyCardList parties={previousParties} />
+                </div>
+              )}
+            </>
           )}
         </div>
 
