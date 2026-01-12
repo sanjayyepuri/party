@@ -14,7 +14,11 @@ export function NextPartyHighlight({ party }: NextPartyHighlightProps) {
       <div className="flex flex-col md:flex-row gap-4 md:gap-6 items-start">
         {/* Card - same size as other cards */}
         <div className="w-full md:w-auto">
-          <Link href={`/parties/${party.slug}`} className="block" prefetch={true}>
+          <Link
+            href={`/parties/${party.slug}`}
+            className="block"
+            prefetch={true}
+          >
             <div className="relative backdrop-blur-md rounded-lg p-6 border-2 border-black transition-all duration-300 hover:border-black cursor-pointer flex flex-col overflow-hidden aspect-[3/4] md:w-[240px] md:h-[320px]">
               {/* Canvas preview for housewarming */}
               {isHousewarming && (
@@ -49,7 +53,9 @@ export function NextPartyHighlight({ party }: NextPartyHighlightProps) {
         <div className="flex-1 pt-2">
           <div className="text-2xl text-black/80 leading-tight tracking-tighter">
             {party.description || (
-              <span className="opacity-60 italic">No description available.</span>
+              <span className="opacity-60 italic">
+                No description available.
+              </span>
             )}
           </div>
         </div>
