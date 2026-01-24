@@ -56,7 +56,13 @@ interface InvitationShaderCanvasProps {
   brightness?: number;
 }
 
-function ShaderPlane({ speed = 1.0, brightness = 1.0 }: { speed?: number; brightness?: number }) {
+function ShaderPlane({
+  speed = 1.0,
+  brightness = 1.0,
+}: {
+  speed?: number;
+  brightness?: number;
+}) {
   const meshRef = useRef<THREE.Mesh>(null);
   const timeRef = useRef(0);
   const { size } = useThree();

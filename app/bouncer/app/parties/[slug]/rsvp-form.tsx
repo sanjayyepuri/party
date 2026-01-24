@@ -110,7 +110,13 @@ export function RsvpForm({ partyId }: RsvpFormProps) {
 
   return (
     <div className="space-y-4 text-inherit">
-      <div className="p-4 rounded" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)', border: '1px solid rgba(250, 249, 246, 0.2)' }}>
+      <div
+        className="p-4 rounded"
+        style={{
+          backgroundColor: "rgba(0, 0, 0, 0.5)",
+          border: "1px solid rgba(250, 249, 246, 0.2)",
+        }}
+      >
         <div className="mb-4">
           <p className="text-sm opacity-80 mb-2 text-inherit">Current Status</p>
           <p className={`text-lg font-semibold ${getStatusTextColor()}`}>

@@ -17,15 +17,29 @@ export function GuestList({ rsvps, currentUserId }: GuestListProps) {
 
   if (acceptedGuests.length === 0) {
     return (
-      <div className="p-4 rounded text-inherit" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)', border: '1px solid rgba(250, 249, 246, 0.2)' }}>
+      <div
+        className="p-4 rounded text-inherit"
+        style={{
+          backgroundColor: "rgba(0, 0, 0, 0.5)",
+          border: "1px solid rgba(250, 249, 246, 0.2)",
+        }}
+      >
         <h3 className="text-xl mb-4 text-inherit">Guests</h3>
-        <p className="text-sm opacity-80 text-inherit">No guests have accepted yet.</p>
+        <p className="text-sm opacity-80 text-inherit">
+          No guests have accepted yet.
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="p-4 rounded text-inherit" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)', border: '1px solid rgba(250, 249, 246, 0.2)' }}>
+    <div
+      className="p-4 rounded text-inherit"
+      style={{
+        backgroundColor: "rgba(0, 0, 0, 0.5)",
+        border: "1px solid rgba(250, 249, 246, 0.2)",
+      }}
+    >
       <h3 className="text-xl mb-4 text-inherit">Guests</h3>
       <ul className="space-y-2">
         {acceptedGuests.map((rsvp) => (
