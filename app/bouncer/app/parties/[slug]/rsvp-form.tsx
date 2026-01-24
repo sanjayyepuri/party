@@ -109,17 +109,17 @@ export function RsvpForm({ partyId }: RsvpFormProps) {
   const isDisabled = isLoading || isUpdating || hasUnrecoverableError;
 
   return (
-    <div className="space-y-4">
-      <div className="p-4 bg-white/5 rounded border border-white/10">
+    <div className="space-y-4 text-inherit">
+      <div className="p-4 rounded" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)', border: '1px solid rgba(250, 249, 246, 0.2)' }}>
         <div className="mb-4">
-          <p className="text-sm opacity-80 mb-2">Current Status</p>
+          <p className="text-sm opacity-80 mb-2 text-inherit">Current Status</p>
           <p className={`text-lg font-semibold ${getStatusTextColor()}`}>
             {getStatusText()}
           </p>
         </div>
 
         <div className="space-y-2">
-          <p className="text-sm opacity-80 mb-2">Update Status</p>
+          <p className="text-sm opacity-80 mb-2 text-inherit">Update Status</p>
           <div className="flex flex-col md:flex-row gap-4 w-full">
             {statusOptions.map((option) => {
               const isActive = rsvp?.status === option.value;

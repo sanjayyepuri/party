@@ -30,4 +30,5 @@ void main() {
     float cx = color(uv + vec2(0.01, 0.0)) - c;
     float cy = color(uv + vec2(0.0, 0.01)) - c;
     gl_FragColor = normalize(vec4(cx, sqrt(abs(cx * cy)), cy, c / 2.0));
+
 }
