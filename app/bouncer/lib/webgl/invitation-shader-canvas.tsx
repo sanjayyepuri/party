@@ -87,6 +87,10 @@ function ShaderPlane({
       shaderMaterial.uniforms.uBrightness.value = brightness;
       // Update resolution on resize
       shaderMaterial.uniforms.uResolution.value.set(size.width, size.height);
+
+      // Update plane scale to match aspect ratio
+      const currentAspect = size.width / size.height;
+      meshRef.current.scale.x = currentAspect;
     }
   });
 
