@@ -130,7 +130,10 @@ export function LoginForm() {
         >
           {loading ? (
             <>
-              <span className="animate-spin">⏳</span>
+              <span
+                className="h-4 w-4 rounded-full border border-white/40 border-t-white animate-spin"
+                aria-hidden="true"
+              />
               <span>Signing in with passkey...</span>
             </>
           ) : (
