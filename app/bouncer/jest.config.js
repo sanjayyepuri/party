@@ -15,7 +15,7 @@ const customJestConfig = {
   },
   // Allow ESM packages used by the WebGL stack to be transformed for Jest.
   transformIgnorePatterns: [
-    "/node_modules/(?!(three|@react-three|postprocessing|maath|n8ao)/)",
+    "/node_modules/(?!(three|@react-three|postprocessing)/)",
   ],
   testMatch: ["**/__tests__/**/*.[jt]s?(x)", "**/?(*.)+(spec|test).[jt]s?(x)"],
   collectCoverageFrom: [

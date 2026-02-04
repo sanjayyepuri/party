@@ -5,7 +5,7 @@ let ReceiptCanvas: ReceiptCanvasType;
 let ReceiptEffect: ReceiptEffectType;
 
 if (process.env.NODE_ENV === "test") {
-  ReceiptCanvas = (({ className } = {}) => {
+  ReceiptCanvas = (({ className, pixelSize, scale } = {}) => {
     const React = require("react");
     return React.createElement("div", {
       className,
