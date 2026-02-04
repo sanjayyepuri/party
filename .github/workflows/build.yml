@@ -6,26 +6,39 @@ on:
   pull_request:
 
 jobs:
-  # build-bouncer:
-  #   runs-on: "ubuntu-latest"
-  #   env:
-  #     working-directory: app/bouncer
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v4
+  test-bouncer:
+    runs-on: "ubuntu-latest"
+    env:
+      working-directory: app/bouncer
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-  #     - name: Setup Node
-  #       uses: actions/setup-node@v4
-  #       with:
-  #         node-version: 22.0.0
-  #         cache: npm
-  #         cache-dependency-path: ${{env.working-directory}}
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.0.0
+          cache: npm
+          cache-dependency-path: app/bouncer/package-lock.json
 
-  #     - name: Build
-  #       working-directory: ${{env.working-directory}}
-  #       run: |
-  #         npm ci
-  #         npx next build
+      - name: Install
+        working-directory: ${{env.working-directory}}
+        run: npm ci
+
+      - name: Test
+        working-directory: ${{env.working-directory}}
+        run: npm test -- --ci --reporters=default --reporters=jest-junit
+        env:
+          JEST_JUNIT_OUTPUT_DIR: ${{env.working-directory}}
+          JEST_JUNIT_OUTPUT_NAME: junit.xml
+
+      - name: Test Report
+        if: always()
+        uses: dorny/test-reporter@v1
+        with:
+          name: bouncer-tests
+          path: app/bouncer/junit.xml
+          reporter: jest-junit
 
   build-pregame:
     runs-on: "ubuntu-latest"

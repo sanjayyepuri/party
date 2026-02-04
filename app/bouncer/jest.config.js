@@ -7,11 +7,16 @@ const createJestConfig = nextJest({
 
 // Add any custom config to be passed to Jest
 const customJestConfig = {
+  setupFiles: ["<rootDir>/jest.setup.mocks.js"],
   setupFilesAfterEnv: ["<rootDir>/jest.setup.js"],
   testEnvironment: "jest-environment-jsdom",
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/$1",
   },
+  // Allow ESM packages used by the WebGL stack to be transformed for Jest.
+  transformIgnorePatterns: [
+    "/node_modules/(?!(three|@react-three|postprocessing)/)",
+  ],
   testMatch: ["**/__tests__/**/*.[jt]s?(x)", "**/?(*.)+(spec|test).[jt]s?(x)"],
   collectCoverageFrom: [
     "components/**/*.{js,jsx,ts,tsx}",
