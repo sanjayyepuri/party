@@ -4,7 +4,7 @@ import Link from "next/link";
 import type { Party, RsvpWithUser } from "@/lib/types";
 import { RsvpForm } from "../[slug]/rsvp-form";
 import { GuestList } from "../[slug]/guest-list";
-import { ReceiptCanvas } from "@/lib/webgl/receipt-canvas";
+import { ReceiptCanvas } from "@/lib/webgl";
 
 interface HousewarmingInvitationProps {
   party: Party;

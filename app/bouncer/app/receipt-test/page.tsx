@@ -1,4 +1,4 @@
-import { ReceiptCanvas } from "@/lib/webgl/receipt-canvas";
+import { ReceiptCanvas } from "@/lib/webgl";
 
 export default function ReceiptTestPage() {
   return (

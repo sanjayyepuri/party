@@ -388,16 +388,20 @@ describe("InvitationsPage", () => {
     const { container } = render(component);
 
     const welcomeText = screen.getByText(/welcome to the party/i);
+    const invitationsHeading = screen.getByText(/your invitations/i);
     const settingsLink = screen.getByText(/manage account/i);
 
     expect(welcomeText).toBeTruthy();
+    expect(invitationsHeading).toBeTruthy();
     expect(settingsLink).toBeTruthy();
 
     // Check that actions come after welcome message in the DOM
     const welcomeElement = welcomeText.closest("p");
+    const partiesContainer = invitationsHeading.closest("div");
     const actionsContainer = settingsLink.closest("div");
 
-    expect(welcomeElement?.nextElementSibling).toBe(actionsContainer);
+    expect(welcomeElement?.nextElementSibling).toBe(partiesContainer);
+    expect(partiesContainer?.nextElementSibling).toBe(actionsContainer);
   });
 
   it("displays both actions with icons side by side in vertical stack", async () => {
