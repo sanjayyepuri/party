@@ -255,6 +255,18 @@ describe("api-client", () => {
         "Party or user not found"
       );
     });
+
+    it("handles 409 conflict error", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 409,
+        statusText: "Conflict",
+      } as Response);
+
+      await expect(fetchRsvp("party-123")).rejects.toThrow(
+        "RSVPs are closed for this party"
+      );
+    });
   });
 
   describe("fetchPartyRsvps", () => {
@@ -407,6 +419,18 @@ describe("api-client", () => {
       await expect(
         updateRsvp({ rsvp_id: "rsvp-123", status: "accepted" })
       ).rejects.toThrow("RSVP not found");
+    });
+
+    it("handles 409 conflict error", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 409,
+        statusText: "Conflict",
+      } as Response);
+
+      await expect(
+        updateRsvp({ rsvp_id: "rsvp-123", status: "accepted" })
+      ).rejects.toThrow("RSVPs are closed for this party");
     });
   });
 });

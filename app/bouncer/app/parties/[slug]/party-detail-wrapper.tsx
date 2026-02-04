@@ -16,7 +16,9 @@ export function PartyDetailWrapper({
   partyRsvpsError,
   currentUserId,
 }: PartyDetailWrapperProps) {
+  const graceMs = 24 * 60 * 60 * 1000;
   const partyDate = new Date(party.time);
+  const isClosed = Date.now() > partyDate.getTime() + graceMs;
   const formattedDate = partyDate.toLocaleDateString("en-US", {
     weekday: "long",
     year: "numeric",
@@ -66,7 +68,7 @@ export function PartyDetailWrapper({
 
         <div className="mb-8">
           <h2 className="text-2xl mb-4 text-black/90">RSVP</h2>
-          <RsvpForm partyId={party.party_id} />
+          <RsvpForm partyId={party.party_id} isClosed={isClosed} />
         </div>
 
         <div className="mb-8">

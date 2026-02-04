@@ -11,6 +11,16 @@ use crate::api::ApiState;
 use crate::auth::BetterAuthSession;
 use crate::model::{Rsvp, RsvpWithUser};
 
+const RSVP_GRACE_HOURS: i64 = 24;
+const RSVP_CLOSED_MESSAGE: &str = "RSVPs are closed for this party";
+
+fn is_rsvp_closed(
+    party_time: chrono::DateTime<chrono::Utc>,
+    now: chrono::DateTime<chrono::Utc>,
+) -> bool {
+    party_time < now - chrono::Duration::hours(RSVP_GRACE_HOURS)
+}
+
 /// Get RSVPs for a specific party
 pub async fn get_party_rsvps(
     State(api_state): State<Arc<ApiState>>,
@@ -84,6 +94,40 @@ async fn get_rsvp_impl(
 
     // Get a connection from the pool
     let client = api_state.db_state.get_connection().await?;
+
+    let party_time_row = client
+        .query_opt(
+            "SELECT time FROM party WHERE party_id = $1 AND deleted_at IS NULL;",
+            &[&party_id],
+        )
+        .await
+        .map_err(|err| {
+            tracing::error!("Database query failed: {:?}", err);
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json("Internal Server Error"),
+            )
+                .into_response()
+        })?;
+
+    let Some(party_time_row) = party_time_row else {
+        return Err((StatusCode::NOT_FOUND, Json("Party not found")).into_response());
+    };
+
+    let party_time: chrono::DateTime<chrono::Utc> = party_time_row
+        .try_get("time")
+        .map_err(|err| {
+            tracing::error!("Failed to parse party time from row: {:?}", err);
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json("Internal Server Error"),
+            )
+                .into_response()
+        })?;
+
+    if is_rsvp_closed(party_time, now) {
+        return Err((StatusCode::CONFLICT, Json(RSVP_CLOSED_MESSAGE)).into_response());
+    }
 
     // Single query: validate party exists, insert if not exists, then select the RSVP
     let row = client
@@ -178,6 +222,46 @@ async fn update_rsvp_impl(
     // Get a connection from the pool
     let client = api_state.db_state.get_connection().await?;
 
+    let party_time_row = client
+        .query_opt(
+            "SELECT p.time
+             FROM party p
+             JOIN rsvp r ON r.party_id = p.party_id
+             WHERE r.rsvp_id = $1
+               AND r.user_id = $2
+               AND r.deleted_at IS NULL
+               AND p.deleted_at IS NULL;",
+            &[&payload.rsvp_id, &user_id],
+        )
+        .await
+        .map_err(|err| {
+            tracing::error!("Database query failed: {:?}", err);
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json("Internal Server Error"),
+            )
+                .into_response()
+        })?;
+
+    let Some(party_time_row) = party_time_row else {
+        return Err((StatusCode::NOT_FOUND, Json("RSVP not found")).into_response());
+    };
+
+    let party_time: chrono::DateTime<chrono::Utc> = party_time_row
+        .try_get("time")
+        .map_err(|err| {
+            tracing::error!("Failed to parse party time from row: {:?}", err);
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json("Internal Server Error"),
+            )
+                .into_response()
+        })?;
+
+    if is_rsvp_closed(party_time, now) {
+        return Err((StatusCode::CONFLICT, Json(RSVP_CLOSED_MESSAGE)).into_response());
+    }
+
     // Only allow users to update their own RSVPs
     let row = client
         .query_opt(
@@ -232,6 +316,46 @@ async fn delete_rsvp_impl(
 
     // Get a connection from the pool
     let client = api_state.db_state.get_connection().await?;
+
+    let party_time_row = client
+        .query_opt(
+            "SELECT p.time
+             FROM party p
+             JOIN rsvp r ON r.party_id = p.party_id
+             WHERE r.party_id = $1
+               AND r.user_id = $2
+               AND r.deleted_at IS NULL
+               AND p.deleted_at IS NULL;",
+            &[&party_id, &user_id],
+        )
+        .await
+        .map_err(|err| {
+            tracing::error!("Database query failed: {:?}", err);
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json("Internal Server Error"),
+            )
+                .into_response()
+        })?;
+
+    let Some(party_time_row) = party_time_row else {
+        return Err((StatusCode::NOT_FOUND, Json("RSVP not found")).into_response());
+    };
+
+    let party_time: chrono::DateTime<chrono::Utc> = party_time_row
+        .try_get("time")
+        .map_err(|err| {
+            tracing::error!("Failed to parse party time from row: {:?}", err);
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json("Internal Server Error"),
+            )
+                .into_response()
+        })?;
+
+    if is_rsvp_closed(party_time, now) {
+        return Err((StatusCode::CONFLICT, Json(RSVP_CLOSED_MESSAGE)).into_response());
+    }
 
     let rows_affected = client
         .execute(

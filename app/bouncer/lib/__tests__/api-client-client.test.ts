@@ -95,6 +95,18 @@ describe("api-client-client", () => {
       ).rejects.toThrow("RSVP not found");
     });
 
+    it("handles 409 conflict error", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 409,
+        statusText: "Conflict",
+      } as Response);
+
+      await expect(
+        updateRsvpClient({ rsvp_id: "rsvp-123", status: "accepted" })
+      ).rejects.toThrow("RSVPs are closed for this party");
+    });
+
     it("handles 500 server error", async () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,

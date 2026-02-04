@@ -31,7 +31,7 @@ describe("RsvpForm", () => {
   });
 
   it("displays current RSVP status", async () => {
-    render(<RsvpForm partyId="party-123" />);
+    render(<RsvpForm partyId="party-123" isClosed={false} />);
 
     await waitFor(() => {
       expect(screen.getByText(/Current Status/i)).toBeInTheDocument();
@@ -50,7 +50,7 @@ describe("RsvpForm", () => {
   });
 
   it("displays status options for updating", async () => {
-    render(<RsvpForm partyId="party-123" />);
+    render(<RsvpForm partyId="party-123" isClosed={false} />);
 
     await waitFor(() => {
       // Check that all status buttons are present
@@ -63,7 +63,7 @@ describe("RsvpForm", () => {
   });
 
   it("disables current status button", async () => {
-    render(<RsvpForm partyId="party-123" />);
+    render(<RsvpForm partyId="party-123" isClosed={false} />);
 
     await waitFor(() => {
       const pendingButton = screen
@@ -78,7 +78,7 @@ describe("RsvpForm", () => {
     const updatedRsvp = { ...mockRsvp, status: "accepted" };
     (updateRsvpClient as jest.Mock).mockResolvedValue(updatedRsvp);
 
-    render(<RsvpForm partyId="party-123" />);
+    render(<RsvpForm partyId="party-123" isClosed={false} />);
 
     await waitFor(() => {
       expect(screen.getByText(/Current Status/i)).toBeInTheDocument();
@@ -114,7 +114,7 @@ describe("RsvpForm", () => {
       new Error("Network error")
     );
 
-    render(<RsvpForm partyId="party-123" />);
+    render(<RsvpForm partyId="party-123" isClosed={false} />);
 
     await waitFor(() => {
       expect(screen.getByText(/Current Status/i)).toBeInTheDocument();
@@ -153,7 +153,7 @@ describe("RsvpForm", () => {
     });
     (updateRsvpClient as jest.Mock).mockReturnValue(updatePromise);
 
-    render(<RsvpForm partyId="party-123" />);
+    render(<RsvpForm partyId="party-123" isClosed={false} />);
 
     await waitFor(() => {
       expect(screen.getByText(/Current Status/i)).toBeInTheDocument();
@@ -195,7 +195,7 @@ describe("RsvpForm", () => {
   it("does not update if clicking current status", async () => {
     const user = userEvent.setup();
 
-    render(<RsvpForm partyId="party-123" />);
+    render(<RsvpForm partyId="party-123" isClosed={false} />);
 
     await waitFor(() => {
       expect(screen.getByText(/Current Status/i)).toBeInTheDocument();
@@ -218,7 +218,7 @@ describe("RsvpForm", () => {
     const updatedRsvp = { ...mockRsvp, status: "accepted" };
     (updateRsvpClient as jest.Mock).mockResolvedValue(updatedRsvp);
 
-    render(<RsvpForm partyId="party-123" />);
+    render(<RsvpForm partyId="party-123" isClosed={false} />);
 
     await waitFor(() => {
       expect(screen.getByText(/Current Status/i)).toBeInTheDocument();
@@ -256,7 +256,7 @@ describe("RsvpForm", () => {
   it("handles different initial statuses correctly", async () => {
     const acceptedRsvp = { ...mockRsvp, status: "accepted" };
     (fetchRsvpClient as jest.Mock).mockResolvedValue(acceptedRsvp);
-    render(<RsvpForm partyId="party-123" />);
+    render(<RsvpForm partyId="party-123" isClosed={false} />);
 
     await waitFor(() => {
       // Check for status in the status display area
@@ -269,7 +269,7 @@ describe("RsvpForm", () => {
   });
 
   it("displays correct status colors", async () => {
-    render(<RsvpForm partyId="party-123" />);
+    render(<RsvpForm partyId="party-123" isClosed={false} />);
 
     await waitFor(() => {
       // Check that status display has appropriate styling
@@ -287,7 +287,7 @@ describe("RsvpForm", () => {
     (fetchRsvpClient as jest.Mock).mockImplementation(
       () => new Promise(() => {}) // Never resolves
     );
-    render(<RsvpForm partyId="party-123" />);
+    render(<RsvpForm partyId="party-123" isClosed={false} />);
 
     // Loading text should appear in the status display
     const statusDisplay = screen
@@ -309,7 +309,7 @@ describe("RsvpForm", () => {
     (fetchRsvpClient as jest.Mock).mockRejectedValue(
       new Error("Failed to load RSVP")
     );
-    render(<RsvpForm partyId="party-123" />);
+    render(<RsvpForm partyId="party-123" isClosed={false} />);
 
     await waitFor(() => {
       // Error should appear in the status display area
