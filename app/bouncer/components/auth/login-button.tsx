@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { signIn, useSession } from "@/lib/auth-client";
 
@@ -9,6 +9,7 @@ export function LoginButton() {
   const { data: session, isPending } = useSession();
   const [loading, setLoading] = useState(false);
   const [isPasskeySupported, setIsPasskeySupported] = useState(true); // Default to true to avoid hydration mismatch
+  const navigationTimeoutRef = useRef<number | null>(null);
 
   // Check if passkeys are supported (client-side only to avoid hydration mismatch)
   useEffect(() => {
@@ -18,9 +19,24 @@ export function LoginButton() {
     );
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (navigationTimeoutRef.current) {
+        window.clearTimeout(navigationTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const handleButtonClick = async () => {
     // If user is authenticated, redirect to invitations
     if (session) {
+      setLoading(true);
+      if (navigationTimeoutRef.current) {
+        window.clearTimeout(navigationTimeoutRef.current);
+      }
+      navigationTimeoutRef.current = window.setTimeout(() => {
+        setLoading(false);
+      }, 8000);
       router.push("/invitations");
       return;
     }
@@ -80,16 +96,24 @@ export function LoginButton() {
       type="button"
       onClick={handleButtonClick}
       disabled={loading || (!session && !isPasskeySupported)}
-      className="bg-black text-white py-3 px-6 rounded hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all"
+      className="group bg-black text-white py-3 px-6 rounded hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all"
     >
       {loading ? (
         <>
-          <span className="animate-spin">⏳</span>
-          <span>Signing in...</span>
+          <span
+            className="h-4 w-4 rounded-full border border-white/40 border-t-white animate-spin"
+            aria-hidden="true"
+          />
+          <span>{session ? "Opening invitations..." : "Signing in..."}</span>
         </>
       ) : session ? (
         <>
-          <span>→</span>
+          <span
+            className="transition-transform duration-200 group-hover:translate-x-0.5 group-focus-visible:translate-x-0.5"
+            aria-hidden="true"
+          >
+            →
+          </span>
           <span>View Invitations</span>
         </>
       ) : (
