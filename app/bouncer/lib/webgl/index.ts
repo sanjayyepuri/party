@@ -13,7 +13,7 @@ if (process.env.NODE_ENV === "test") {
     });
   }) as ReceiptCanvasType;
 
-  ReceiptEffect = (() => null) as ReceiptEffectType;
+  ReceiptEffect = ((() => null) as unknown) as ReceiptEffectType;
 } else {
   ({ ReceiptCanvas } = require("./receipt-canvas"));
   ({ ReceiptEffect } = require("./receipt-effect"));
