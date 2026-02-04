@@ -27,7 +27,18 @@ jobs:
 
       - name: Test
         working-directory: ${{env.working-directory}}
-        run: npm test
+        run: npm test -- --ci --reporters=default --reporters=jest-junit
+        env:
+          JEST_JUNIT_OUTPUT_DIR: ${{env.working-directory}}
+          JEST_JUNIT_OUTPUT_NAME: junit.xml
+
+      - name: Test Report
+        if: always()
+        uses: dorny/test-reporter@v1
+        with:
+          name: bouncer-tests
+          path: app/bouncer/junit.xml
+          reporter: jest-junit
 
   build-pregame:
     runs-on: "ubuntu-latest"
