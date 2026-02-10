@@ -6,9 +6,10 @@ import { fetchRsvpClient, updateRsvpClient } from "@/lib/api-client-client";
 
 interface RsvpFormProps {
   partyId: string;
+  isClosed: boolean;
 }
 
-export function RsvpForm({ partyId }: RsvpFormProps) {
+export function RsvpForm({ partyId, isClosed }: RsvpFormProps) {
   const [rsvp, setRsvp] = useState<Rsvp | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -33,7 +34,7 @@ export function RsvpForm({ partyId }: RsvpFormProps) {
   }, [partyId]);
 
   const handleStatusChange = async (newStatus: string) => {
-    if (!rsvp || newStatus === rsvp.status) {
+    if (!rsvp || newStatus === rsvp.status || isClosed) {
       return; // No change needed
     }
 
@@ -106,11 +107,16 @@ export function RsvpForm({ partyId }: RsvpFormProps) {
   };
 
   const hasUnrecoverableError = error && !rsvp;
-  const isDisabled = isLoading || isUpdating || hasUnrecoverableError;
+  const isDisabled = isLoading || isUpdating || hasUnrecoverableError || isClosed;
 
   return (
     <div className="space-y-4">
       <div className="p-4 bg-white/5 rounded border border-white/10">
+        {isClosed && (
+          <div className="mb-4 rounded border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+            RSVPs are closed for this party.
+          </div>
+        )}
         <div className="mb-4">
           <p className="text-sm opacity-80 mb-2">Current Status</p>
           <p className={`text-lg font-semibold ${getStatusTextColor()}`}>

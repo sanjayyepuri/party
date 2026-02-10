@@ -63,6 +63,9 @@ export async function fetchRsvpClient(partyId: string): Promise<Rsvp> {
     if (response.status === 404) {
       throw new Error("Party or user not found");
     }
+    if (response.status === 409) {
+      throw new Error("RSVPs are closed for this party");
+    }
     if (response.status === 500) {
       throw new Error("Server error: Unable to fetch RSVP");
     }
@@ -98,6 +101,9 @@ export async function updateRsvpClient(
     }
     if (response.status === 404) {
       throw new Error("RSVP not found");
+    }
+    if (response.status === 409) {
+      throw new Error("RSVPs are closed for this party");
     }
     if (response.status === 500) {
       throw new Error("Server error: Unable to update RSVP");

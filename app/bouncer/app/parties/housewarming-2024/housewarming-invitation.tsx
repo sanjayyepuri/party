@@ -19,7 +19,9 @@ export function HousewarmingInvitation({
   partyRsvpsError,
   currentUserId,
 }: HousewarmingInvitationProps) {
+  const graceMs = 24 * 60 * 60 * 1000;
   const partyDate = new Date(party.time);
+  const isClosed = Date.now() > partyDate.getTime() + graceMs;
   const formattedDate = partyDate.toLocaleDateString("en-US", {
     weekday: "long",
     year: "numeric",
@@ -80,7 +82,7 @@ export function HousewarmingInvitation({
             <h2 className="text-xl md:text-3xl font-bold mb-4 md:mb-6 text-black">
               RSVP
             </h2>
-            <RsvpForm partyId={party.party_id} />
+            <RsvpForm partyId={party.party_id} isClosed={isClosed} />
           </div>
 
           {/* Guest list section */}
