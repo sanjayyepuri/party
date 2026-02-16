@@ -39,7 +39,11 @@ function formatValue(
   });
 }
 
-export function LocalDateTime({ dateTime, mode, className }: LocalDateTimeProps) {
+export function LocalDateTime({
+  dateTime,
+  mode,
+  className,
+}: LocalDateTimeProps) {
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {

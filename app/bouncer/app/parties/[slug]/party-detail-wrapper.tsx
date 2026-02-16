@@ -37,7 +37,8 @@ export function PartyDetailWrapper({
           <h1 className="text-4xl mb-4 text-black/90">{party.name}</h1>
           <div className="space-y-2 text-lg text-black/70">
             <p>
-              <strong>When:</strong> <LocalDateTime dateTime={party.time} mode="date" /> at{" "}
+              <strong>When:</strong>{" "}
+              <LocalDateTime dateTime={party.time} mode="date" /> at{" "}
               <LocalDateTime dateTime={party.time} mode="time" />
             </p>
             <p>
