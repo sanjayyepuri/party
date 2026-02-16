@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Party } from "@/lib/types";
 import { ReceiptCanvas } from "@/lib/webgl/receipt-canvas";
+import { LocalDateTime } from "@/app/components/local-date-time";
 
 interface NextPartyHighlightProps {
   party: Party;
@@ -38,12 +39,7 @@ export function NextPartyHighlight({ party }: NextPartyHighlightProps) {
                   {party.name}
                 </h3>
                 <p className="text-sm text-black/70 text-left leading-relaxed">
-                  {new Date(party.time).toLocaleDateString("en-US", {
-                    weekday: "long",
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })}
+                  <LocalDateTime dateTime={party.time} mode="date" />
                 </p>
               </div>
             </div>

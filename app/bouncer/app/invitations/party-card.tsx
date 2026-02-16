@@ -1,20 +1,13 @@
 import Link from "next/link";
 import type { Party } from "@/lib/types";
 import { ReceiptCanvas } from "@/lib/webgl/receipt-canvas";
+import { LocalDateTime } from "@/app/components/local-date-time";
 
 interface PartyCardProps {
   party: Party;
 }
 
 export function PartyCard({ party }: PartyCardProps) {
-  const partyDate = new Date(party.time);
-  const formattedDate = partyDate.toLocaleDateString("en-US", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-
   const hasReceiptPreview =
     party.slug === "housewarming-2024" || party.slug === "launch-party-2026";
 
@@ -39,7 +32,7 @@ export function PartyCard({ party }: PartyCardProps) {
               {party.name}
             </h3>
             <p className="text-sm text-black/70 text-left leading-relaxed">
-              {formattedDate}
+              <LocalDateTime dateTime={party.time} mode="date" />
             </p>
           </div>
         </div>

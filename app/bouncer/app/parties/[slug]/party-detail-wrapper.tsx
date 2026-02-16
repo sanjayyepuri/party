@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Party, RsvpWithUser } from "@/lib/types";
+import { LocalDateTime } from "@/app/components/local-date-time";
 import { RsvpForm } from "./rsvp-form";
 import { GuestList } from "./guest-list";
 
@@ -16,18 +17,6 @@ export function PartyDetailWrapper({
   partyRsvpsError,
   currentUserId,
 }: PartyDetailWrapperProps) {
-  const partyDate = new Date(party.time);
-  const formattedDate = partyDate.toLocaleDateString("en-US", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-  const formattedTime = partyDate.toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-  });
-
   return (
     <div className="relative bg-white/90 backdrop-blur-sm rounded-lg p-8 border-2 border-black/10 shadow-[0_4px_6px_rgba(0,0,0,0.1),0_8px_16px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.9)] overflow-hidden">
       {/* Inner shadow for depth */}
@@ -48,7 +37,8 @@ export function PartyDetailWrapper({
           <h1 className="text-4xl mb-4 text-black/90">{party.name}</h1>
           <div className="space-y-2 text-lg text-black/70">
             <p>
-              <strong>When:</strong> {formattedDate} at {formattedTime}
+              <strong>When:</strong> <LocalDateTime dateTime={party.time} mode="date" /> at{" "}
+              <LocalDateTime dateTime={party.time} mode="time" />
             </p>
             <p>
               <strong>Where:</strong> {party.location}

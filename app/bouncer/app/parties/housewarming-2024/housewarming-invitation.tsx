@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import type { Party, RsvpWithUser } from "@/lib/types";
+import { LocalDateTime } from "@/app/components/local-date-time";
 import { RsvpForm } from "../[slug]/rsvp-form";
 import { GuestList } from "../[slug]/guest-list";
 import { ReceiptCanvas } from "@/lib/webgl/receipt-canvas";
@@ -19,18 +20,6 @@ export function HousewarmingInvitation({
   partyRsvpsError,
   currentUserId,
 }: HousewarmingInvitationProps) {
-  const partyDate = new Date(party.time);
-  const formattedDate = partyDate.toLocaleDateString("en-US", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-  const formattedTime = partyDate.toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-  });
-
   return (
     <div className="relative min-h-screen overflow-hidden">
       {/* Receipt canvas background */}
@@ -58,8 +47,9 @@ export function HousewarmingInvitation({
             </h1>
             <div className="space-y-2 md:space-y-3 text-base md:text-lg text-black/90">
               <p>
-                <strong className="text-black">When:</strong> {formattedDate} at{" "}
-                {formattedTime}
+                <strong className="text-black">When:</strong>{" "}
+                <LocalDateTime dateTime={party.time} mode="date" /> at{" "}
+                <LocalDateTime dateTime={party.time} mode="time" />
               </p>
               <p>
                 <strong className="text-black">Where:</strong> {party.location}
