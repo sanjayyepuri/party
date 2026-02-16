@@ -16,7 +16,7 @@ export function InvitationsContent({
 }: InvitationsContentProps) {
   const now = new Date();
   const sortedParties = [...parties].sort(
-    (a, b) => new Date(b.time).getTime() - new Date(a.time).getTime(),
+    (a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()
   );
 
   // Find the next party (earliest future party)
