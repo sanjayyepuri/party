@@ -20,7 +20,7 @@ export default async function HomePage() {
       <p className="mb-5">
         This community will be open. It&apos;s
         not an invitation to reach out. It&apos;s an automatic invitation to
-        come by.
+        come through.
       </p>
       <div className="mt-8">
         <LoginButton />
