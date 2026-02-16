@@ -7,7 +7,8 @@ interface NextPartyHighlightProps {
 }
 
 export function NextPartyHighlight({ party }: NextPartyHighlightProps) {
-  const isHousewarming = party.slug === "housewarming-2024";
+  const hasReceiptPreview =
+    party.slug === "housewarming-2024" || party.slug === "launch-party-2026";
 
   return (
     <div className="mb-8 md:mb-12">
@@ -20,8 +21,8 @@ export function NextPartyHighlight({ party }: NextPartyHighlightProps) {
             prefetch={true}
           >
             <div className="relative backdrop-blur-md rounded-lg p-6 border-2 border-black transition-all duration-300 hover:border-black cursor-pointer flex flex-col overflow-hidden aspect-[3/4] md:w-[240px] md:h-[320px]">
-              {/* Canvas preview for housewarming */}
-              {isHousewarming && (
+              {/* Canvas preview for receipt-style invites */}
+              {hasReceiptPreview && (
                 <div className="absolute inset-0 rounded-lg overflow-hidden z-0 backdrop-blur-sm">
                   <ReceiptCanvas
                     className="w-full h-full"

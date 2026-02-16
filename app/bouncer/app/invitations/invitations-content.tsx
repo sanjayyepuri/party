@@ -14,15 +14,26 @@ export function InvitationsContent({
   parties,
   partiesError,
 }: InvitationsContentProps) {
-  // Find the next party (earliest future party)
   const now = new Date();
-  const nextParty = parties.find((party) => {
-    const partyTime = new Date(party.time);
-    return partyTime >= now;
-  });
+  const sortedParties = [...parties].sort(
+    (a, b) => new Date(b.time).getTime() - new Date(a.time).getTime(),
+  );
 
-  // Separate previous parties (parties in the past)
-  const previousParties = parties.filter((party) => {
+  // Find the next party (earliest future party)
+  const nextParty = sortedParties.reduce<Party | null>((closest, party) => {
+    const partyTime = new Date(party.time);
+    if (partyTime < now) {
+      return closest;
+    }
+    if (!closest) {
+      return party;
+    }
+    const closestTime = new Date(closest.time);
+    return partyTime < closestTime ? party : closest;
+  }, null);
+
+  // Separate previous parties (parties in the past), already sorted most recent first.
+  const previousParties = sortedParties.filter((party) => {
     const partyTime = new Date(party.time);
     return partyTime < now;
   });
