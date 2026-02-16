@@ -34,13 +34,18 @@ export function NextPartyHighlight({ party }: NextPartyHighlightProps) {
               )}
 
               {/* Content */}
-              <div className="relative z-10 flex flex-col h-full justify-start">
-                <h3 className="text-xl font-semibold mb-4 text-black/90 hover:text-black transition-colors text-left line-clamp-3">
-                  {party.name}
-                </h3>
-                <p className="text-sm text-black/70 text-left leading-relaxed">
-                  <LocalDateTime dateTime={party.time} mode="date" />
-                </p>
+              <div className="relative z-10 flex h-full flex-col justify-between">
+                <div>
+                  <h3 className="text-xl font-semibold mb-4 text-black/90 hover:text-black transition-colors text-left line-clamp-3">
+                    {party.name}
+                  </h3>
+                  <p className="text-sm text-black/70 text-left leading-relaxed">
+                    <LocalDateTime dateTime={party.time} mode="date" />
+                  </p>
+                </div>
+                <span className="inline-flex self-start items-center gap-1 text-[11px] uppercase tracking-[0.14em] text-black/55">
+                  open invitation <span aria-hidden="true">↗</span>
+                </span>
               </div>
             </div>
           </Link>
