@@ -41,7 +41,7 @@ float color(vec2 uv) {
 }
 
 void main() {
-    vec2 uv = (vUv - 0.5) * 8.0;
+    vec2 uv = (vUv - 0.5) * 1.5;
     float c = color(uv);
     float cx = color(uv + vec2(0.01, 0.0)) - c;
     float cy = color(uv + vec2(0.0, 0.01)) - c;

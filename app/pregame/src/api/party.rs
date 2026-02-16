@@ -26,7 +26,7 @@ async fn list_parties_impl(
             "SELECT
                 party_id, name, time, location, description, slug, created_at, updated_at, deleted_at
             FROM party
-            WHERE deleted_at IS NULL ORDER BY time ASC;",
+            WHERE deleted_at IS NULL ORDER BY time DESC;",
             &[],
         )
         .await

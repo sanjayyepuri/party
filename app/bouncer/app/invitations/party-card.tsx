@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Party } from "@/lib/types";
-import { ReceiptCanvas } from "@/lib/webgl/receipt-canvas";
+import { InvitationShaderCanvas } from "@/lib/webgl/invitation-shader-canvas";
 
 interface PartyCardProps {
   party: Party;
@@ -24,7 +24,7 @@ export function PartyCard({ party }: PartyCardProps) {
           {/* Canvas preview for housewarming */}
           {isHousewarming && (
             <div className="absolute inset-0 rounded-lg overflow-hidden z-0 backdrop-blur-sm">
-              <ReceiptCanvas
+              <InvitationShaderCanvas
                 className="w-full h-full"
                 pixelSize={8.0}
                 scale={0.5}
