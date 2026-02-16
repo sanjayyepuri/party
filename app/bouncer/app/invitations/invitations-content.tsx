@@ -41,12 +41,16 @@ export function InvitationsContent({
   return (
     <div className="">
       <div className="flex-1">
-        <h1 className="lowercase text-4xl mb-6">hey {userName}.</h1>
-        <p className="text-lg opacity-80 mb-4">welcome to the party.</p>
+        <h1 className="lowercase text-3xl md:text-4xl mb-3 md:mb-6">
+          hey {userName}.
+        </h1>
+        <p className="text-base md:text-lg opacity-80 mb-3 md:mb-4">
+          welcome to the party.
+        </p>
 
         {/* Parties Section */}
-        <div className="mb-12">
-          <h2 className="text-2xl mb-4">your invitations</h2>
+        <div className="mb-8 md:mb-12">
+          <h2 className="text-xl md:text-2xl mb-3 md:mb-4">your invitations</h2>
 
           {partiesError && (
             <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded text-red-800">
@@ -65,14 +69,14 @@ export function InvitationsContent({
             <>
               {/* Next Party Highlight */}
               {nextParty && (
-                <div className="mb-8 pt-6 border-t border-white/20">
+                <div className="mb-6 md:mb-8 pt-4 md:pt-6 border-t border-white/20">
                   <NextPartyHighlight party={nextParty} />
                 </div>
               )}
 
               {/* Previous Parties */}
               {previousParties.length > 0 && (
-                <div className="pt-6 border-t border-white/20">
+                <div className="pt-4 md:pt-6 border-t border-white/20">
                   <PartyCardList parties={previousParties} />
                 </div>
               )}
@@ -81,7 +85,7 @@ export function InvitationsContent({
         </div>
 
         {/* Account management */}
-        <div className="flex flex-col gap-2 mb-8">
+        <div className="flex flex-col gap-2 mb-6 md:mb-8">
           <a
             href="/settings"
             className="flex items-center gap-2 hover:opacity-100 opacity-80 transition-opacity text-sm"
