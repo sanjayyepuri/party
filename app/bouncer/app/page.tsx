@@ -20,7 +20,7 @@ export default async function HomePage() {
       <p className="mb-5">
         This community will be open, but the entry will be backwards. It&apos;s
         not an invitation to reach out. It&apos;s an automatic invitation to
-        events I host.
+        come by.
       </p>
       <div className="mt-8">
         <LoginButton />
