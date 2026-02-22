@@ -3,6 +3,7 @@
 import Link from "next/link";
 import type { Party, RsvpWithUser } from "@/lib/types";
 import { LocalDateTime } from "@/app/components/local-date-time";
+import { AddressLink } from "@/app/components/address-link";
 import { RsvpForm } from "../[slug]/rsvp-form";
 import { GuestList } from "../[slug]/guest-list";
 import { ReceiptCanvas } from "@/lib/webgl/receipt-canvas";
@@ -52,7 +53,7 @@ export function LaunchPartyInvitation({
                 <LocalDateTime dateTime={party.time} mode="time" />
               </p>
               <p>
-                <strong className="text-black">Where:</strong> {party.location}
+                <strong className="text-black">Where:</strong> <AddressLink location={party.location} />
               </p>
             </div>
 
