@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Party, RsvpWithUser } from "@/lib/types";
 import { LocalDateTime } from "@/app/components/local-date-time";
+import { AddressLink } from "@/app/components/address-link";
 import { RsvpForm } from "./rsvp-form";
 import { GuestList } from "./guest-list";
 import { CalendarFeedControls } from "@/components/calendar/calendar-feed-controls";
@@ -47,7 +48,7 @@ export function PartyDetailWrapper({
               <LocalDateTime dateTime={party.time} mode="time" />
             </p>
             <p>
-              <strong>Where:</strong> {party.location}
+              <strong>Where:</strong> <AddressLink location={party.location} />
             </p>
           </div>
         </div>
