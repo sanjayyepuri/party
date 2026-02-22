@@ -4,11 +4,13 @@
  */
 
 import {
+  fetchCalendarFeedToken,
   fetchParties,
   fetchPartyById,
   fetchPartyBySlug,
   fetchRsvp,
   fetchPartyRsvps,
+  rotateCalendarFeedToken,
   updateRsvp,
 } from "../api-client";
 import type { Party, Rsvp, RsvpWithUser } from "../types";
@@ -407,6 +409,76 @@ describe("api-client", () => {
       await expect(
         updateRsvp({ rsvp_id: "rsvp-123", status: "accepted" })
       ).rejects.toThrow("RSVP not found");
+    });
+  });
+
+  describe("fetchCalendarFeedToken", () => {
+    it("fetches calendar feed token successfully", async () => {
+      const tokenResponse = {
+        feed_path: "/api/bouncer/calendar/feed.ics?token=test-token",
+      };
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => tokenResponse,
+      } as Response);
+
+      const response = await fetchCalendarFeedToken();
+
+      expect(response).toEqual(tokenResponse);
+      expect(mockFetch).toHaveBeenCalledWith(
+        "http://localhost:3000/api/bouncer/calendar/feed-token",
+        expect.objectContaining({
+          method: "GET",
+          cache: "no-store",
+        })
+      );
+    });
+
+    it("handles unauthorized error", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 401,
+        statusText: "Unauthorized",
+      } as Response);
+
+      await expect(fetchCalendarFeedToken()).rejects.toThrow(
+        "Unauthorized: Please log in to view calendar feed"
+      );
+    });
+  });
+
+  describe("rotateCalendarFeedToken", () => {
+    it("rotates calendar feed token successfully", async () => {
+      const tokenResponse = {
+        feed_path: "/api/bouncer/calendar/feed.ics?token=rotated-token",
+      };
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => tokenResponse,
+      } as Response);
+
+      const response = await rotateCalendarFeedToken();
+
+      expect(response).toEqual(tokenResponse);
+      expect(mockFetch).toHaveBeenCalledWith(
+        "http://localhost:3000/api/bouncer/calendar/feed-token/rotate",
+        expect.objectContaining({
+          method: "POST",
+          cache: "no-store",
+        })
+      );
+    });
+
+    it("handles server error", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        statusText: "Internal Server Error",
+      } as Response);
+
+      await expect(rotateCalendarFeedToken()).rejects.toThrow(
+        "Server error: Unable to rotate calendar feed token"
+      );
     });
   });
 });

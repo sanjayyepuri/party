@@ -9,6 +9,7 @@ pub struct ApiState {
 }
 
 pub mod auth;
+pub mod calendar;
 pub mod error;
 pub mod party;
 pub mod rsvp;

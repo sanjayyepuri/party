@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import { fetchCalendarFeedToken } from "@/lib/api-client";
+import { CalendarFeedControls } from "@/components/calendar/calendar-feed-controls";
 
 export default async function SettingsPage() {
   // Check if user is authenticated
@@ -16,6 +18,16 @@ export default async function SettingsPage() {
   const userName = session.user.name || "User";
   const userEmail = session.user.email;
   const userPhone = (session.user as any).phone || null;
+
+  let calendarFeedPath: string | null = null;
+  let calendarFeedError: string | null = null;
+  try {
+    const response = await fetchCalendarFeedToken();
+    calendarFeedPath = response.feed_path;
+  } catch (error) {
+    calendarFeedError =
+      error instanceof Error ? error.message : "Failed to load calendar feed";
+  }
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -50,6 +62,21 @@ export default async function SettingsPage() {
           <p className="text-sm text-gray-500">
             Profile editing will be available soon.
           </p>
+        </div>
+
+        <div className="pt-4">
+          {calendarFeedPath && (
+            <CalendarFeedControls
+              initialFeedPath={calendarFeedPath}
+              title="Calendar Feed"
+              description="Subscribe once and your calendar will stay in sync with upcoming events."
+            />
+          )}
+          {calendarFeedError && (
+            <div className="p-3 border border-red-200 bg-red-50 rounded text-sm text-red-700 mt-3">
+              {calendarFeedError}
+            </div>
+          )}
         </div>
 
         <div className="pt-4">

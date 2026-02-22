@@ -3,7 +3,10 @@
  * Tests RSVP update functionality from client components
  */
 
-import { updateRsvpClient } from "../api-client-client";
+import {
+  rotateCalendarFeedTokenClient,
+  updateRsvpClient,
+} from "../api-client-client";
 import type { UpdateRsvpRequest } from "../types";
 
 // Mock fetch globally
@@ -170,6 +173,42 @@ describe("api-client-client", () => {
           credentials: "include",
           body: JSON.stringify(updateRequest),
         })
+      );
+    });
+  });
+
+  describe("rotateCalendarFeedTokenClient", () => {
+    it("rotates token successfully", async () => {
+      const tokenResponse = {
+        feed_path: "/api/bouncer/calendar/feed.ics?token=abc123",
+      };
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => tokenResponse,
+      } as Response);
+
+      const result = await rotateCalendarFeedTokenClient();
+
+      expect(result).toEqual(tokenResponse);
+      expect(mockFetch).toHaveBeenCalledWith(
+        "http://localhost:3000/api/bouncer/calendar/feed-token/rotate",
+        expect.objectContaining({
+          method: "POST",
+          credentials: "include",
+          cache: "no-store",
+        })
+      );
+    });
+
+    it("handles unauthorized error", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 401,
+        statusText: "Unauthorized",
+      } as Response);
+
+      await expect(rotateCalendarFeedTokenClient()).rejects.toThrow(
+        "Unauthorized: Please log in to rotate calendar feed"
       );
     });
   });
