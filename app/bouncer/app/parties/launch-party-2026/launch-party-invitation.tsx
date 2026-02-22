@@ -53,7 +53,8 @@ export function LaunchPartyInvitation({
                 <LocalDateTime dateTime={party.time} mode="time" />
               </p>
               <p>
-                <strong className="text-black">Where:</strong> <AddressLink location={party.location} />
+                <strong className="text-black">Where:</strong>{" "}
+                <AddressLink location={party.location} />
               </p>
             </div>
 
