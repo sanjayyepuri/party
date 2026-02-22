@@ -4,7 +4,13 @@
  */
 
 import { headers } from "next/headers";
-import type { Party, Rsvp, RsvpWithUser, UpdateRsvpRequest } from "./types";
+import type {
+  CalendarFeedTokenResponse,
+  Party,
+  Rsvp,
+  RsvpWithUser,
+  UpdateRsvpRequest,
+} from "./types";
 import { getBaseURL } from "./auth-config";
 
 const API_PATH = "/api/bouncer";
@@ -234,4 +240,67 @@ export async function updateRsvp(
 
   const rsvp: Rsvp = await response.json();
   return rsvp;
+}
+
+/**
+ * Fetch the calendar feed token path for the authenticated user.
+ * Creates the token if one does not exist yet.
+ */
+export async function fetchCalendarFeedToken(): Promise<CalendarFeedTokenResponse> {
+  const authHeaders = await getAuthHeaders();
+  const apiBaseUrl = await getApiBaseUrl();
+
+  const response = await fetch(`${apiBaseUrl}${API_PATH}/calendar/feed-token`, {
+    method: "GET",
+    headers: authHeaders,
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      throw new Error("Unauthorized: Please log in to view calendar feed");
+    }
+    if (response.status === 500) {
+      throw new Error("Server error: Unable to fetch calendar feed token");
+    }
+    throw new Error(
+      `Failed to fetch calendar feed token: ${response.statusText}`
+    );
+  }
+
+  const tokenResponse: CalendarFeedTokenResponse = await response.json();
+  return tokenResponse;
+}
+
+/**
+ * Rotate the calendar feed token for the authenticated user.
+ * The old feed URL is invalid immediately after rotation.
+ */
+export async function rotateCalendarFeedToken(): Promise<CalendarFeedTokenResponse> {
+  const authHeaders = await getAuthHeaders();
+  const apiBaseUrl = await getApiBaseUrl();
+
+  const response = await fetch(
+    `${apiBaseUrl}${API_PATH}/calendar/feed-token/rotate`,
+    {
+      method: "POST",
+      headers: authHeaders,
+      cache: "no-store",
+    }
+  );
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      throw new Error("Unauthorized: Please log in to rotate calendar feed");
+    }
+    if (response.status === 500) {
+      throw new Error("Server error: Unable to rotate calendar feed token");
+    }
+    throw new Error(
+      `Failed to rotate calendar feed token: ${response.statusText}`
+    );
+  }
+
+  const tokenResponse: CalendarFeedTokenResponse = await response.json();
+  return tokenResponse;
 }

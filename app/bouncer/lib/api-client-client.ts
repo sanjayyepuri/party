@@ -3,7 +3,11 @@
  * Used in client components where we can't use server-side headers()
  */
 
-import type { Rsvp, UpdateRsvpRequest } from "./types";
+import type {
+  CalendarFeedTokenResponse,
+  Rsvp,
+  UpdateRsvpRequest,
+} from "./types";
 
 const API_PATH = "/api/bouncer";
 
@@ -107,4 +111,37 @@ export async function updateRsvpClient(
 
   const rsvp: Rsvp = await response.json();
   return rsvp;
+}
+
+/**
+ * Rotate the authenticated user's calendar feed token (client-side).
+ */
+export async function rotateCalendarFeedTokenClient(): Promise<CalendarFeedTokenResponse> {
+  const apiBaseUrl = getApiBaseUrl();
+  const response = await fetch(
+    `${apiBaseUrl}${API_PATH}/calendar/feed-token/rotate`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      cache: "no-store",
+    }
+  );
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      throw new Error("Unauthorized: Please log in to rotate calendar feed");
+    }
+    if (response.status === 500) {
+      throw new Error("Server error: Unable to rotate calendar feed token");
+    }
+    throw new Error(
+      `Failed to rotate calendar feed token: ${response.statusText}`
+    );
+  }
+
+  const tokenResponse: CalendarFeedTokenResponse = await response.json();
+  return tokenResponse;
 }

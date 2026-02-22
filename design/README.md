@@ -28,6 +28,9 @@ Defines the core system architecture for single-party invitation hosting with cu
 ### [RFD 002: Frontend Architecture](./RFD-002-frontend-architecture.md)
 Specifies the frontend architecture using React data providers and custom invitation components, enabling unlimited design freedom while maintaining consistent business logic.
 
+### [RFD 007: Calendar Feed](./RFD-007-calendar-feed.md)
+Defines the architecture for a user-scoped, token-protected iCalendar feed with rotatable secrets and library-backed ICS generation.
+
 ## Contributing
 
 When proposing significant changes or new features:

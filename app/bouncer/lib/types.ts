@@ -33,3 +33,7 @@ export interface UpdateRsvpRequest {
   rsvp_id: string;
   status: string;
 }
+
+export interface CalendarFeedTokenResponse {
+  feed_path: string;
+}

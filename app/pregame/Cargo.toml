@@ -19,3 +19,4 @@ tower = "0.5.2"
 chrono = { version = "0.4", features = ["serde"] }
 uuid = { version = "1.19", features = ["v4", "serde"] }
 percent-encoding = "2.3"
+icalendar = "0.17.6"
