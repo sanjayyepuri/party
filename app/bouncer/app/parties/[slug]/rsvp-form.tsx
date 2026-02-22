@@ -54,9 +54,9 @@ export function RsvpForm({ partyId }: RsvpFormProps) {
   };
 
   const statusOptions = [
-    { value: "pending", label: "Pending" },
-    { value: "accepted", label: "Accepted" },
-    { value: "declined", label: "Declined" },
+    { value: "pending", label: "Maybe" },
+    { value: "accepted", label: "Going" },
+    { value: "declined", label: "Decline" },
   ];
 
   const getStatusColor = (status: string) => {

@@ -45,7 +45,7 @@ describe("RsvpForm", () => {
         .getByText(/Current Status/i)
         .closest("div")
         ?.querySelector("p.text-lg");
-      expect(statusDisplay).toHaveTextContent("Pending");
+      expect(statusDisplay).toHaveTextContent("Maybe");
     });
   });
 
@@ -56,9 +56,9 @@ describe("RsvpForm", () => {
       // Check that all status buttons are present
       const buttons = screen.getAllByRole("button");
       const buttonTexts = buttons.map((btn) => btn.textContent);
-      expect(buttonTexts).toContain("Pending");
-      expect(buttonTexts).toContain("Accepted");
-      expect(buttonTexts).toContain("Declined");
+      expect(buttonTexts).toContain("Maybe");
+      expect(buttonTexts).toContain("Going");
+      expect(buttonTexts).toContain("Decline");
     });
   });
 
@@ -67,7 +67,7 @@ describe("RsvpForm", () => {
 
     await waitFor(() => {
       const pendingButton = screen
-        .getAllByText("Pending")
+        .getAllByText("Maybe")
         .find((el) => el.tagName === "BUTTON");
       expect(pendingButton).toBeDisabled();
     });
@@ -85,7 +85,7 @@ describe("RsvpForm", () => {
     });
 
     const acceptedButton = screen
-      .getAllByText("Accepted")
+      .getAllByText("Going")
       .find((el) => el.tagName === "BUTTON") as HTMLButtonElement;
 
     await user.click(acceptedButton);
@@ -99,12 +99,12 @@ describe("RsvpForm", () => {
     await waitFor(() => {
       // First check that "Updating RSVP..." is gone
       expect(screen.queryByText("Updating RSVP...")).not.toBeInTheDocument();
-      // Then check that status updated to Accepted
+      // Then check that status updated to Going
       const statusDisplay = screen
         .getByText(/Current Status/i)
         .closest("div")
         ?.querySelector("p.text-lg");
-      expect(statusDisplay).toHaveTextContent("Accepted");
+      expect(statusDisplay).toHaveTextContent("Going");
     });
   });
 
@@ -121,7 +121,7 @@ describe("RsvpForm", () => {
     });
 
     const acceptedButton = screen
-      .getAllByText("Accepted")
+      .getAllByText("Going")
       .find((el) => el.tagName === "BUTTON") as HTMLButtonElement;
 
     await user.click(acceptedButton);
@@ -160,7 +160,7 @@ describe("RsvpForm", () => {
     });
 
     const acceptedButton = screen
-      .getAllByText("Accepted")
+      .getAllByText("Going")
       .find((el) => el.tagName === "BUTTON") as HTMLButtonElement;
 
     await user.click(acceptedButton);
@@ -187,7 +187,7 @@ describe("RsvpForm", () => {
         .getByText(/Current Status/i)
         .closest("div")
         ?.querySelector("p.text-lg");
-      expect(statusDisplay).toHaveTextContent("Accepted");
+      expect(statusDisplay).toHaveTextContent("Going");
       expect(statusDisplay).toHaveClass("text-green-600");
     });
   });
@@ -202,7 +202,7 @@ describe("RsvpForm", () => {
     });
 
     const pendingButton = screen
-      .getAllByText("Pending")
+      .getAllByText("Maybe")
       .find((el) => el.tagName === "BUTTON") as HTMLButtonElement;
 
     // Button should be disabled, but try clicking anyway
@@ -225,7 +225,7 @@ describe("RsvpForm", () => {
     });
 
     const acceptedButton = screen
-      .getAllByText("Accepted")
+      .getAllByText("Going")
       .find((el) => el.tagName === "BUTTON") as HTMLButtonElement;
 
     await user.click(acceptedButton);
@@ -241,13 +241,13 @@ describe("RsvpForm", () => {
         .getByText(/Current Status/i)
         .closest("div")
         ?.querySelector("p.text-lg");
-      expect(statusDisplay).toHaveTextContent("Accepted");
+      expect(statusDisplay).toHaveTextContent("Going");
     });
 
-    // Accepted button should now be disabled after state update
+    // Going button should now be disabled after state update
     await waitFor(() => {
       const newAcceptedButton = screen
-        .getAllByText("Accepted")
+        .getAllByText("Going")
         .find((el) => el.tagName === "BUTTON") as HTMLButtonElement;
       expect(newAcceptedButton).toBeDisabled();
     });
@@ -264,7 +264,7 @@ describe("RsvpForm", () => {
         .getByText(/Current Status/i)
         .closest("div")
         ?.querySelector("p.text-lg");
-      expect(statusDisplay).toHaveTextContent("Accepted");
+      expect(statusDisplay).toHaveTextContent("Going");
     });
   });
 
