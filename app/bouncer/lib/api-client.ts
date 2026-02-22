@@ -263,7 +263,9 @@ export async function fetchCalendarFeedToken(): Promise<CalendarFeedTokenRespons
     if (response.status === 500) {
       throw new Error("Server error: Unable to fetch calendar feed token");
     }
-    throw new Error(`Failed to fetch calendar feed token: ${response.statusText}`);
+    throw new Error(
+      `Failed to fetch calendar feed token: ${response.statusText}`
+    );
   }
 
   const tokenResponse: CalendarFeedTokenResponse = await response.json();
@@ -294,7 +296,9 @@ export async function rotateCalendarFeedToken(): Promise<CalendarFeedTokenRespon
     if (response.status === 500) {
       throw new Error("Server error: Unable to rotate calendar feed token");
     }
-    throw new Error(`Failed to rotate calendar feed token: ${response.statusText}`);
+    throw new Error(
+      `Failed to rotate calendar feed token: ${response.statusText}`
+    );
   }
 
   const tokenResponse: CalendarFeedTokenResponse = await response.json();

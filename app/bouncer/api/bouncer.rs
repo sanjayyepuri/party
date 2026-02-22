@@ -10,7 +10,7 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use vercel_runtime::axum::VercelLayer;
 use vercel_runtime::Error;
 
-use pregame::api::{ApiState, auth, calendar, error, party, rsvp};
+use pregame::api::{auth, calendar, error, party, rsvp, ApiState};
 use pregame::db::DbState;
 
 #[tokio::main]
@@ -66,12 +66,12 @@ async fn main() -> Result<(), Error> {
             auth::auth_middleware,
         ));
 
-    let public_api_routes = Router::new().route(
-        "/calendar/feed.ics",
-        get(calendar::get_calendar_feed),
-    );
+    let public_api_routes =
+        Router::new().route("/calendar/feed.ics", get(calendar::get_calendar_feed));
 
-    let api_routes = Router::new().merge(public_api_routes).merge(protected_api_routes);
+    let api_routes = Router::new()
+        .merge(public_api_routes)
+        .merge(protected_api_routes);
 
     let app = Router::new()
         .nest("/api/bouncer", api_routes)

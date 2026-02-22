@@ -29,7 +29,9 @@ describe("CalendarFeedControls", () => {
   });
 
   it("rotates the token and updates the displayed URL", async () => {
-    const { rotateCalendarFeedTokenClient } = require("@/lib/api-client-client");
+    const {
+      rotateCalendarFeedTokenClient,
+    } = require("@/lib/api-client-client");
     rotateCalendarFeedTokenClient.mockResolvedValue({
       feed_path: "/api/bouncer/calendar/feed.ics?token=rotated",
     });
@@ -56,7 +58,9 @@ describe("CalendarFeedControls", () => {
   });
 
   it("shows an error when rotate fails", async () => {
-    const { rotateCalendarFeedTokenClient } = require("@/lib/api-client-client");
+    const {
+      rotateCalendarFeedTokenClient,
+    } = require("@/lib/api-client-client");
     rotateCalendarFeedTokenClient.mockRejectedValue(new Error("Rotate failed"));
 
     render(

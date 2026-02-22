@@ -77,7 +77,9 @@ export function CalendarFeedControls({
       setFeedPath(response.feed_path);
       setCopyMessage("Calendar feed token rotated. Old URL is now invalid.");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to rotate feed token");
+      setError(
+        err instanceof Error ? err.message : "Failed to rotate feed token"
+      );
     } finally {
       setIsRotating(false);
     }
@@ -89,7 +91,10 @@ export function CalendarFeedControls({
       <p className="text-sm text-black/70 mb-3">{description}</p>
 
       <div className="space-y-3">
-        <label className="block text-sm text-black/70" htmlFor="calendar-feed-url">
+        <label
+          className="block text-sm text-black/70"
+          htmlFor="calendar-feed-url"
+        >
           Feed URL
         </label>
         <input
@@ -120,7 +125,9 @@ export function CalendarFeedControls({
         </div>
       </div>
 
-      {copyMessage && <p className="text-sm text-green-700 mt-3">{copyMessage}</p>}
+      {copyMessage && (
+        <p className="text-sm text-green-700 mt-3">{copyMessage}</p>
+      )}
       {error && <p className="text-sm text-red-700 mt-3">{error}</p>}
     </div>
   );

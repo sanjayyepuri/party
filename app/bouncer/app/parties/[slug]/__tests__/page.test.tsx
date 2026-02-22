@@ -287,6 +287,8 @@ describe("PartyPage", () => {
     render(component);
 
     expect(screen.getByText("Track in Calendar")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /copy url/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /copy url/i })
+    ).toBeInTheDocument();
   });
 });

@@ -75,7 +75,9 @@ describe("SettingsPage", () => {
 
   it("renders calendar feed error when token fetch fails", async () => {
     const { fetchCalendarFeedToken } = require("@/lib/api-client");
-    fetchCalendarFeedToken.mockRejectedValue(new Error("Calendar feed unavailable"));
+    fetchCalendarFeedToken.mockRejectedValue(
+      new Error("Calendar feed unavailable")
+    );
 
     const component = await SettingsPage();
     render(component);

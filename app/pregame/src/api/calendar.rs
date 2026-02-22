@@ -317,10 +317,7 @@ mod tests {
     fn extract_request_origin_prefers_forwarded_headers() {
         let mut headers = HeaderMap::new();
         headers.insert("x-forwarded-proto", "https".parse().unwrap());
-        headers.insert(
-            "x-forwarded-host",
-            "calendar.example.com".parse().unwrap(),
-        );
+        headers.insert("x-forwarded-host", "calendar.example.com".parse().unwrap());
         headers.insert("host", "localhost:3000".parse().unwrap());
 
         assert_eq!(

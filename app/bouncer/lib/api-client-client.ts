@@ -137,7 +137,9 @@ export async function rotateCalendarFeedTokenClient(): Promise<CalendarFeedToken
     if (response.status === 500) {
       throw new Error("Server error: Unable to rotate calendar feed token");
     }
-    throw new Error(`Failed to rotate calendar feed token: ${response.statusText}`);
+    throw new Error(
+      `Failed to rotate calendar feed token: ${response.statusText}`
+    );
   }
 
   const tokenResponse: CalendarFeedTokenResponse = await response.json();
