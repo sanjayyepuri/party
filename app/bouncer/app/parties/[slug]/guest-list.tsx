@@ -39,10 +39,16 @@ export function GuestList({ rsvps, currentUserId }: GuestListProps) {
     <div className="p-4 bg-white/5 rounded border border-white/10">
       <h3 className="text-xl mb-4">Guests</h3>
       <div className="flex gap-1 mb-4 border-b border-black/10">
-        <button onClick={() => setActiveTab("accepted")} className={tabClass("accepted")}>
+        <button
+          onClick={() => setActiveTab("accepted")}
+          className={tabClass("accepted")}
+        >
           Going ({goingGuests.length})
         </button>
-        <button onClick={() => setActiveTab("pending")} className={tabClass("pending")}>
+        <button
+          onClick={() => setActiveTab("pending")}
+          className={tabClass("pending")}
+        >
           Maybe ({maybeGuests.length})
         </button>
       </div>

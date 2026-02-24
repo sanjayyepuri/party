@@ -18,9 +18,8 @@ export default async function HomePage() {
         disappears.
       </p>
       <p className="mb-5">
-        This community will be open. It&apos;s
-        not an invitation to reach out. It&apos;s an automatic invitation to
-        come through.
+        This community will be open. It&apos;s not an invitation to reach out.
+        It&apos;s an automatic invitation to come through.
       </p>
       <div className="mt-8">
         <LoginButton />
