@@ -33,6 +33,14 @@ jest.mock("@/lib/api-client", () => ({
   fetchParties: jest.fn(),
 }));
 
+jest.mock("@/lib/webgl/receipt-canvas", () => ({
+  ReceiptCanvas: () => <div data-testid="receipt-canvas" />,
+}));
+
+jest.mock("@/lib/webgl/cloud-canvas", () => ({
+  CloudCanvas: () => <div data-testid="cloud-canvas" />,
+}));
+
 jest.mock("next/headers", () => ({
   headers: jest.fn(),
 }));
@@ -299,7 +307,21 @@ describe("InvitationsPage", () => {
 
   it("creates clickable links to party detail pages", async () => {
     const { fetchParties } = require("@/lib/api-client");
-    fetchParties.mockResolvedValue(mockParties);
+    fetchParties.mockResolvedValue([
+      ...mockParties,
+      {
+        party_id: "party-3",
+        name: "What's the Move?",
+        time: "2026-05-31T00:00:00Z",
+        location: "TBD",
+        description:
+          "A practical check-in on whether I should stay in New York or make a different move.",
+        slug: "whats-the-move-2026",
+        created_at: "2026-05-10T00:00:00Z",
+        updated_at: "2026-05-10T00:00:00Z",
+        deleted_at: null,
+      },
+    ]);
 
     const component = await InvitationsPage();
     render(component);
@@ -309,11 +331,10 @@ describe("InvitationsPage", () => {
       link.getAttribute("href")?.startsWith("/parties/")
     );
 
-    expect(partyLinks.length).toBe(2);
-    expect(partyLinks[0]?.getAttribute("href")).toBe(
-      "/parties/new-years-party"
-    );
-    expect(partyLinks[1]?.getAttribute("href")).toBe("/parties/summer-bbq");
+    const hrefs = partyLinks.map((link) => link.getAttribute("href"));
+    expect(hrefs).toContain("/parties/new-years-party");
+    expect(hrefs).toContain("/parties/summer-bbq");
+    expect(hrefs).toContain("/parties/whats-the-move-2026");
   });
 
   it("displays party date and time correctly", async () => {
@@ -380,7 +401,7 @@ describe("InvitationsPage", () => {
     expect(actionsContainer?.className).toContain("flex-col");
   });
 
-  it("positions actions after invitations section", async () => {
+  it("positions actions after the invitations section", async () => {
     const { fetchParties } = require("@/lib/api-client");
     fetchParties.mockResolvedValue([]);
 
@@ -393,7 +414,7 @@ describe("InvitationsPage", () => {
     expect(invitationsHeading).toBeTruthy();
     expect(settingsLink).toBeTruthy();
 
-    // Check that actions come after the invitations section in the DOM
+    // Check that actions come after the invitations section in the DOM.
     const invitationsSection = invitationsHeading.closest("div");
     const actionsContainer = settingsLink.closest("div");
 
