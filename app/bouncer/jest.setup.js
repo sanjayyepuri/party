@@ -1,6 +1,18 @@
 // Learn more: https://github.com/testing-library/jest-dom
 import "@testing-library/jest-dom";
 
+jest.mock("@/lib/webgl/receipt-canvas", () => {
+  const React = require("react");
+
+  return {
+    ReceiptCanvas: ({ className }) =>
+      React.createElement("div", {
+        className,
+        "data-testid": "receipt-canvas",
+      }),
+  };
+});
+
 // Mock window.location
 Object.defineProperty(window, "location", {
   writable: true,

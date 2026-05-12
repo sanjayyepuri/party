@@ -380,24 +380,24 @@ describe("InvitationsPage", () => {
     expect(actionsContainer?.className).toContain("flex-col");
   });
 
-  it("positions actions directly after welcome message", async () => {
+  it("positions actions after invitations section", async () => {
     const { fetchParties } = require("@/lib/api-client");
     fetchParties.mockResolvedValue([]);
 
     const component = await InvitationsPage();
     const { container } = render(component);
 
-    const welcomeText = screen.getByText(/welcome to the party/i);
+    const invitationsHeading = screen.getByText(/your invitations/i);
     const settingsLink = screen.getByText(/manage account/i);
 
-    expect(welcomeText).toBeTruthy();
+    expect(invitationsHeading).toBeTruthy();
     expect(settingsLink).toBeTruthy();
 
-    // Check that actions come after welcome message in the DOM
-    const welcomeElement = welcomeText.closest("p");
+    // Check that actions come after the invitations section in the DOM
+    const invitationsSection = invitationsHeading.closest("div");
     const actionsContainer = settingsLink.closest("div");
 
-    expect(welcomeElement?.nextElementSibling).toBe(actionsContainer);
+    expect(invitationsSection?.nextElementSibling).toBe(actionsContainer);
   });
 
   it("displays both actions with icons side by side in vertical stack", async () => {

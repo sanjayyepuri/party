@@ -42,7 +42,6 @@ next-env.d.ts
 
 # Rust
 /target
-Cargo.lock
 **/*.rs.bk
 *.pdb
 

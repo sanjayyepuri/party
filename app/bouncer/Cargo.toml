@@ -1,24 +1,24 @@
 [package]
 name = "bouncer"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 
 [dependencies]
-vercel_runtime = { version = "2", features = ["axum"] }
+vercel_runtime = { version = "2.2.0", features = ["axum"] }
 tokio = { version = "1", features = ["full"] }
 hyper = { version = "1", features = ["full"] }
-axum = { version = "0.8" }
-axum-streams = { version = "0.24", features = ["json", "text"] }
-tower = { version = "0.5"}
+axum = { version = "0.8.9" }
+axum-streams = { version = "0.25.0", features = ["json", "text"] }
+tower = { version = "0.5.3" }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 pregame = { path = "../pregame" }
-url = "2.5.7"
+url = "2.5.8"
 tracing-subscriber = { version = "0.3.22", features = ["env-filter"] }
-tower-http = { version = "0.6.8", features = ["trace"] }
-tracing = "0.1.43"
+tower-http = { version = "0.6.10", features = ["trace"] }
+tracing = "0.1.44"
 dotenvy = "0.15.7"
-reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json"] }
+reqwest = { version = "0.13.3", default-features = false, features = ["rustls", "json"] }
 
 # You can specify a library for shared logic here (optional)
 # [lib]
