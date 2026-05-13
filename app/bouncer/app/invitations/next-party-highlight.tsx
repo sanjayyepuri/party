@@ -44,7 +44,7 @@ export function NextPartyHighlight({ party }: NextPartyHighlightProps) {
               <div className="relative z-10 flex h-full flex-col justify-between">
                 <div>
                   <h3
-                    className={`text-base md:text-lg font-semibold mb-3 transition-colors text-left leading-tight line-clamp-3 break-words ${
+                    className={`text-xl font-semibold mb-4 transition-colors text-left leading-tight line-clamp-3 break-words ${
                       hasCloudPreview
                         ? "text-black/90 hover:text-black"
                         : "text-black/90 hover:text-black"
@@ -53,7 +53,7 @@ export function NextPartyHighlight({ party }: NextPartyHighlightProps) {
                     {party.name}
                   </h3>
                   <p
-                    className={`text-xs text-left leading-relaxed ${
+                    className={`text-sm text-left leading-relaxed ${
                       hasCloudPreview ? "text-black/70" : "text-black/70"
                     }`}
                   >
