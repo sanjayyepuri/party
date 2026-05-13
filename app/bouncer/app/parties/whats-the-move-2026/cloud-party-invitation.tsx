@@ -23,7 +23,7 @@ const previewWeather = {
 };
 
 const dividerStyle = {
-  borderColor: "rgba(255, 255, 255, 0.18)",
+  borderColor: "rgba(15, 23, 42, 0.12)",
 };
 
 export function CloudPartyInvitation({
@@ -38,7 +38,9 @@ export function CloudPartyInvitation({
         <CloudCanvas className="h-full w-full" />
       </div>
 
-      <div className="pointer-events-none fixed inset-x-0 top-0 z-[1] flex justify-between px-4 py-3 text-[11px] uppercase text-slate-700/70 md:px-6">
+      <div className="pointer-events-none fixed inset-0 z-10 bg-white/30" />
+
+      <div className="pointer-events-none fixed inset-x-0 top-0 z-20 flex justify-between px-4 py-3 text-[11px] uppercase text-slate-900/80 md:px-6">
         <span>may 30</span>
         <span>
           {previewWeather.temperature} / {previewWeather.condition}
@@ -47,20 +49,20 @@ export function CloudPartyInvitation({
 
       <main
         className="fixed inset-0 mx-auto flex min-h-screen w-full max-w-4xl flex-col overflow-y-auto px-4 pb-6 pt-14 md:px-6 md:pt-16"
-        style={{ zIndex: 20 }}
+        style={{ zIndex: 30 }}
       >
         <div className="mb-2">
           <Link
             href="/invitations"
-            className="inline-flex text-[11px] uppercase text-slate-700 transition-colors hover:text-slate-950"
+            className="inline-flex text-[11px] uppercase text-slate-900 transition-colors hover:text-slate-950"
           >
             back
           </Link>
         </div>
 
-        <div className="grid gap-2 text-xs text-slate-800/88">
+        <div className="grid gap-2 text-xs text-slate-950/90">
           <section className="border-y py-2" style={dividerStyle}>
-            <div className="mb-2 flex items-center justify-between gap-3 uppercase text-slate-600/76">
+            <div className="mb-2 flex items-center justify-between gap-3 uppercase text-slate-800/75">
               <span>party</span>
               <span>may 30</span>
             </div>
@@ -73,10 +75,10 @@ export function CloudPartyInvitation({
             className="grid border-b py-2 md:grid-cols-[120px_1fr]"
             style={dividerStyle}
           >
-            <div className="uppercase text-slate-500">time</div>
+            <div className="uppercase text-slate-700/80">time</div>
             <div>
               <LocalDateTime dateTime={party.time} mode="date" />{" "}
-              <span className="text-slate-500">/</span>{" "}
+              <span className="text-slate-700/80">/</span>{" "}
               <LocalDateTime dateTime={party.time} mode="time" />
             </div>
           </section>
@@ -85,7 +87,7 @@ export function CloudPartyInvitation({
             className="grid border-b py-2 md:grid-cols-[120px_1fr]"
             style={dividerStyle}
           >
-            <div className="uppercase text-slate-500">where</div>
+            <div className="uppercase text-slate-700/80">where</div>
             <AddressLink location={party.location} />
           </section>
 
@@ -93,7 +95,7 @@ export function CloudPartyInvitation({
             className="grid border-b py-2 md:grid-cols-[120px_1fr]"
             style={dividerStyle}
           >
-            <div className="uppercase text-slate-500">weather</div>
+            <div className="uppercase text-slate-700/80">weather</div>
             <div className="grid gap-1 md:grid-cols-4">
               <div>{previewWeather.temperature}</div>
               <div>{previewWeather.condition}</div>
@@ -107,8 +109,8 @@ export function CloudPartyInvitation({
               className="grid border-b py-2 md:grid-cols-[120px_1fr]"
               style={dividerStyle}
             >
-              <div className="uppercase text-slate-500">note</div>
-              <p className="max-w-[68ch] leading-relaxed text-slate-800/88">
+              <div className="uppercase text-slate-700/80">note</div>
+              <p className="max-w-[68ch] leading-relaxed text-slate-950/90">
                 {party.description}
               </p>
             </section>
@@ -118,7 +120,7 @@ export function CloudPartyInvitation({
             className="grid border-b py-2 md:grid-cols-[120px_1fr]"
             style={dividerStyle}
           >
-            <div className="uppercase text-slate-500">rsvp</div>
+            <div className="uppercase text-slate-700/80">rsvp</div>
             <div className="[&>div]:space-y-2 [&_.bg-black]:bg-slate-950 [&_.rounded]:rounded-none [&_.text-lg]:text-base">
               <RsvpForm partyId={party.party_id} />
             </div>
@@ -128,7 +130,7 @@ export function CloudPartyInvitation({
             className="grid border-b py-2 md:grid-cols-[120px_1fr]"
             style={dividerStyle}
           >
-            <div className="uppercase text-slate-500">guests</div>
+            <div className="uppercase text-slate-700/80">guests</div>
             <div className="[&_.rounded]:rounded-none [&_.text-xl]:text-base">
               {partyRsvpsError && (
                 <div className="border border-red-200 bg-red-50 p-3 text-red-800">
