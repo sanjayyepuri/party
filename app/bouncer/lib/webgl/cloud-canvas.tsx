@@ -67,7 +67,7 @@ const fragmentShader = /* glsl */ `
   float cloudDepth(vec3 position) {
     vec3 drift = vec3(uTime * 0.035, uTime * 0.014, -uTime * 0.018);
     float ellipse = 1.0 - length(position * uCloudSize);
-    float cloud = ellipse + fbm(position * 1.08 + drift) * 1.82 - 0.46;
+    float cloud = ellipse + fbm(position * 0.98 + drift) * 1.55 - 0.38;
 
     return min(max(0.0, cloud), 1.0);
   }
@@ -94,12 +94,12 @@ const fragmentShader = /* glsl */ `
           lightPosition += lightDirection * shadowStepLength;
           shadow += cloudDepth(lightPosition);
         }
-        shadow = exp((-shadow / uShadowSteps) * 3.0);
+        shadow = exp((-shadow / uShadowSteps) * 3.4);
 
-        float density = clamp((depth / uCloudSteps) * 22.0, 0.0, 1.0);
+        float density = clamp((depth / uCloudSteps) * 24.0, 0.0, 1.0);
         color.rgb += vec3(shadow * density) * uCloudColor * color.a;
         color.a *= 1.0 - density;
-        color.rgb += density * uSkyColor * color.a;
+        color.rgb += density * mix(uSkyColor, uCloudColor, 0.8) * color.a * 0.22;
       }
 
       cloudPosition += ray * stepLength;
@@ -124,7 +124,7 @@ const fragmentShader = /* glsl */ `
 
     vec4 color = cloudMarch(jitter, uCameraPosition, ray);
     float horizon = smoothstep(-0.9, 0.9, pixel.y);
-    vec3 sky = mix(vec3(0.88, 0.96, 1.0), uSkyColor, horizon);
+    vec3 sky = mix(vec3(0.70, 0.88, 1.0), uSkyColor, horizon);
     gl_FragColor = vec4(color.rgb + sky * color.a, 1.0);
   }
 `;
@@ -137,8 +137,8 @@ function CloudShader({ compact = false }: { compact?: boolean }) {
     () => ({
       uCloudSize: {
         value: compact
-          ? new THREE.Vector3(0.76, 0.56, 0.76)
-          : new THREE.Vector3(0.5, 0.36, 0.5),
+          ? new THREE.Vector3(0.94, 0.68, 0.94)
+          : new THREE.Vector3(0.68, 0.48, 0.68),
       },
       uSunPosition: { value: new THREE.Vector3(1.8, 2.4, 1.2) },
       uCameraPosition: {
@@ -147,14 +147,14 @@ function CloudShader({ compact = false }: { compact?: boolean }) {
           : new THREE.Vector3(0.0, 0.82, 2.72),
       },
       uCloudColor: { value: new THREE.Color("#ffffff") },
-      uSkyColor: { value: new THREE.Color(compact ? "#bdeaff" : "#a8ddff") },
+      uSkyColor: { value: new THREE.Color(compact ? "#8ccfff" : "#74b9f6") },
       uCloudSteps: { value: compact ? 32 : 42 },
       uShadowSteps: { value: compact ? 5 : 7 },
       uCloudLength: { value: compact ? 3.8 : 4.8 },
       uShadowLength: { value: compact ? 1.25 : 1.65 },
       uResolution: { value: new THREE.Vector2(size.width, size.height) },
       uTime: { value: 0 },
-      uFocalLength: { value: compact ? -1.36 : -1.22 },
+      uFocalLength: { value: compact ? 1.36 : 1.22 },
       uRegress: { value: false },
     }),
     [compact, size.height, size.width]
