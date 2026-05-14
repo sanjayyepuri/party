@@ -3,6 +3,8 @@ use chrono::{DateTime, Utc};
 use clap::{Parser, Subcommand};
 use openssl::ssl::{SslConnector, SslMethod};
 use postgres_openssl::MakeTlsConnector;
+use serde::Serialize;
+use std::path::{Path, PathBuf};
 use tokio_postgres::Client;
 use uuid::Uuid;
 
@@ -52,6 +54,12 @@ enum Commands {
         slug: String,
     },
 
+    /// Show RSVP summary for a party
+    Summary {
+        /// Slug of the party
+        slug: String,
+    },
+
     /// Update a party
     Update {
         /// Slug of the party to update
@@ -86,6 +94,20 @@ enum Commands {
         slug: String,
     },
 
+    /// Send a new-party notification email to all verified users
+    Notify {
+        /// Slug of the party to notify guests about
+        slug: String,
+
+        /// Explicit recipient email. May be repeated or comma-separated.
+        #[arg(long = "email", value_delimiter = ',')]
+        emails: Vec<String>,
+
+        /// Preview recipients and email content without sending via Resend
+        #[arg(long)]
+        dry_run: bool,
+    },
+
     /// Create the party table with the schema from RFD-006
     CreateTable,
 
@@ -98,7 +120,7 @@ enum Commands {
 }
 
 async fn connect_db() -> Result<Client> {
-    dotenvy::dotenv().ok();
+    load_environment();
 
     let connection_string = std::env::var("NEON_POSTGRES_URL")
         .context("NEON_POSTGRES_URL environment variable not set")?;
@@ -116,6 +138,37 @@ async fn connect_db() -> Result<Client> {
     });
 
     Ok(client)
+}
+
+fn find_env_file_from(start: &Path, filename: &str) -> Option<PathBuf> {
+    let mut directory = start.to_path_buf();
+
+    loop {
+        let candidate = directory.join(filename);
+        if candidate.is_file() {
+            return Some(candidate);
+        }
+
+        if !directory.pop() {
+            return None;
+        }
+    }
+}
+
+fn find_env_file(filename: &str) -> Option<PathBuf> {
+    std::env::current_dir()
+        .ok()
+        .and_then(|current_dir| find_env_file_from(&current_dir, filename))
+}
+
+fn load_environment() {
+    if let Some(env_path) = find_env_file(".env") {
+        dotenvy::from_path(env_path).ok();
+    }
+
+    if let Some(env_local_path) = find_env_file(".env.local") {
+        dotenvy::from_path_override(env_local_path).ok();
+    }
 }
 
 async fn create_party(
@@ -227,6 +280,185 @@ async fn get_party(client: &Client, slug: String) -> Result<()> {
         println!("Deleted:     {}", deleted.format("%Y-%m-%d %H:%M:%S %Z"));
     }
     println!("{}\n", "=".repeat(80));
+
+    Ok(())
+}
+
+#[derive(Debug, Clone)]
+struct PartySummary {
+    party_id: String,
+    name: String,
+    slug: String,
+    time: DateTime<Utc>,
+}
+
+#[derive(Debug, Clone)]
+struct RsvpSummaryRow {
+    name: Option<String>,
+    email: String,
+    status: String,
+    updated_at: Option<DateTime<Utc>>,
+}
+
+fn rsvp_status_label(status: &str) -> &'static str {
+    match status {
+        "accepted" => "Going",
+        "pending" => "Maybe",
+        "declined" => "Declined",
+        "not_started" => "Not started",
+        _ => "Other",
+    }
+}
+
+fn rsvp_status_order(status: &str) -> usize {
+    match status {
+        "accepted" => 0,
+        "pending" => 1,
+        "declined" => 2,
+        "not_started" => 3,
+        _ => 4,
+    }
+}
+
+fn count_rsvp_status(rows: &[RsvpSummaryRow], status: &str) -> usize {
+    rows.iter().filter(|row| row.status == status).count()
+}
+
+fn format_rsvp_summary_person(row: &RsvpSummaryRow) -> String {
+    let display_name = row.name.as_deref().unwrap_or("").trim();
+    let person = if display_name.is_empty() {
+        row.email.clone()
+    } else {
+        format!("{} <{}>", display_name, row.email)
+    };
+
+    match row.updated_at {
+        Some(updated_at) => format!(
+            "{} (updated {})",
+            person,
+            updated_at.format("%Y-%m-%d %H:%M")
+        ),
+        None => person,
+    }
+}
+
+async fn fetch_party_summary(client: &Client, slug: &str) -> Result<Option<PartySummary>> {
+    let row = client
+        .query_opt(
+            "SELECT party_id, name, slug, time
+             FROM party
+             WHERE slug = $1 AND deleted_at IS NULL",
+            &[&slug],
+        )
+        .await?;
+
+    row.map(|row| -> Result<PartySummary, tokio_postgres::Error> {
+        Ok(PartySummary {
+            party_id: row.try_get("party_id")?,
+            name: row.try_get("name")?,
+            slug: row.try_get("slug")?,
+            time: row.try_get("time")?,
+        })
+    })
+    .transpose()
+    .context("Failed to parse party summary row")
+}
+
+async fn fetch_rsvp_summary_rows(client: &Client, party_id: &str) -> Result<Vec<RsvpSummaryRow>> {
+    let rows = client
+        .query(
+            r#"
+            SELECT
+                u.name,
+                u.email,
+                COALESCE(r.status, 'not_started') AS status,
+                r.updated_at
+            FROM "user" u
+            LEFT JOIN rsvp r
+                ON r.user_id = u.id
+                AND r.party_id = $1
+                AND r.deleted_at IS NULL
+            WHERE btrim(u.email) <> ''
+            ORDER BY
+                CASE COALESCE(r.status, 'not_started')
+                    WHEN 'accepted' THEN 0
+                    WHEN 'pending' THEN 1
+                    WHEN 'declined' THEN 2
+                    WHEN 'not_started' THEN 3
+                    ELSE 4
+                END,
+                lower(COALESCE(NULLIF(btrim(u.name), ''), u.email)),
+                lower(u.email)
+            "#,
+            &[&party_id],
+        )
+        .await?;
+
+    rows.into_iter()
+        .map(|row| {
+            Ok(RsvpSummaryRow {
+                name: row.try_get("name")?,
+                email: row.try_get("email")?,
+                status: row.try_get("status")?,
+                updated_at: row.try_get("updated_at")?,
+            })
+        })
+        .collect::<Result<Vec<_>, tokio_postgres::Error>>()
+        .context("Failed to parse RSVP summary rows")
+}
+
+fn print_rsvp_summary(party: &PartySummary, rows: &[RsvpSummaryRow]) {
+    println!("\nRSVP summary: {}", party.name);
+    println!("{}", "=".repeat(80));
+    println!("Slug: {}", party.slug);
+    println!("Time: {}", party.time.format("%Y-%m-%d %H:%M:%S %Z"));
+    println!("Total users: {}", rows.len());
+    println!("Going: {}", count_rsvp_status(rows, "accepted"));
+    println!("Maybe: {}", count_rsvp_status(rows, "pending"));
+    println!("Declined: {}", count_rsvp_status(rows, "declined"));
+    println!("Not started: {}", count_rsvp_status(rows, "not_started"));
+
+    for status in ["accepted", "pending", "declined", "not_started"] {
+        let people = rows
+            .iter()
+            .filter(|row| row.status == status)
+            .collect::<Vec<_>>();
+
+        if people.is_empty() {
+            continue;
+        }
+
+        println!("\n{} ({})", rsvp_status_label(status), people.len());
+        for person in people {
+            println!("  - {}", format_rsvp_summary_person(person));
+        }
+    }
+
+    let other_statuses = rows
+        .iter()
+        .filter(|row| rsvp_status_order(&row.status) == 4)
+        .collect::<Vec<_>>();
+    if !other_statuses.is_empty() {
+        println!("\nOther ({})", other_statuses.len());
+        for person in other_statuses {
+            println!(
+                "  - {} [{}]",
+                format_rsvp_summary_person(person),
+                person.status
+            );
+        }
+    }
+
+    println!("\n{}", "=".repeat(80));
+}
+
+async fn show_rsvp_summary(client: &Client, slug: String) -> Result<()> {
+    let party = fetch_party_summary(client, &slug)
+        .await?
+        .with_context(|| format!("Party with slug '{}' not found or already deleted", slug))?;
+    let rows = fetch_rsvp_summary_rows(client, &party.party_id).await?;
+
+    print_rsvp_summary(&party, &rows);
 
     Ok(())
 }
@@ -457,10 +689,585 @@ async fn clear_table(client: &Client, confirm: String) -> Result<()> {
     Ok(())
 }
 
+#[derive(Debug, Clone)]
+struct PartyNotification {
+    name: String,
+    slug: String,
+    time: DateTime<Utc>,
+    location: String,
+    description: String,
+}
+
+#[derive(Debug, Clone)]
+struct PartyNotificationEmail {
+    subject: String,
+    html: String,
+    text: String,
+    rsvp_url: String,
+}
+
+#[derive(Debug, Serialize)]
+struct ResendEmailPayload {
+    from: String,
+    to: String,
+    subject: String,
+    html: String,
+    text: String,
+}
+
+#[derive(Debug)]
+struct SendFailure {
+    email: String,
+    error: String,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+struct NotificationConfig {
+    resend_api_key: Option<String>,
+    from_email: Option<String>,
+    site_base_url: String,
+}
+
+fn load_notification_config(dry_run: bool) -> Result<NotificationConfig> {
+    let site_base_url = std::env::var("PARTY_SITE_BASE_URL")
+        .context("PARTY_SITE_BASE_URL environment variable is required for notifications")?;
+
+    if dry_run {
+        return Ok(NotificationConfig {
+            resend_api_key: None,
+            from_email: None,
+            site_base_url,
+        });
+    }
+
+    Ok(NotificationConfig {
+        resend_api_key: Some(
+            std::env::var("RESEND_API_KEY")
+                .context("RESEND_API_KEY environment variable is required for notifications")?,
+        ),
+        from_email: Some(
+            std::env::var("RESEND_FROM_EMAIL")
+                .context("RESEND_FROM_EMAIL environment variable is required for notifications")?,
+        ),
+        site_base_url,
+    })
+}
+
+fn escape_html(value: &str) -> String {
+    value
+        .replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
+        .replace('"', "&quot;")
+        .replace('\'', "&#39;")
+}
+
+fn build_party_notification_email(
+    party: &PartyNotification,
+    site_base_url: &str,
+) -> PartyNotificationEmail {
+    let base_url = site_base_url.trim_end_matches('/');
+    let rsvp_url = format!("{}/parties/{}", base_url, party.slug);
+    let formatted_time = party.time.format("%A, %B %-d, %Y at %-I:%M %p UTC");
+    let subject = format!("Sanjay invited you to {}", party.name);
+
+    let html = format!(
+        r#"
+<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #222; line-height: 1.5;">
+  <p>Hey,</p>
+  <p>I am hosting {name} and wanted to invite you.</p>
+  <p>
+    When: {time}<br>
+    Where: {location}
+  </p>
+  <p>{description}</p>
+  <p>RSVP here:<br><a href="{rsvp_url}">{rsvp_url}</a></p>
+  <p style="color: #666; font-size: 14px;">
+    You are getting this because you have an account on sanjay.party.
+    Reply here with any questions. If you do not want party invites, reply "unsubscribe".
+  </p>
+</div>
+"#,
+        name = escape_html(&party.name),
+        description = escape_html(&party.description),
+        time = escape_html(&formatted_time.to_string()),
+        location = escape_html(&party.location),
+        rsvp_url = escape_html(&rsvp_url),
+    );
+
+    let text = format!(
+        "Hey,\n\nI am hosting {} and wanted to invite you.\n\nWhen: {}\nWhere: {}\n\n{}\n\nRSVP here:\n{}\n\nYou are getting this because you have an account on sanjay.party.\nReply here with any questions. If you do not want party invites, reply \"unsubscribe\".",
+        party.name, formatted_time, party.location, party.description, rsvp_url
+    );
+
+    PartyNotificationEmail {
+        subject,
+        html,
+        text,
+        rsvp_url,
+    }
+}
+
+fn build_resend_payload(
+    from_email: &str,
+    recipient_email: &str,
+    email: &PartyNotificationEmail,
+) -> ResendEmailPayload {
+    ResendEmailPayload {
+        from: from_email.to_string(),
+        to: recipient_email.to_string(),
+        subject: email.subject.clone(),
+        html: email.html.clone(),
+        text: email.text.clone(),
+    }
+}
+
+fn normalize_explicit_recipient_emails(emails: Vec<String>) -> Vec<String> {
+    let mut recipients = Vec::new();
+
+    for email in emails {
+        let email = email.trim();
+        if email.is_empty() || recipients.iter().any(|existing| existing == email) {
+            continue;
+        }
+
+        recipients.push(email.to_string());
+    }
+
+    recipients
+}
+
+async fn fetch_party_notification(
+    client: &Client,
+    slug: &str,
+) -> Result<Option<PartyNotification>> {
+    let row = client
+        .query_opt(
+            "SELECT name, slug, time, location, description
+             FROM party
+             WHERE slug = $1 AND deleted_at IS NULL",
+            &[&slug],
+        )
+        .await?;
+
+    row.map(|row| -> Result<PartyNotification, tokio_postgres::Error> {
+        Ok(PartyNotification {
+            name: row.try_get("name")?,
+            slug: row.try_get("slug")?,
+            time: row.try_get("time")?,
+            location: row.try_get("location")?,
+            description: row.try_get("description")?,
+        })
+    })
+    .transpose()
+    .context("Failed to parse party notification row")
+}
+
+async fn fetch_verified_recipient_emails(client: &Client) -> Result<Vec<String>> {
+    let rows = client
+        .query(
+            r#"
+            SELECT email
+            FROM "user"
+            WHERE "emailVerified" = true
+              AND btrim(email) <> ''
+            ORDER BY email ASC
+            "#,
+            &[],
+        )
+        .await?;
+
+    rows.into_iter()
+        .map(|row| row.try_get("email").context("Failed to parse user email"))
+        .collect()
+}
+
+async fn send_resend_email(
+    http_client: &reqwest::Client,
+    api_key: &str,
+    payload: &ResendEmailPayload,
+) -> Result<()> {
+    send_resend_email_to_endpoint(
+        http_client,
+        api_key,
+        "https://api.resend.com/emails",
+        payload,
+    )
+    .await
+}
+
+async fn send_resend_email_to_endpoint(
+    http_client: &reqwest::Client,
+    api_key: &str,
+    endpoint: &str,
+    payload: &ResendEmailPayload,
+) -> Result<()> {
+    let response = http_client
+        .post(endpoint)
+        .bearer_auth(api_key)
+        .json(payload)
+        .send()
+        .await
+        .context("Failed to send request to Resend")?;
+
+    let status = response.status();
+    if !status.is_success() {
+        let body = response
+            .text()
+            .await
+            .unwrap_or_else(|_| "Unable to read response body".to_string());
+        anyhow::bail!("Resend returned {}: {}", status, body);
+    }
+
+    Ok(())
+}
+
+async fn notify_party(
+    client: &Client,
+    slug: String,
+    explicit_recipient_emails: Vec<String>,
+    dry_run: bool,
+) -> Result<()> {
+    let config = load_notification_config(dry_run)?;
+
+    let party = fetch_party_notification(client, &slug)
+        .await?
+        .with_context(|| format!("Party with slug '{}' not found or already deleted", slug))?;
+    let explicit_recipients = normalize_explicit_recipient_emails(explicit_recipient_emails);
+    let (recipients, recipient_label) = if explicit_recipients.is_empty() {
+        (
+            fetch_verified_recipient_emails(client).await?,
+            "verified users",
+        )
+    } else {
+        (explicit_recipients, "explicit recipients")
+    };
+
+    if recipients.is_empty() {
+        anyhow::bail!("No recipient email addresses found");
+    }
+
+    let email = build_party_notification_email(&party, &config.site_base_url);
+
+    if dry_run {
+        println!(
+            "Dry run: would send party notification for '{}' to {} {}",
+            party.name,
+            recipients.len(),
+            recipient_label
+        );
+        println!("  Subject: {}", email.subject);
+        println!("  RSVP link: {}", email.rsvp_url);
+        println!("\nRecipients:");
+        for recipient in &recipients {
+            println!("  - {}", recipient);
+        }
+        println!("\nPlain-text preview:\n{}", email.text);
+        return Ok(());
+    }
+
+    let resend_api_key = config
+        .resend_api_key
+        .as_deref()
+        .expect("RESEND_API_KEY is loaded when dry_run is false");
+    let from_email = config
+        .from_email
+        .as_deref()
+        .expect("RESEND_FROM_EMAIL is loaded when dry_run is false");
+    let http_client = reqwest::Client::new();
+    let mut sent_count = 0usize;
+    let mut failures = Vec::new();
+
+    println!(
+        "Sending party notification for '{}' to {} {}",
+        party.name,
+        recipients.len(),
+        recipient_label
+    );
+
+    for recipient in &recipients {
+        let payload = build_resend_payload(&from_email, recipient, &email);
+        match send_resend_email(&http_client, &resend_api_key, &payload).await {
+            Ok(()) => {
+                sent_count += 1;
+                println!("✓ Sent notification to {}", recipient);
+            }
+            Err(error) => {
+                eprintln!("✗ Failed to send notification to {}: {}", recipient, error);
+                failures.push(SendFailure {
+                    email: recipient.clone(),
+                    error: error.to_string(),
+                });
+            }
+        }
+    }
+
+    println!("\nNotification summary");
+    println!("  Total recipients: {}", recipients.len());
+    println!("  Sent: {}", sent_count);
+    println!("  Failed: {}", failures.len());
+    println!("  RSVP link: {}", email.rsvp_url);
+
+    if !failures.is_empty() {
+        println!("\nFailed recipients:");
+        for failure in &failures {
+            println!("  - {} ({})", failure.email, failure.error);
+        }
+    }
+
+    if sent_count == 0 {
+        anyhow::bail!("Failed to send all {} notifications", recipients.len());
+    }
+
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+    use std::sync::Mutex;
+    use tokio::io::{AsyncReadExt, AsyncWriteExt};
+    use tokio::net::TcpListener;
+
+    static ENV_LOCK: Mutex<()> = Mutex::new(());
+
+    fn test_party() -> PartyNotification {
+        PartyNotification {
+            name: "Sanjay's <Party>".to_string(),
+            slug: "new-party".to_string(),
+            time: "2026-05-31T00:00:00Z".parse().unwrap(),
+            location: "Austin & <NYC>".to_string(),
+            description: "Bring \"ideas\" & snacks.".to_string(),
+        }
+    }
+
+    #[test]
+    fn finds_env_file_in_parent_directory() {
+        let temp_root = std::env::temp_dir().join(format!("guestbook-env-test-{}", Uuid::new_v4()));
+        let nested_dir = temp_root.join("app").join("guestbook");
+        fs::create_dir_all(&nested_dir).unwrap();
+        fs::write(
+            temp_root.join(".env.local"),
+            "PARTY_SITE_BASE_URL=https://example.com",
+        )
+        .unwrap();
+
+        let found = find_env_file_from(&nested_dir, ".env.local");
+
+        assert_eq!(found, Some(temp_root.join(".env.local")));
+
+        fs::remove_dir_all(temp_root).unwrap();
+    }
+
+    #[test]
+    fn builds_party_notification_email_with_escaped_html_and_plain_text() {
+        let party = test_party();
+        let email = build_party_notification_email(&party, "https://sanjay.party");
+
+        assert_eq!(email.subject, "Sanjay invited you to Sanjay's <Party>");
+        assert_eq!(email.rsvp_url, "https://sanjay.party/parties/new-party");
+        assert!(email.html.contains("Sanjay&#39;s &lt;Party&gt;"));
+        assert!(email.html.contains("Austin &amp; &lt;NYC&gt;"));
+        assert!(email.html.contains("Bring &quot;ideas&quot; &amp; snacks."));
+        assert!(!email.html.contains("Sanjay's <Party>"));
+        assert!(email.text.contains("Sanjay's <Party>"));
+        assert!(email
+            .text
+            .contains("RSVP here:\nhttps://sanjay.party/parties/new-party"));
+        assert!(email
+            .text
+            .contains("You are getting this because you have an account on sanjay.party."));
+        assert!(email.text.contains("reply \"unsubscribe\""));
+        assert!(!email.html.contains("View invitation and RSVP"));
+    }
+
+    #[test]
+    fn trims_base_url_before_building_rsvp_link() {
+        let party = test_party();
+        let email = build_party_notification_email(&party, "https://sanjay.party/");
+
+        assert_eq!(email.rsvp_url, "https://sanjay.party/parties/new-party");
+    }
+
+    #[test]
+    fn builds_resend_payload() {
+        let email = PartyNotificationEmail {
+            subject: "You're invited: Test".to_string(),
+            html: "<p>Hello</p>".to_string(),
+            text: "Hello".to_string(),
+            rsvp_url: "https://sanjay.party/parties/test".to_string(),
+        };
+
+        let payload =
+            build_resend_payload("Party <party@sanjay.party>", "guest@example.com", &email);
+
+        assert_eq!(payload.from, "Party <party@sanjay.party>");
+        assert_eq!(payload.to, "guest@example.com");
+        assert_eq!(payload.subject, "You're invited: Test");
+        assert_eq!(payload.html, "<p>Hello</p>");
+        assert_eq!(payload.text, "Hello");
+    }
+
+    #[test]
+    fn formats_rsvp_summary_people_with_and_without_names() {
+        let updated_at: DateTime<Utc> = "2026-05-31T00:00:00Z".parse().unwrap();
+        let named = RsvpSummaryRow {
+            name: Some("  Jane Guest  ".to_string()),
+            email: "jane@example.com".to_string(),
+            status: "accepted".to_string(),
+            updated_at: Some(updated_at),
+        };
+        let unnamed = RsvpSummaryRow {
+            name: Some(" ".to_string()),
+            email: "anon@example.com".to_string(),
+            status: "not_started".to_string(),
+            updated_at: None,
+        };
+
+        assert_eq!(
+            format_rsvp_summary_person(&named),
+            "Jane Guest <jane@example.com> (updated 2026-05-31 00:00)"
+        );
+        assert_eq!(format_rsvp_summary_person(&unnamed), "anon@example.com");
+    }
+
+    #[test]
+    fn counts_rsvp_summary_statuses() {
+        let rows = vec![
+            RsvpSummaryRow {
+                name: None,
+                email: "a@example.com".to_string(),
+                status: "accepted".to_string(),
+                updated_at: None,
+            },
+            RsvpSummaryRow {
+                name: None,
+                email: "b@example.com".to_string(),
+                status: "accepted".to_string(),
+                updated_at: None,
+            },
+            RsvpSummaryRow {
+                name: None,
+                email: "c@example.com".to_string(),
+                status: "pending".to_string(),
+                updated_at: None,
+            },
+        ];
+
+        assert_eq!(count_rsvp_status(&rows, "accepted"), 2);
+        assert_eq!(count_rsvp_status(&rows, "pending"), 1);
+        assert_eq!(count_rsvp_status(&rows, "declined"), 0);
+        assert_eq!(rsvp_status_label("not_started"), "Not started");
+        assert_eq!(rsvp_status_order("accepted"), 0);
+        assert_eq!(rsvp_status_order("unknown"), 4);
+    }
+
+    #[test]
+    fn normalizes_explicit_recipient_emails() {
+        let recipients = normalize_explicit_recipient_emails(vec![
+            " guest@example.com ".to_string(),
+            "".to_string(),
+            "guest@example.com".to_string(),
+            "friend@example.com".to_string(),
+        ]);
+
+        assert_eq!(
+            recipients,
+            vec![
+                "guest@example.com".to_string(),
+                "friend@example.com".to_string(),
+            ]
+        );
+    }
+
+    #[test]
+    fn dry_run_config_does_not_require_resend_credentials() {
+        let _env_lock = ENV_LOCK.lock().unwrap();
+        std::env::set_var("PARTY_SITE_BASE_URL", "https://sanjay.party");
+        std::env::remove_var("RESEND_API_KEY");
+        std::env::remove_var("RESEND_FROM_EMAIL");
+
+        let config = load_notification_config(true).unwrap();
+
+        assert_eq!(
+            config,
+            NotificationConfig {
+                resend_api_key: None,
+                from_email: None,
+                site_base_url: "https://sanjay.party".to_string(),
+            }
+        );
+
+        std::env::remove_var("PARTY_SITE_BASE_URL");
+    }
+
+    #[test]
+    fn send_config_requires_resend_credentials() {
+        let _env_lock = ENV_LOCK.lock().unwrap();
+        std::env::set_var("PARTY_SITE_BASE_URL", "https://sanjay.party");
+        std::env::remove_var("RESEND_API_KEY");
+        std::env::remove_var("RESEND_FROM_EMAIL");
+
+        let error = load_notification_config(false).unwrap_err();
+
+        assert!(error.to_string().contains("RESEND_API_KEY"));
+
+        std::env::remove_var("PARTY_SITE_BASE_URL");
+    }
+
+    #[tokio::test]
+    async fn sends_resend_payload_to_http_endpoint() {
+        let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+
+        let server = tokio::spawn(async move {
+            let (mut stream, _) = listener.accept().await.unwrap();
+            let mut buffer = vec![0; 4096];
+            let bytes_read = stream.read(&mut buffer).await.unwrap();
+            let request = String::from_utf8_lossy(&buffer[..bytes_read]).to_string();
+            stream
+                .write_all(
+                    b"HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: 13\r\n\r\n{\"id\":\"ok\"}",
+                )
+                .await
+                .unwrap();
+            request
+        });
+
+        let email = PartyNotificationEmail {
+            subject: "You're invited: Test".to_string(),
+            html: "<p>Hello</p>".to_string(),
+            text: "Hello".to_string(),
+            rsvp_url: "https://sanjay.party/parties/test".to_string(),
+        };
+        let payload =
+            build_resend_payload("Party <party@sanjay.party>", "guest@example.com", &email);
+        let http_client = reqwest::Client::new();
+
+        send_resend_email_to_endpoint(
+            &http_client,
+            "test-api-key",
+            &format!("http://{}/emails", address),
+            &payload,
+        )
+        .await
+        .unwrap();
+
+        let request = server.await.unwrap();
+        assert!(request.starts_with("POST /emails HTTP/1.1"));
+        assert!(request.contains("authorization: Bearer test-api-key"));
+        assert!(request.contains("\"from\":\"Party <party@sanjay.party>\""));
+        assert!(request.contains("\"to\":\"guest@example.com\""));
+        assert!(request.contains("\"subject\":\"You're invited: Test\""));
+        assert!(request.contains("\"html\":\"<p>Hello</p>\""));
+        assert!(request.contains("\"text\":\"Hello\""));
+    }
+}
+
 #[tokio::main]
 async fn main() -> Result<()> {
-    // Load environment variables from .env file
-    dotenvy::dotenv().ok();
+    load_environment();
 
     let cli = Cli::parse();
     let client = connect_db().await?;
@@ -478,6 +1285,8 @@ async fn main() -> Result<()> {
 
         Commands::Get { slug } => get_party(&client, slug).await?,
 
+        Commands::Summary { slug } => show_rsvp_summary(&client, slug).await?,
+
         Commands::Update {
             slug,
             name,
@@ -489,6 +1298,12 @@ async fn main() -> Result<()> {
         Commands::Delete { slug } => delete_party(&client, slug).await?,
 
         Commands::Purge { slug } => purge_party(&client, slug).await?,
+
+        Commands::Notify {
+            slug,
+            emails,
+            dry_run,
+        } => notify_party(&client, slug, emails, dry_run).await?,
 
         Commands::CreateTable => create_table(&client).await?,
 
