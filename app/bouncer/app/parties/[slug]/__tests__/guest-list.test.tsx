@@ -85,12 +85,13 @@ describe("GuestList", () => {
     expect(screen.getByText("Jane Smith")).toBeInTheDocument();
   });
 
-  it("filters out pending RSVPs", () => {
+  it("displays pending RSVPs with a maybe label", () => {
     const rsvps = [mockRsvpWithUser1, mockRsvpPending];
     render(<GuestList rsvps={rsvps} currentUserId={currentUserId} />);
 
     expect(screen.getByText("John Doe")).toBeInTheDocument();
-    expect(screen.queryByText("Bob Pending")).not.toBeInTheDocument();
+    expect(screen.getByText("Bob Pending")).toBeInTheDocument();
+    expect(screen.getByText("Maybe")).toBeInTheDocument();
   });
 
   it("filters out declined RSVPs", () => {
@@ -117,13 +118,13 @@ describe("GuestList", () => {
     // Should not display anything for the null name RSVP
   });
 
-  it("displays empty state when no accepted guests", () => {
-    const rsvps = [mockRsvpPending, mockRsvpDeclined];
+  it("displays empty state when no accepted or pending guests", () => {
+    const rsvps = [mockRsvpDeclined];
     render(<GuestList rsvps={rsvps} currentUserId={currentUserId} />);
 
     expect(screen.getByText("Guests")).toBeInTheDocument();
     expect(
-      screen.getByText("No guests have accepted yet.")
+      screen.getByText("No guests have responded yet.")
     ).toBeInTheDocument();
   });
 
@@ -132,7 +133,7 @@ describe("GuestList", () => {
 
     expect(screen.getByText("Guests")).toBeInTheDocument();
     expect(
-      screen.getByText("No guests have accepted yet.")
+      screen.getByText("No guests have responded yet.")
     ).toBeInTheDocument();
   });
 
@@ -142,7 +143,7 @@ describe("GuestList", () => {
 
     expect(screen.getByText("Guests")).toBeInTheDocument();
     expect(
-      screen.getByText("No guests have accepted yet.")
+      screen.getByText("No guests have responded yet.")
     ).toBeInTheDocument();
   });
 
@@ -174,10 +175,11 @@ describe("GuestList", () => {
     ];
     render(<GuestList rsvps={rsvps} currentUserId={currentUserId} />);
 
-    // Should only show accepted guests that are not the current user
+    // Should show accepted and pending guests that are not the current user
     expect(screen.getByText("John Doe")).toBeInTheDocument();
+    expect(screen.getByText("Bob Pending")).toBeInTheDocument();
+    expect(screen.getByText("Maybe")).toBeInTheDocument();
     expect(screen.getByText("Jane Smith")).toBeInTheDocument();
-    expect(screen.queryByText("Bob Pending")).not.toBeInTheDocument();
     expect(screen.queryByText("Alice Declined")).not.toBeInTheDocument();
     expect(screen.queryByText("Current User")).not.toBeInTheDocument();
   });
