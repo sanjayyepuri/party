@@ -110,7 +110,7 @@ export function CloudPartyInvitation({
               style={dividerStyle}
             >
               <div className="uppercase text-slate-700/80">note</div>
-              <p className="max-w-[68ch] leading-relaxed text-slate-950/90">
+              <p className="max-w-[68ch] whitespace-pre-wrap leading-relaxed text-slate-950/90">
                 {party.description}
               </p>
             </section>
