@@ -3,6 +3,7 @@ import type { Party } from "@/lib/types";
 import { ReceiptCanvas } from "@/lib/webgl/receipt-canvas";
 import { CloudCanvas } from "@/lib/webgl/cloud-canvas";
 import { LocalDateTime } from "@/app/components/local-date-time";
+import { SimplePartyPreview } from "./simple-party-preview";
 
 interface PartyCardProps {
   party: Party;
@@ -12,6 +13,7 @@ export function PartyCard({ party }: PartyCardProps) {
   const hasReceiptPreview =
     party.slug === "housewarming-2024" || party.slug === "launch-party-2026";
   const hasCloudPreview = party.slug === "whats-the-move-2026";
+  const hasSimplePreview = party.slug === "keep-it-simple-stupid-2026";
 
   return (
     <div className="group w-[clamp(180px,42vw,240px)] flex-shrink-0">
@@ -32,13 +34,19 @@ export function PartyCard({ party }: PartyCardProps) {
               <CloudCanvas className="h-full w-full" compact />
             </div>
           )}
+          {hasSimplePreview && <SimplePartyPreview party={party} />}
 
           {/* Content */}
-          <div className="relative z-10 flex flex-col h-full justify-start">
+          <div
+            className={`relative z-10 flex h-full flex-col justify-start ${
+              hasSimplePreview ? "invisible" : ""
+            }`}
+            aria-hidden={hasSimplePreview}
+          >
             <h3
               className={`text-xl font-semibold mb-4 transition-colors text-left line-clamp-3 ${
-                hasCloudPreview
-                  ? "text-black/90 group-hover:text-black"
+                hasSimplePreview
+                  ? "text-black"
                   : "text-black/90 group-hover:text-black"
               }`}
             >
@@ -46,7 +54,7 @@ export function PartyCard({ party }: PartyCardProps) {
             </h3>
             <p
               className={`text-sm text-left leading-relaxed ${
-                hasCloudPreview ? "text-black/70" : "text-black/70"
+                hasSimplePreview ? "text-black" : "text-black/70"
               }`}
             >
               <LocalDateTime dateTime={party.time} mode="date" />

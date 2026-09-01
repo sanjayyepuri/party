@@ -6,9 +6,10 @@ import { fetchRsvpClient, updateRsvpClient } from "@/lib/api-client-client";
 
 interface RsvpFormProps {
   partyId: string;
+  variant?: "default" | "monochrome";
 }
 
-export function RsvpForm({ partyId }: RsvpFormProps) {
+export function RsvpForm({ partyId, variant = "default" }: RsvpFormProps) {
   const [rsvp, setRsvp] = useState<Rsvp | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -60,6 +61,10 @@ export function RsvpForm({ partyId }: RsvpFormProps) {
   ];
 
   const getStatusColor = (status: string) => {
+    if (variant === "monochrome") {
+      return "text-black";
+    }
+
     switch (status) {
       case "accepted":
         return "text-green-600";
@@ -107,10 +112,17 @@ export function RsvpForm({ partyId }: RsvpFormProps) {
 
   const hasUnrecoverableError = error && !rsvp;
   const isDisabled = isLoading || isUpdating || hasUnrecoverableError;
+  const isMonochrome = variant === "monochrome";
 
   return (
     <div className="space-y-4">
-      <div className="p-4 bg-white/5 rounded border border-white/10">
+      <div
+        className={
+          isMonochrome
+            ? "border-t-2 border-black pt-4"
+            : "p-4 bg-white/5 rounded border border-white/10"
+        }
+      >
         <div className="mb-4">
           <p className="text-sm opacity-80 mb-2">Current Status</p>
           <p className={`text-lg font-semibold ${getStatusTextColor()}`}>
@@ -130,9 +142,10 @@ export function RsvpForm({ partyId }: RsvpFormProps) {
                   onClick={() => handleStatusChange(option.value)}
                   disabled={isDisabled || isActive}
                   className={`
-                    flex-1 bg-black text-white py-3 px-4 rounded hover:bg-gray-800
+                    flex-1 bg-black text-white py-3 px-4 hover:bg-gray-800
                     disabled:bg-gray-400 disabled:cursor-not-allowed
-                    flex items-center justify-center gap-2 transition-all
+                    flex items-center justify-center gap-2 transition-colors
+                    ${isMonochrome ? "rounded-none border-2 border-black uppercase tracking-tight disabled:border-gray-400" : "rounded"}
                     ${isDisabled ? "opacity-50 cursor-not-allowed" : ""}
                   `}
                 >

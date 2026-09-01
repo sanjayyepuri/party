@@ -3,6 +3,7 @@ import type { Party } from "@/lib/types";
 import { ReceiptCanvas } from "@/lib/webgl/receipt-canvas";
 import { CloudCanvas } from "@/lib/webgl/cloud-canvas";
 import { LocalDateTime } from "@/app/components/local-date-time";
+import { SimplePartyPreview } from "./simple-party-preview";
 
 interface NextPartyHighlightProps {
   party: Party;
@@ -12,6 +13,7 @@ export function NextPartyHighlight({ party }: NextPartyHighlightProps) {
   const hasReceiptPreview =
     party.slug === "housewarming-2024" || party.slug === "launch-party-2026";
   const hasCloudPreview = party.slug === "whats-the-move-2026";
+  const hasSimplePreview = party.slug === "keep-it-simple-stupid-2026";
 
   return (
     <div className="mb-4 md:mb-8">
@@ -39,14 +41,20 @@ export function NextPartyHighlight({ party }: NextPartyHighlightProps) {
                   <CloudCanvas className="h-full w-full" compact />
                 </div>
               )}
+              {hasSimplePreview && <SimplePartyPreview party={party} />}
 
               {/* Content */}
-              <div className="relative z-10 flex h-full flex-col justify-between">
+              <div
+                className={`relative z-10 flex h-full flex-col justify-between ${
+                  hasSimplePreview ? "invisible" : ""
+                }`}
+                aria-hidden={hasSimplePreview}
+              >
                 <div>
                   <h3
                     className={`text-xl font-semibold mb-4 transition-colors text-left leading-tight line-clamp-3 break-words ${
-                      hasCloudPreview
-                        ? "text-black/90 hover:text-black"
+                      hasSimplePreview
+                        ? "w-1/2 pr-2 text-white"
                         : "text-black/90 hover:text-black"
                     }`}
                   >
@@ -54,7 +62,9 @@ export function NextPartyHighlight({ party }: NextPartyHighlightProps) {
                   </h3>
                   <p
                     className={`text-sm text-left leading-relaxed ${
-                      hasCloudPreview ? "text-black/70" : "text-black/70"
+                      hasSimplePreview
+                        ? "w-1/2 pr-2 text-white"
+                        : "text-black/70"
                     }`}
                   >
                     <LocalDateTime dateTime={party.time} mode="date" />
@@ -62,7 +72,7 @@ export function NextPartyHighlight({ party }: NextPartyHighlightProps) {
                 </div>
                 <span
                   className={`inline-flex self-start items-center gap-1 text-[10px] uppercase tracking-[0.14em] ${
-                    hasCloudPreview ? "text-black/55" : "text-black/55"
+                    hasSimplePreview ? "text-white/75" : "text-black/55"
                   }`}
                 >
                   open invitation <span aria-hidden="true">↗</span>

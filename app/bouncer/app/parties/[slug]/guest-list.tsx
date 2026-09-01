@@ -3,9 +3,14 @@ import type { RsvpWithUser } from "@/lib/types";
 interface GuestListProps {
   rsvps: RsvpWithUser[];
   currentUserId: string;
+  variant?: "default" | "monochrome";
 }
 
-export function GuestList({ rsvps, currentUserId }: GuestListProps) {
+export function GuestList({
+  rsvps,
+  currentUserId,
+  variant = "default",
+}: GuestListProps) {
   const visibleGuests = rsvps.filter(
     (rsvp) =>
       (rsvp.status === "accepted" || rsvp.status === "pending") &&
@@ -16,7 +21,13 @@ export function GuestList({ rsvps, currentUserId }: GuestListProps) {
 
   if (visibleGuests.length === 0) {
     return (
-      <div className="p-4 bg-white/5 rounded border border-white/10">
+      <div
+        className={
+          variant === "monochrome"
+            ? "border-t-2 border-black pt-4"
+            : "p-4 bg-white/5 rounded border border-white/10"
+        }
+      >
         <h3 className="text-xl mb-4">Guests</h3>
         <p className="text-sm opacity-80">No guests have responded yet.</p>
       </div>
@@ -24,14 +35,26 @@ export function GuestList({ rsvps, currentUserId }: GuestListProps) {
   }
 
   return (
-    <div className="p-4 bg-white/5 rounded border border-white/10">
+    <div
+      className={
+        variant === "monochrome"
+          ? "border-t-2 border-black pt-4"
+          : "p-4 bg-white/5 rounded border border-white/10"
+      }
+    >
       <h3 className="text-xl mb-4">Guests</h3>
       <ul className="space-y-2">
         {visibleGuests.map((rsvp) => (
           <li key={rsvp.rsvp_id} className="flex items-center gap-2 text-base">
             <span>{rsvp.user_name}</span>
             {rsvp.status === "pending" ? (
-              <span className="rounded border border-yellow-600/30 px-2 py-0.5 text-xs font-medium text-yellow-700">
+              <span
+                className={
+                  variant === "monochrome"
+                    ? "border border-black px-2 py-0.5 text-xs font-medium uppercase"
+                    : "rounded border border-yellow-600/30 px-2 py-0.5 text-xs font-medium text-yellow-700"
+                }
+              >
                 Maybe
               </span>
             ) : null}
