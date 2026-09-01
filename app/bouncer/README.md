@@ -88,6 +88,8 @@ All deployments consume the same backend API but render with completely differen
 - `BETTER_AUTH_TRUSTED_ORIGINS`: Comma-separated list of trusted origins for CSRF protection (optional, defaults to baseURL only)
 - `RESEND_API_KEY`: Resend API key for sending email OTP verification codes (optional for development, required for production)
 - `RESEND_FROM_EMAIL`: Email address to send from (required when RESEND_API_KEY is set). Must be in the format `email@example.com` or `Name <email@example.com>`. The email domain must be verified in your Resend account.
+- `PARTY_SITE_BASE_URL`: Public site URL used in party notification links sent by the guestbook CLI.
+- `PARTY_TIMEZONE`: IANA timezone used to display event times in party notification emails (optional, defaults to `America/New_York`).
 
 ## Authentication
 
