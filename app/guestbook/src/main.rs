@@ -1,5 +1,6 @@
 use anyhow::{Context, Result};
 use chrono::{DateTime, Utc};
+use chrono_tz::Tz;
 use clap::{Parser, Subcommand};
 use openssl::ssl::{SslConnector, SslMethod};
 use postgres_openssl::MakeTlsConnector;
@@ -726,17 +727,27 @@ struct NotificationConfig {
     resend_api_key: Option<String>,
     from_email: Option<String>,
     site_base_url: String,
+    timezone: Tz,
 }
 
 fn load_notification_config(dry_run: bool) -> Result<NotificationConfig> {
     let site_base_url = std::env::var("PARTY_SITE_BASE_URL")
         .context("PARTY_SITE_BASE_URL environment variable is required for notifications")?;
+    let timezone_name =
+        std::env::var("PARTY_TIMEZONE").unwrap_or_else(|_| "America/New_York".to_string());
+    let timezone = timezone_name.parse::<Tz>().with_context(|| {
+        format!(
+            "PARTY_TIMEZONE must be a valid IANA timezone name, such as America/New_York (received '{}')",
+            timezone_name
+        )
+    })?;
 
     if dry_run {
         return Ok(NotificationConfig {
             resend_api_key: None,
             from_email: None,
             site_base_url,
+            timezone,
         });
     }
 
@@ -750,6 +761,7 @@ fn load_notification_config(dry_run: bool) -> Result<NotificationConfig> {
                 .context("RESEND_FROM_EMAIL environment variable is required for notifications")?,
         ),
         site_base_url,
+        timezone,
     })
 }
 
@@ -765,10 +777,14 @@ fn escape_html(value: &str) -> String {
 fn build_party_notification_email(
     party: &PartyNotification,
     site_base_url: &str,
+    timezone: Tz,
 ) -> PartyNotificationEmail {
     let base_url = site_base_url.trim_end_matches('/');
     let rsvp_url = format!("{}/parties/{}", base_url, party.slug);
-    let formatted_time = party.time.format("%A, %B %-d, %Y at %-I:%M %p UTC");
+    let formatted_time = party
+        .time
+        .with_timezone(&timezone)
+        .format("%A, %B %-d, %Y at %-I:%M %p %Z");
     let subject = format!("Sanjay invited you to {}", party.name);
 
     let html = format!(
@@ -947,7 +963,7 @@ async fn notify_party(
         anyhow::bail!("No recipient email addresses found");
     }
 
-    let email = build_party_notification_email(&party, &config.site_base_url);
+    let email = build_party_notification_email(&party, &config.site_base_url, config.timezone);
 
     if dry_run {
         println!(
@@ -1063,7 +1079,7 @@ mod tests {
     #[test]
     fn builds_party_notification_email_with_escaped_html_and_plain_text() {
         let party = test_party();
-        let email = build_party_notification_email(&party, "https://sanjay.party");
+        let email = build_party_notification_email(&party, "https://sanjay.party", Tz::UTC);
 
         assert_eq!(email.subject, "Sanjay invited you to Sanjay's <Party>");
         assert_eq!(email.rsvp_url, "https://sanjay.party/parties/new-party");
@@ -1085,9 +1101,24 @@ mod tests {
     #[test]
     fn trims_base_url_before_building_rsvp_link() {
         let party = test_party();
-        let email = build_party_notification_email(&party, "https://sanjay.party/");
+        let email = build_party_notification_email(&party, "https://sanjay.party/", Tz::UTC);
 
         assert_eq!(email.rsvp_url, "https://sanjay.party/parties/new-party");
+    }
+
+    #[test]
+    fn formats_party_notification_time_in_configured_timezone() {
+        let party = test_party();
+        let email = build_party_notification_email(
+            &party,
+            "https://sanjay.party",
+            "America/New_York".parse().unwrap(),
+        );
+
+        assert!(email
+            .text
+            .contains("When: Saturday, May 30, 2026 at 8:00 PM EDT"));
+        assert!(!email.text.contains("Sunday, May 31, 2026 at 12:00 AM UTC"));
     }
 
     #[test]
@@ -1185,6 +1216,7 @@ mod tests {
     fn dry_run_config_does_not_require_resend_credentials() {
         let _env_lock = ENV_LOCK.lock().unwrap();
         std::env::set_var("PARTY_SITE_BASE_URL", "https://sanjay.party");
+        std::env::remove_var("PARTY_TIMEZONE");
         std::env::remove_var("RESEND_API_KEY");
         std::env::remove_var("RESEND_FROM_EMAIL");
 
@@ -1196,6 +1228,7 @@ mod tests {
                 resend_api_key: None,
                 from_email: None,
                 site_base_url: "https://sanjay.party".to_string(),
+                timezone: "America/New_York".parse().unwrap(),
             }
         );
 
@@ -1203,9 +1236,24 @@ mod tests {
     }
 
     #[test]
+    fn notification_config_rejects_invalid_timezone() {
+        let _env_lock = ENV_LOCK.lock().unwrap();
+        std::env::set_var("PARTY_SITE_BASE_URL", "https://sanjay.party");
+        std::env::set_var("PARTY_TIMEZONE", "New York");
+
+        let error = load_notification_config(true).unwrap_err();
+
+        assert!(error.to_string().contains("valid IANA timezone"));
+
+        std::env::remove_var("PARTY_SITE_BASE_URL");
+        std::env::remove_var("PARTY_TIMEZONE");
+    }
+
+    #[test]
     fn send_config_requires_resend_credentials() {
         let _env_lock = ENV_LOCK.lock().unwrap();
         std::env::set_var("PARTY_SITE_BASE_URL", "https://sanjay.party");
+        std::env::remove_var("PARTY_TIMEZONE");
         std::env::remove_var("RESEND_API_KEY");
         std::env::remove_var("RESEND_FROM_EMAIL");
 
