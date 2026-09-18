@@ -12,8 +12,7 @@ import type {
   UpdateRsvpRequest,
 } from "./types";
 import { getBaseURL } from "./auth-config";
-
-const API_PATH = "/api/bouncer";
+import { API_PATH } from "./api-paths";
 
 /**
  * Get the API base URL for server-side requests

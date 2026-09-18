@@ -3,7 +3,7 @@
 import Link from "next/link";
 import type { Party, RsvpWithUser } from "@/lib/types";
 import { AddressLink } from "@/app/components/address-link";
-import { LocalDateTime } from "@/app/components/local-date-time";
+import { InvitationDateTime } from "@/app/components/invitation-date-time";
 import { GuestList } from "../[slug]/guest-list";
 import { RsvpForm } from "../[slug]/rsvp-form";
 
@@ -41,8 +41,7 @@ export function SimpleInvitation({
           But how could you live
           <br />
           and have no story to tell?
-          <br />
-          - Dostoevsky
+          <br />- Dostoevsky
         </p>
       </div>
 
@@ -77,9 +76,11 @@ export function SimpleInvitation({
           When
         </h2>
         <p className="col-span-3 p-3 text-lg font-bold uppercase leading-tight sm:text-2xl">
-          <LocalDateTime dateTime={party.time} mode="date" />
-          <br />
-          <LocalDateTime dateTime={party.time} mode="time" />
+          <InvitationDateTime
+            partyId={party.party_id}
+            dateTime={party.time}
+            separator={<br />}
+          />
         </p>
       </section>
 

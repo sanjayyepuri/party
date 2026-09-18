@@ -1,11 +1,11 @@
 use axum::{
     Extension, Json,
-    extract::{Query, State},
+    extract::{Path, Query, State},
     http::{HeaderMap, StatusCode, header},
     response::IntoResponse,
 };
 use chrono::{Duration, Utc};
-use icalendar::{Calendar, Component, Event, EventLike};
+use icalendar::{Calendar, Component, Event, EventLike, Property};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tokio_postgres::Row;
@@ -34,6 +34,11 @@ struct CalendarFeedEvent {
     slug: String,
     updated_at: chrono::DateTime<chrono::Utc>,
     rsvp_status: String,
+}
+
+struct PartyCalendarDownload {
+    filename: String,
+    payload: String,
 }
 
 impl CalendarFeedEvent {
@@ -141,12 +146,86 @@ pub async fn get_calendar_feed(
     match get_calendar_feed_impl(api_state, headers, query).await {
         Ok(calendar_payload) => (
             StatusCode::OK,
-            [(header::CONTENT_TYPE, "text/calendar; charset=utf-8")],
+            [
+                (header::CONTENT_TYPE, "text/calendar; charset=utf-8"),
+                (header::CACHE_CONTROL, "private, no-cache"),
+            ],
             calendar_payload,
         )
             .into_response(),
         Err(response) => response,
     }
+}
+
+/// Downloads one invitation as an iCalendar file for the signed-in user.
+pub async fn download_party_calendar(
+    State(api_state): State<Arc<ApiState>>,
+    Extension(session): Extension<BetterAuthSession>,
+    headers: HeaderMap,
+    Path(party_id): Path<String>,
+) -> impl IntoResponse {
+    match download_party_calendar_impl(api_state, session.user_id, headers, party_id).await {
+        Ok(download) => (
+            StatusCode::OK,
+            [
+                (
+                    header::CONTENT_TYPE,
+                    "text/calendar; charset=utf-8".to_string(),
+                ),
+                (
+                    header::CONTENT_DISPOSITION,
+                    format!("attachment; filename=\"{}\"", download.filename),
+                ),
+                (header::CACHE_CONTROL, "private, no-store".to_string()),
+            ],
+            download.payload,
+        )
+            .into_response(),
+        Err(response) => response,
+    }
+}
+
+async fn download_party_calendar_impl(
+    api_state: Arc<ApiState>,
+    user_id: String,
+    headers: HeaderMap,
+    party_id: String,
+) -> Result<PartyCalendarDownload, axum::response::Response> {
+    let client = api_state.db_state.get_connection().await?;
+    let row = client
+        .query_opt(
+            "SELECT
+                p.party_id,
+                p.name,
+                p.time,
+                p.location,
+                p.description,
+                p.slug,
+                p.updated_at,
+                COALESCE(r.status, 'invited') AS rsvp_status
+            FROM party p
+            LEFT JOIN rsvp r
+                ON p.party_id = r.party_id
+                AND r.user_id = $1
+                AND r.deleted_at IS NULL
+            WHERE p.party_id = $2
+                AND p.deleted_at IS NULL;",
+            &[&user_id, &party_id],
+        )
+        .await
+        .map_err(internal_error)?;
+
+    let Some(row) = row else {
+        return Err((StatusCode::NOT_FOUND, Json("Party not found")).into_response());
+    };
+    let event = CalendarFeedEvent::from_row(&row).map_err(internal_error)?;
+    let origin = extract_request_origin(&headers);
+    let filename = format!("{}.ics", sanitize_filename(&event.slug));
+
+    Ok(PartyCalendarDownload {
+        payload: build_party_calendar_payload(&event, &origin),
+        filename,
+    })
 }
 
 async fn get_calendar_feed_impl(
@@ -253,9 +332,37 @@ fn first_header_value(headers: &HeaderMap, name: &str) -> Option<String> {
         .map(str::to_string)
 }
 
+enum CalendarDocumentKind {
+    Feed,
+    EventImport,
+}
+
 fn build_calendar_payload(events: &[CalendarFeedEvent], origin: &str) -> String {
+    build_calendar(events, origin, CalendarDocumentKind::Feed)
+}
+
+fn build_party_calendar_payload(event: &CalendarFeedEvent, origin: &str) -> String {
+    build_calendar(
+        std::slice::from_ref(event),
+        origin,
+        CalendarDocumentKind::EventImport,
+    )
+}
+
+fn build_calendar(
+    events: &[CalendarFeedEvent],
+    origin: &str,
+    document_kind: CalendarDocumentKind,
+) -> String {
     let mut calendar = Calendar::new();
-    calendar.name("Party Invitations");
+    match document_kind {
+        CalendarDocumentKind::Feed => {
+            calendar.name("Party Invitations");
+        }
+        CalendarDocumentKind::EventImport => {
+            calendar.append_property(Property::new("METHOD", "PUBLISH"));
+        }
+    }
 
     let safe_origin = origin.trim_end_matches('/');
     let uid_domain = url::Url::parse(origin)
@@ -291,6 +398,21 @@ fn build_calendar_payload(events: &[CalendarFeedEvent], origin: &str) -> String 
     }
 
     calendar.to_string()
+}
+
+fn sanitize_filename(slug: &str) -> String {
+    let sanitized: String = slug
+        .chars()
+        .filter(|character| {
+            character.is_ascii_alphanumeric() || *character == '-' || *character == '_'
+        })
+        .collect();
+
+    if sanitized.is_empty() {
+        "party-invitation".to_string()
+    } else {
+        sanitized
+    }
 }
 
 fn normalize_rsvp_status(status: &str) -> &'static str {
@@ -349,5 +471,38 @@ mod tests {
         assert!(payload.contains("BEGIN:VEVENT"));
         assert!(payload.contains("URL:https://www.sanjay.party/parties/launch-party-2026"));
         assert!(payload.contains("RSVP status: accepted"));
+    }
+
+    #[test]
+    fn build_party_calendar_payload_is_import_oriented() {
+        let event = CalendarFeedEvent {
+            party_id: "party-1".to_string(),
+            name: "Launch Party".to_string(),
+            time: chrono::DateTime::parse_from_rfc3339("2026-02-28T17:00:00Z")
+                .unwrap()
+                .with_timezone(&Utc),
+            location: "321 Oak Street".to_string(),
+            description: "Big reveal night".to_string(),
+            slug: "launch-party-2026".to_string(),
+            updated_at: chrono::DateTime::parse_from_rfc3339("2026-02-20T10:00:00Z")
+                .unwrap()
+                .with_timezone(&Utc),
+            rsvp_status: "accepted".to_string(),
+        };
+
+        let payload = build_party_calendar_payload(&event, "https://www.sanjay.party");
+
+        assert!(payload.contains("METHOD:PUBLISH"));
+        assert!(!payload.contains("X-WR-CALNAME"));
+        assert!(payload.contains("BEGIN:VEVENT"));
+    }
+
+    #[test]
+    fn sanitize_filename_rejects_header_characters() {
+        assert_eq!(
+            sanitize_filename("launch-party\r\nmalicious"),
+            "launch-partymalicious"
+        );
+        assert_eq!(sanitize_filename("!!!"), "party-invitation");
     }
 }

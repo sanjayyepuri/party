@@ -8,8 +8,7 @@ import type {
   Rsvp,
   UpdateRsvpRequest,
 } from "./types";
-
-const API_PATH = "/api/bouncer";
+import { API_PATH } from "./api-paths";
 
 /**
  * Get the API base URL for client-side requests

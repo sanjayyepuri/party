@@ -48,6 +48,9 @@ describe("SimpleInvitation", () => {
       screen.getByRole("heading", { name: party.name })
     ).toBeInTheDocument();
     expect(screen.getByText("Somewhere simple")).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /add to calendar/i })
+    ).toHaveAttribute("href", "/api/bouncer/parties/party-123/calendar.ics");
     const description = screen.getByText(
       (_, element) =>
         element?.tagName === "P" &&

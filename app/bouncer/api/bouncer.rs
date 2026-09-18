@@ -1,23 +1,29 @@
 use axum::middleware;
 use axum::{
-    routing::{get, post, put},
     Router,
+    routing::{get, post, put},
 };
 use std::sync::Arc;
 use tower::ServiceBuilder;
 use tower_http::trace::TraceLayer;
-use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-use vercel_runtime::axum::VercelLayer;
+use tracing_subscriber::{EnvFilter, layer::SubscriberExt, util::SubscriberInitExt};
 use vercel_runtime::Error;
+use vercel_runtime::axum::VercelLayer;
 
-use pregame::api::{auth, calendar, error, party, rsvp, ApiState};
+use pregame::api::{ApiState, auth, calendar, error, party, rsvp};
 use pregame::db::DbState;
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
     dotenvy::dotenv().ok();
 
+    let log_filter = EnvFilter::try_from_default_env()
+        .unwrap_or_else(|_| EnvFilter::new("info,tower_http=debug"))
+        // Database TRACE logs include bound parameters such as session tokens.
+        .add_directive("tokio_postgres=warn".parse()?);
+
     tracing_subscriber::registry()
+        .with(log_filter)
         .with(tracing_subscriber::fmt::layer())
         .init();
 
@@ -50,6 +56,10 @@ async fn main() -> Result<(), Error> {
     let protected_api_routes = Router::new()
         .route("/parties", get(party::list_parties))
         .route("/parties/{party_id}", get(party::get_party))
+        .route(
+            "/parties/{party_id}/calendar.ics",
+            get(calendar::download_party_calendar),
+        )
         .route("/parties/{party_id}/rsvps", get(rsvp::get_party_rsvps))
         .route(
             "/parties/{party_id}/rsvp",
@@ -76,7 +86,16 @@ async fn main() -> Result<(), Error> {
     let app = Router::new()
         .nest("/api/bouncer", api_routes)
         .fallback(error::fallback)
-        .layer(TraceLayer::new_for_http())
+        .layer(
+            TraceLayer::new_for_http().make_span_with(|request: &axum::http::Request<_>| {
+                tracing::debug_span!(
+                    "request",
+                    method = %request.method(),
+                    path = %request.uri().path(),
+                    version = ?request.version(),
+                )
+            }),
+        )
         .with_state(api_state);
 
     let app = ServiceBuilder::new().layer(VercelLayer::new()).service(app);

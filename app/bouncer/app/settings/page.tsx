@@ -69,7 +69,7 @@ export default async function SettingsPage() {
             <CalendarFeedControls
               initialFeedPath={calendarFeedPath}
               title="Calendar Feed"
-              description="Subscribe once and your calendar will stay in sync with upcoming events."
+              description="Open this feed in your calendar app, or download all upcoming invitations."
             />
           )}
           {calendarFeedError && (

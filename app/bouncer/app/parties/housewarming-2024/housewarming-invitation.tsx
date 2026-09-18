@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { Party, RsvpWithUser } from "@/lib/types";
-import { LocalDateTime } from "@/app/components/local-date-time";
+import { InvitationDateTime } from "@/app/components/invitation-date-time";
 import { AddressLink } from "@/app/components/address-link";
 import { RsvpForm } from "../[slug]/rsvp-form";
 import { GuestList } from "../[slug]/guest-list";
@@ -49,8 +49,10 @@ export function HousewarmingInvitation({
             <div className="space-y-2 md:space-y-3 text-base md:text-lg text-black/90">
               <p>
                 <strong className="text-black">When:</strong>{" "}
-                <LocalDateTime dateTime={party.time} mode="date" /> at{" "}
-                <LocalDateTime dateTime={party.time} mode="time" />
+                <InvitationDateTime
+                  partyId={party.party_id}
+                  dateTime={party.time}
+                />
               </p>
               <p>
                 <strong className="text-black">Where:</strong>{" "}
