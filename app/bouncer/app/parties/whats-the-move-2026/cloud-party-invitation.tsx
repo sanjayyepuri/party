@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { Party, RsvpWithUser } from "@/lib/types";
-import { LocalDateTime } from "@/app/components/local-date-time";
+import { InvitationDateTime } from "@/app/components/invitation-date-time";
 import { AddressLink } from "@/app/components/address-link";
 import { CloudCanvas } from "@/lib/webgl/cloud-canvas";
 import { RsvpForm } from "../[slug]/rsvp-form";
@@ -77,9 +77,11 @@ export function CloudPartyInvitation({
           >
             <div className="uppercase text-slate-700/80">time</div>
             <div>
-              <LocalDateTime dateTime={party.time} mode="date" />{" "}
-              <span className="text-slate-700/80">/</span>{" "}
-              <LocalDateTime dateTime={party.time} mode="time" />
+              <InvitationDateTime
+                partyId={party.party_id}
+                dateTime={party.time}
+                separator={<span className="text-slate-700/80">{" / "}</span>}
+              />
             </div>
           </section>
 

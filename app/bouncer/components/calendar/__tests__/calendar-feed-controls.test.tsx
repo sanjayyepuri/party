@@ -23,9 +23,25 @@ describe("CalendarFeedControls", () => {
     );
     const user = userEvent.setup();
 
+    await user.click(
+      screen.getByText("Advanced feed options", { selector: "summary" })
+    );
     await user.click(screen.getByRole("button", { name: /copy url/i }));
 
     expect(screen.getByText("Calendar feed URL copied.")).toBeInTheDocument();
+  });
+
+  it("opens the feed directly in the user's calendar app", () => {
+    render(
+      <CalendarFeedControls initialFeedPath="/api/bouncer/calendar/feed.ics?token=abc123" />
+    );
+
+    expect(
+      screen.getByRole("link", { name: /subscribe in calendar app/i })
+    ).toHaveAttribute(
+      "href",
+      "webcal://localhost:3000/api/bouncer/calendar/feed.ics?token=abc123"
+    );
   });
 
   it("rotates the token and updates the displayed URL", async () => {
@@ -41,7 +57,9 @@ describe("CalendarFeedControls", () => {
     );
     const user = userEvent.setup();
 
-    await user.click(screen.getByRole("button", { name: /rotate token/i }));
+    await user.click(
+      screen.getByRole("button", { name: /reset calendar link/i })
+    );
 
     await waitFor(() => {
       expect(rotateCalendarFeedTokenClient).toHaveBeenCalledTimes(1);
@@ -53,7 +71,7 @@ describe("CalendarFeedControls", () => {
       )
     ).toBeInTheDocument();
     expect(
-      screen.getByText("Calendar feed token rotated. Old URL is now invalid.")
+      screen.getByText("Calendar link reset. The old link no longer works.")
     ).toBeInTheDocument();
   });
 
@@ -68,7 +86,9 @@ describe("CalendarFeedControls", () => {
     );
     const user = userEvent.setup();
 
-    await user.click(screen.getByRole("button", { name: /rotate token/i }));
+    await user.click(
+      screen.getByRole("button", { name: /reset calendar link/i })
+    );
 
     expect(await screen.findByText("Rotate failed")).toBeInTheDocument();
   });

@@ -30,7 +30,6 @@ jest.mock("@/lib/auth", () => ({
 }));
 
 jest.mock("@/lib/api-client", () => ({
-  fetchCalendarFeedToken: jest.fn(),
   fetchPartyBySlug: jest.fn(),
   fetchPartyRsvps: jest.fn(),
 }));
@@ -86,14 +85,10 @@ describe("PartyPage", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     const { auth } = require("@/lib/auth");
-    const { fetchCalendarFeedToken } = require("@/lib/api-client");
     const { headers } = require("next/headers");
 
     headers.mockResolvedValue(new Headers());
     auth.api.getSession.mockResolvedValue(mockSession);
-    fetchCalendarFeedToken.mockResolvedValue({
-      feed_path: "/api/bouncer/calendar/feed.ics?token=test-token",
-    });
   });
 
   it("redirects to home page when user is not authenticated", async () => {
@@ -276,7 +271,7 @@ describe("PartyPage", () => {
     expect(guestList.textContent).toContain("user-123");
   });
 
-  it("renders calendar feed controls when feed token is available", async () => {
+  it("links the displayed date to the party calendar download", async () => {
     const { fetchPartyBySlug, fetchPartyRsvps } = require("@/lib/api-client");
     fetchPartyBySlug.mockResolvedValue(mockParty);
     fetchPartyRsvps.mockResolvedValue([]);
@@ -286,9 +281,8 @@ describe("PartyPage", () => {
     });
     render(component);
 
-    expect(screen.getByText("Track in Calendar")).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /copy url/i })
-    ).toBeInTheDocument();
+      screen.getByRole("link", { name: /add to calendar/i })
+    ).toHaveAttribute("href", "/api/bouncer/parties/party-123/calendar.ics");
   });
 });

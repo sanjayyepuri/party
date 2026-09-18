@@ -1,11 +1,7 @@
 import { redirect, notFound } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-import {
-  fetchCalendarFeedToken,
-  fetchPartyBySlug,
-  fetchPartyRsvps,
-} from "@/lib/api-client";
+import { fetchPartyBySlug, fetchPartyRsvps } from "@/lib/api-client";
 import { PartyDetailWrapper } from "./party-detail-wrapper";
 import Link from "next/link";
 
@@ -72,25 +68,12 @@ export default async function PartyPage({ params }: PartyPageProps) {
       error instanceof Error ? error.message : "Failed to load party RSVPs";
   }
 
-  // Fetch calendar feed token path for quick copy/rotate on this page.
-  let calendarFeedPath: string | null = null;
-  let calendarFeedError: string | null = null;
-  try {
-    const response = await fetchCalendarFeedToken();
-    calendarFeedPath = response.feed_path;
-  } catch (error) {
-    calendarFeedError =
-      error instanceof Error ? error.message : "Failed to load calendar feed";
-  }
-
   return (
     <PartyDetailWrapper
       party={party}
       partyRsvps={partyRsvps}
       partyRsvpsError={partyRsvpsError}
       currentUserId={session.user.id}
-      calendarFeedPath={calendarFeedPath}
-      calendarFeedError={calendarFeedError}
     />
   );
 }

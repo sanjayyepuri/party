@@ -18,6 +18,7 @@ Users need a reliable way to track party events in their personal calendar app (
 - Feed access must be user-scoped and secured with a secret token.
 - Users must be able to rotate the secret token and invalidate the old link immediately.
 - Feed should include all upcoming visible parties in current schema.
+- Provide an authenticated, per-party `.ics` download for one-click imports.
 - Events should include title, time, location, description, RSVP state, and deep link back to invitation page.
 - Event duration defaults to 3 hours because schema currently stores start time only.
 
@@ -34,6 +35,8 @@ The calendar feature extends the existing Axum API under `/api/bouncer` with:
 - Authenticated token management endpoints:
   - `GET /calendar/feed-token`
   - `POST /calendar/feed-token/rotate`
+- Authenticated invitation download endpoint:
+  - `GET /parties/{party_id}/calendar.ics`
 - Public feed endpoint:
   - `GET /calendar/feed.ics?token=<secret>`
 
@@ -43,6 +46,8 @@ High-level flow:
 2. Frontend stores only returned path and composes absolute URL from browser origin.
 3. Calendar app polls `.ics` endpoint with token.
 4. Backend validates token, fetches upcoming parties plus user RSVP status, emits ICS document.
+5. On an invitation, the browser can download a single-event `.ics` document
+   using the user's existing session.
 
 ## API Contracts
 
@@ -81,6 +86,28 @@ Behavior:
 
 - Replaces existing token for current user atomically.
 - Old token becomes invalid immediately.
+
+### Authenticated: Download Invitation
+
+- Method: `GET`
+- Path: `/api/bouncer/parties/{party_id}/calendar.ics`
+- Auth: Better Auth session required
+- Success:
+  - `200 OK`
+  - `Content-Type: text/calendar; charset=utf-8`
+  - `Content-Disposition: attachment`
+  - `Cache-Control: private, no-store`
+  - Body: RFC5545 calendar document containing one event
+- Failure:
+  - `401 Unauthorized` when the session is missing or expired
+  - `404 Not Found` when the party does not exist
+  - `500 Internal Server Error` for internal failures
+
+Behavior:
+
+- Uses `METHOD:PUBLISH` so calendar clients import one event rather than offer
+  to create a subscribed calendar.
+- Uses the same event UID as the subscription feed to support deduplication.
 
 ### Public: Calendar Feed
 
@@ -124,7 +151,23 @@ Event query model:
 - Token is high-entropy and unguessable.
 - Token lifecycle is user-managed via rotate endpoint.
 - Invalid token responses are normalized to `404` to reduce probing signal.
-- No session auth on `.ics` endpoint to preserve compatibility with calendar clients.
+- No session auth on the subscription feed endpoint to preserve compatibility
+  with polling calendar clients.
+- Per-invitation downloads require a valid user session and are marked
+  `private, no-store` because RSVP state varies by user.
+- Any authenticated user may download any non-deleted party, matching the
+  existing party-detail and invitation-feed visibility model.
+- Download filenames are derived from the party slug and restricted to safe
+  ASCII filename characters before being placed in `Content-Disposition`.
+
+## Client Compatibility
+
+- `webcal://` opens the subscription directly in compatible desktop and Apple
+  calendar applications.
+- Google Calendar web and clients without a registered `webcal` handler can
+  use the advanced feed URL flow.
+- The per-invitation endpoint uses a normal HTTPS download because `.ics`
+  imports are broadly supported across desktop, iOS, and Android.
 
 ## Library Choices
 
@@ -145,8 +188,11 @@ Custom code remains limited to:
 
 1. Ship migration for `calendar_feed_token`.
 2. Deploy token management endpoints and public `.ics` endpoint.
-3. Add calendar controls to Settings and Party Detail pages.
-4. Verify subscription and rotation behavior in Apple Calendar / Google Calendar.
+3. Add one-click subscription and feed download controls to Settings, plus a
+   per-invitation download on Party Detail pages. Keep URL copying as an
+   advanced fallback rather than the primary workflow.
+4. Verify subscription and rotation behavior in Apple Calendar / Google
+   Calendar, and invitation imports on iOS and Android.
 5. Monitor logs for token lookup misses and feed generation errors.
 
 ## Success Metrics

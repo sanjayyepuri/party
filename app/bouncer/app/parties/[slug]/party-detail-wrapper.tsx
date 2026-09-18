@@ -1,18 +1,15 @@
 import Link from "next/link";
 import type { Party, RsvpWithUser } from "@/lib/types";
-import { LocalDateTime } from "@/app/components/local-date-time";
+import { InvitationDateTime } from "@/app/components/invitation-date-time";
 import { AddressLink } from "@/app/components/address-link";
 import { RsvpForm } from "./rsvp-form";
 import { GuestList } from "./guest-list";
-import { CalendarFeedControls } from "@/components/calendar/calendar-feed-controls";
 
 interface PartyDetailWrapperProps {
   party: Party;
   partyRsvps: RsvpWithUser[] | null;
   partyRsvpsError: string | null;
   currentUserId: string;
-  calendarFeedPath: string | null;
-  calendarFeedError: string | null;
 }
 
 export function PartyDetailWrapper({
@@ -20,8 +17,6 @@ export function PartyDetailWrapper({
   partyRsvps,
   partyRsvpsError,
   currentUserId,
-  calendarFeedPath,
-  calendarFeedError,
 }: PartyDetailWrapperProps) {
   return (
     <div className="relative bg-white/90 backdrop-blur-sm rounded-lg p-8 border-2 border-black/10 shadow-[0_4px_6px_rgba(0,0,0,0.1),0_8px_16px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.9)] overflow-hidden">
@@ -44,8 +39,10 @@ export function PartyDetailWrapper({
           <div className="space-y-2 text-lg text-black/70">
             <p>
               <strong>When:</strong>{" "}
-              <LocalDateTime dateTime={party.time} mode="date" /> at{" "}
-              <LocalDateTime dateTime={party.time} mode="time" />
+              <InvitationDateTime
+                partyId={party.party_id}
+                dateTime={party.time}
+              />
             </p>
             <p>
               <strong>Where:</strong> <AddressLink location={party.location} />
@@ -64,22 +61,6 @@ export function PartyDetailWrapper({
         <div className="mb-8">
           <h2 className="text-2xl mb-4 text-black/90">RSVP</h2>
           <RsvpForm partyId={party.party_id} />
-        </div>
-
-        <div className="mb-8">
-          {calendarFeedPath && (
-            <CalendarFeedControls
-              initialFeedPath={calendarFeedPath}
-              title="Track in Calendar"
-              description="Use this feed URL to keep your calendar app synced with event updates."
-            />
-          )}
-          {calendarFeedError && (
-            <div className="p-4 bg-red-50 border border-red-200 rounded text-red-800">
-              <p className="font-medium">Error loading calendar feed</p>
-              <p className="text-sm">{calendarFeedError}</p>
-            </div>
-          )}
         </div>
 
         <div className="mb-8">

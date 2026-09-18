@@ -9,6 +9,10 @@ interface CalendarFeedControlsProps {
   description?: string;
 }
 
+function toWebcalUrl(url: string): string {
+  return url.replace(/^https?:/, "webcal:");
+}
+
 async function copyText(text: string): Promise<void> {
   if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
     await navigator.clipboard.writeText(text);
@@ -30,7 +34,7 @@ async function copyText(text: string): Promise<void> {
 export function CalendarFeedControls({
   initialFeedPath,
   title = "Calendar Feed",
-  description = "Subscribe to this URL in Apple Calendar, Google Calendar, or Outlook.",
+  description = "Keep your calendar in sync with upcoming invitations.",
 }: CalendarFeedControlsProps) {
   const [origin, setOrigin] = useState("");
   const [feedPath, setFeedPath] = useState(initialFeedPath);
@@ -51,6 +55,7 @@ export function CalendarFeedControls({
     }
     return `${origin}${feedPath}`;
   }, [origin, feedPath]);
+  const webcalUrl = origin ? toWebcalUrl(fullFeedUrl) : undefined;
 
   const handleCopy = async () => {
     setIsCopying(true);
@@ -75,7 +80,7 @@ export function CalendarFeedControls({
     try {
       const response = await rotateCalendarFeedTokenClient();
       setFeedPath(response.feed_path);
-      setCopyMessage("Calendar feed token rotated. Old URL is now invalid.");
+      setCopyMessage("Calendar link reset. The old link no longer works.");
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Failed to rotate feed token"
@@ -87,48 +92,79 @@ export function CalendarFeedControls({
 
   return (
     <div className="p-4 bg-white/50 rounded border border-black/10">
-      <h3 className="text-lg font-semibold text-black/90 mb-2">{title}</h3>
+      <h2 className="text-lg font-semibold text-black/90 mb-2">{title}</h2>
       <p className="text-sm text-black/70 mb-3">{description}</p>
 
       <div className="space-y-3">
-        <label
-          className="block text-sm text-black/70"
-          htmlFor="calendar-feed-url"
-        >
-          Feed URL
-        </label>
-        <input
-          id="calendar-feed-url"
-          type="text"
-          readOnly
-          value={fullFeedUrl}
-          className="w-full rounded border border-black/20 bg-white/80 px-3 py-2 text-sm text-black/80"
-        />
-
         <div className="flex flex-col sm:flex-row gap-3">
-          <button
-            type="button"
-            onClick={handleCopy}
-            disabled={isCopying || isRotating}
-            className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed text-sm"
+          {webcalUrl && (
+            <a
+              href={webcalUrl}
+              className="bg-black text-center text-white px-4 py-2 rounded hover:bg-gray-800 text-sm"
+            >
+              Subscribe in calendar app
+            </a>
+          )}
+          <a
+            href={fullFeedUrl}
+            download="party-invitations.ics"
+            className="bg-black/80 text-center text-white px-4 py-2 rounded hover:bg-black text-sm"
           >
-            {isCopying ? "Copying..." : "Copy URL"}
-          </button>
+            Download invitations
+          </a>
           <button
             type="button"
             onClick={handleRotate}
             disabled={isRotating || isCopying}
-            className="bg-black/80 text-white px-4 py-2 rounded hover:bg-black disabled:bg-gray-400 disabled:cursor-not-allowed text-sm"
+            className="border border-black/30 text-black/70 px-4 py-2 rounded hover:border-black/60 hover:text-black disabled:text-gray-400 disabled:cursor-not-allowed text-sm"
           >
-            {isRotating ? "Rotating..." : "Rotate Token"}
+            {isRotating ? "Resetting..." : "Reset calendar link"}
           </button>
         </div>
+
+        <details className="pt-2">
+          <summary className="cursor-pointer text-sm text-black/60 hover:text-black/80">
+            Advanced feed options
+          </summary>
+          <div className="space-y-3 pt-3">
+            <label
+              className="block text-sm text-black/70"
+              htmlFor="calendar-feed-url"
+            >
+              Feed URL
+            </label>
+            <input
+              id="calendar-feed-url"
+              type="text"
+              readOnly
+              value={fullFeedUrl}
+              className="w-full rounded border border-black/20 bg-white/80 px-3 py-2 text-sm text-black/80"
+            />
+
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                type="button"
+                onClick={handleCopy}
+                disabled={isCopying || isRotating}
+                className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed text-sm"
+              >
+                {isCopying ? "Copying..." : "Copy URL"}
+              </button>
+            </div>
+          </div>
+        </details>
       </div>
 
       {copyMessage && (
-        <p className="text-sm text-green-700 mt-3">{copyMessage}</p>
+        <p role="status" className="text-sm text-green-700 mt-3">
+          {copyMessage}
+        </p>
       )}
-      {error && <p className="text-sm text-red-700 mt-3">{error}</p>}
+      {error && (
+        <p role="alert" className="text-sm text-red-700 mt-3">
+          {error}
+        </p>
+      )}
     </div>
   );
 }
