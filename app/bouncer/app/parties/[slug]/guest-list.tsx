@@ -1,16 +1,31 @@
 import type { RsvpWithUser } from "@/lib/types";
 
+export interface GuestListCopy {
+  heading: string;
+  maybe: string;
+  empty: string;
+}
+
+const defaultCopy: GuestListCopy = {
+  heading: "Guests",
+  maybe: "Maybe",
+  empty: "No guests have responded yet.",
+};
+
 interface GuestListProps {
   rsvps: RsvpWithUser[];
   currentUserId: string;
   variant?: "default" | "monochrome";
+  copy?: Partial<GuestListCopy>;
 }
 
 export function GuestList({
   rsvps,
   currentUserId,
   variant = "default",
+  copy,
 }: GuestListProps) {
+  const labels = { ...defaultCopy, ...copy };
   const visibleGuests = rsvps.filter(
     (rsvp) =>
       (rsvp.status === "accepted" || rsvp.status === "pending") &&
@@ -28,8 +43,8 @@ export function GuestList({
             : "p-4 bg-white/5 rounded border border-white/10"
         }
       >
-        <h3 className="text-xl mb-4">Guests</h3>
-        <p className="text-sm opacity-80">No guests have responded yet.</p>
+        <h3 className="text-xl mb-4">{labels.heading}</h3>
+        <p className="text-sm opacity-80">{labels.empty}</p>
       </div>
     );
   }
@@ -42,7 +57,7 @@ export function GuestList({
           : "p-4 bg-white/5 rounded border border-white/10"
       }
     >
-      <h3 className="text-xl mb-4">Guests</h3>
+      <h3 className="text-xl mb-4">{labels.heading}</h3>
       <ul className="space-y-2">
         {visibleGuests.map((rsvp) => (
           <li key={rsvp.rsvp_id} className="flex items-center gap-2 text-base">
@@ -55,7 +70,7 @@ export function GuestList({
                     : "rounded border border-yellow-600/30 px-2 py-0.5 text-xs font-medium text-yellow-700"
                 }
               >
-                Maybe
+                {labels.maybe}
               </span>
             ) : null}
           </li>

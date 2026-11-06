@@ -4,12 +4,44 @@ import { useState, useEffect } from "react";
 import type { Rsvp } from "@/lib/types";
 import { fetchRsvpClient, updateRsvpClient } from "@/lib/api-client-client";
 
+export interface RsvpFormCopy {
+  currentStatus: string;
+  updateStatus: string;
+  maybe: string;
+  going: string;
+  decline: string;
+  loading: string;
+  updating: string;
+  unknown: string;
+  loadError: string;
+  updateError: string;
+}
+
+const defaultCopy: RsvpFormCopy = {
+  currentStatus: "Current Status",
+  updateStatus: "Update Status",
+  maybe: "Maybe",
+  going: "Going",
+  decline: "Decline",
+  loading: "Loading RSVP...",
+  updating: "Updating RSVP...",
+  unknown: "Unknown",
+  loadError: "Failed to load RSVP",
+  updateError: "Failed to update RSVP",
+};
+
 interface RsvpFormProps {
   partyId: string;
   variant?: "default" | "monochrome";
+  copy?: Partial<RsvpFormCopy>;
 }
 
-export function RsvpForm({ partyId, variant = "default" }: RsvpFormProps) {
+export function RsvpForm({
+  partyId,
+  variant = "default",
+  copy,
+}: RsvpFormProps) {
+  const labels = { ...defaultCopy, ...copy };
   const [rsvp, setRsvp] = useState<Rsvp | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -24,14 +56,14 @@ export function RsvpForm({ partyId, variant = "default" }: RsvpFormProps) {
         const fetchedRsvp = await fetchRsvpClient(partyId);
         setRsvp(fetchedRsvp);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load RSVP");
+        setError(err instanceof Error ? err.message : labels.loadError);
       } finally {
         setIsLoading(false);
       }
     }
 
     loadRsvp();
-  }, [partyId]);
+  }, [partyId, labels.loadError]);
 
   const handleStatusChange = async (newStatus: string) => {
     if (!rsvp || newStatus === rsvp.status) {
@@ -48,16 +80,16 @@ export function RsvpForm({ partyId, variant = "default" }: RsvpFormProps) {
       });
       setRsvp(updatedRsvp);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update RSVP");
+      setError(err instanceof Error ? err.message : labels.updateError);
     } finally {
       setIsUpdating(false);
     }
   };
 
   const statusOptions = [
-    { value: "pending", label: "Maybe" },
-    { value: "accepted", label: "Going" },
-    { value: "declined", label: "Decline" },
+    { value: "pending", label: labels.maybe },
+    { value: "accepted", label: labels.going },
+    { value: "declined", label: labels.decline },
   ];
 
   const getStatusColor = (status: string) => {
@@ -77,13 +109,13 @@ export function RsvpForm({ partyId, variant = "default" }: RsvpFormProps) {
 
   const getStatusText = () => {
     if (isLoading) {
-      return "Loading RSVP...";
+      return labels.loading;
     }
     if (error && !rsvp) {
-      return error || "Failed to load RSVP";
+      return error || labels.loadError;
     }
     if (isUpdating) {
-      return "Updating RSVP...";
+      return labels.updating;
     }
     if (error) {
       return error;
@@ -94,7 +126,7 @@ export function RsvpForm({ partyId, variant = "default" }: RsvpFormProps) {
         rsvp.status
       );
     }
-    return "Unknown";
+    return labels.unknown;
   };
 
   const getStatusTextColor = () => {
@@ -124,14 +156,14 @@ export function RsvpForm({ partyId, variant = "default" }: RsvpFormProps) {
         }
       >
         <div className="mb-4">
-          <p className="text-sm opacity-80 mb-2">Current Status</p>
+          <p className="text-sm opacity-80 mb-2">{labels.currentStatus}</p>
           <p className={`text-lg font-semibold ${getStatusTextColor()}`}>
             {getStatusText()}
           </p>
         </div>
 
         <div className="space-y-2">
-          <p className="text-sm opacity-80 mb-2">Update Status</p>
+          <p className="text-sm opacity-80 mb-2">{labels.updateStatus}</p>
           <div className="flex flex-col md:flex-row gap-4 w-full">
             {statusOptions.map((option) => {
               const isActive = rsvp?.status === option.value;

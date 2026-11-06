@@ -4,6 +4,7 @@ import { ReceiptCanvas } from "@/lib/webgl/receipt-canvas";
 import { CloudCanvas } from "@/lib/webgl/cloud-canvas";
 import { LocalDateTime } from "@/app/components/local-date-time";
 import { SimplePartyPreview } from "./simple-party-preview";
+import { FallPartyPreview } from "./fall-party-preview";
 
 interface PartyCardProps {
   party: Party;
@@ -14,6 +15,7 @@ export function PartyCard({ party }: PartyCardProps) {
     party.slug === "housewarming-2024" || party.slug === "launch-party-2026";
   const hasCloudPreview = party.slug === "whats-the-move-2026";
   const hasSimplePreview = party.slug === "keep-it-simple-stupid-2026";
+  const hasFallPreview = party.slug === "time-to-fall-2026";
 
   return (
     <div className="group w-[clamp(180px,42vw,240px)] flex-shrink-0">
@@ -35,13 +37,14 @@ export function PartyCard({ party }: PartyCardProps) {
             </div>
           )}
           {hasSimplePreview && <SimplePartyPreview party={party} />}
+          {hasFallPreview && <FallPartyPreview party={party} />}
 
           {/* Content */}
           <div
             className={`relative z-10 flex h-full flex-col justify-start ${
-              hasSimplePreview ? "invisible" : ""
+              hasSimplePreview || hasFallPreview ? "invisible" : ""
             }`}
-            aria-hidden={hasSimplePreview}
+            aria-hidden={hasSimplePreview || hasFallPreview}
           >
             <h3
               className={`text-xl font-semibold mb-4 transition-colors text-left line-clamp-3 ${

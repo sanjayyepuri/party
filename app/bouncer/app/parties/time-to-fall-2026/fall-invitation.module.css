@@ -1,0 +1,402 @@
+@font-face {
+  font-family: "Fall Cormorant";
+  src: url("/fonts/CormorantGaramond-Variable.ttf") format("truetype");
+  font-weight: 300 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Fall Cormorant";
+  src: url("/fonts/CormorantGaramond-Italic-Variable.ttf") format("truetype");
+  font-weight: 300 700;
+  font-style: italic;
+  font-display: swap;
+}
+/* Let the invitation sit on its own sheet instead of the site's mono column. */
+:global(body):has(.stage) {
+  margin: 0;
+  max-width: none;
+  background: #1c1412;
+}
+:global(body):has(.stage)::before,
+:global(body):has(.stage)::after {
+  display: none;
+}
+:global(body):has(.stage) > :global(main) {
+  margin: 0;
+  padding: 0;
+}
+:global(body):has(.stage) > :global(main) > :global(aside),
+:global(body):has(.stage) > :global(main) > :global(div) > :global(h1),
+:global(body):has(.stage)
+  > :global(main)
+  > :global(div)
+  > :global(div)
+  > :global(footer) {
+  display: none;
+}
+.stage {
+  position: relative;
+  isolation: isolate;
+  background-color: #1c1412;
+  background-image:
+    url("/images/postal-engraving.svg"),
+    repeating-linear-gradient(90deg, #e8ded403 0 1px, transparent 1px 5px);
+  padding: 36px 16px;
+  min-height: 100svh;
+}
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 8px 0;
+  line-height: 1.2;
+  color: inherit;
+  text-decoration: none;
+}
+.backLink:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.backLink:focus-visible {
+  outline: 2px solid #e8e1d8;
+  outline-offset: 4px;
+}
+.invitation {
+  --ink: #e8e1d8;
+  --rule: #e8e1d83d;
+  width: 100%;
+  max-width: 570px;
+  margin: 0;
+  color: var(--ink);
+  color-scheme: dark;
+  font-family: "Fall Cormorant", Georgia, serif;
+  font-feature-settings: "liga", "dlig";
+  container-type: inline-size;
+}
+.invitation a {
+  text-underline-offset: 3px;
+}
+.invitation a:focus-visible,
+.invitation button:focus-visible,
+.invitation input:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 4px;
+}
+.poster {
+  position: relative;
+  aspect-ratio: 1 / 1.04;
+  overflow: hidden;
+  border-bottom: 1px solid var(--ink);
+}
+.imprint {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12px;
+  line-height: 1.2;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border-top: 1px solid var(--ink);
+}
+.title {
+  position: relative;
+  z-index: 2;
+  font-size: 132px;
+  font-size: 27cqi;
+  font-weight: 500;
+  line-height: 0.73;
+  letter-spacing: -0.075em;
+  margin: 8px 0 0;
+}
+.title > span {
+  display: block;
+}
+.titleBottom {
+  margin-top: 0.045em;
+}
+.titleBottom i {
+  font-weight: 400;
+  font-size: 0.58em;
+  letter-spacing: -0.07em;
+}
+.art {
+  pointer-events: none;
+  position: absolute;
+  width: 90%;
+  aspect-ratio: 1;
+  right: -8%;
+  top: 33%;
+  border-radius: 50%;
+  overflow: hidden;
+}
+.spiral {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.caption {
+  text-shadow:
+    0 1px 4px #1c1412,
+    0 0 12px #1c141280;
+  position: absolute;
+  z-index: 2;
+  left: 0;
+  bottom: 32px;
+  font-size: 23px;
+  font-size: 4.5cqi;
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+  max-width: 48%;
+}
+.issue {
+  position: absolute;
+  bottom: 10px;
+  right: 0;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+}
+.information {
+  padding: 22px 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 26px;
+}
+.dateBlock time {
+  display: block;
+}
+.date {
+  display: block;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  font-weight: 600;
+}
+.time {
+  display: block;
+  font-size: 19px;
+  line-height: 1.1;
+  margin-top: 6px;
+}
+.location {
+  font-size: 17px;
+  line-height: 1.2;
+  margin-top: 12px;
+}
+.description {
+  font-size: 18px;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+.response {
+  border-top: 1px solid var(--ink);
+  border-bottom: 1px solid var(--ink);
+}
+.responseHeading {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 15px 0;
+  font-size: 17px;
+}
+.responseHeading h2 {
+  font-size: 13px;
+  letter-spacing: 0.08em;
+}
+.responseHeading > i {
+  margin-left: auto;
+}
+.responseContent {
+  padding: 5px 0 22px;
+}
+.addCalendar {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  margin-top: 12px;
+  padding: 5px 10px;
+  border: 1px solid var(--rule);
+  font-size: 15px;
+  line-height: 1;
+}
+.addCalendar:hover {
+  border-color: var(--ink);
+  background: #e8e1d80d;
+}
+.form > div > div {
+  padding: 0;
+  border: none;
+}
+.form p {
+  font-size: 17px;
+  color: var(--ink);
+}
+.form :global(.text-red-600) {
+  color: #e2aaa0;
+}
+.form :global(.text-gray-400) {
+  color: #b8aaa1;
+}
+.form button:hover:not(:disabled) {
+  background: #fff9f0;
+}
+.form button {
+  font-family: inherit;
+  font-size: 18px;
+  border: 1px solid var(--ink);
+  background: var(--ink);
+  color: #211715;
+  text-transform: none;
+  padding: 8px 12px;
+}
+.form button:disabled {
+  background: #4b3e39;
+  color: #b8aaa1;
+  border-color: #4b3e39;
+}
+.guests {
+  margin-top: 22px;
+}
+.guests > div {
+  border-top: 1px solid var(--rule);
+  padding-top: 16px;
+}
+.guests h3 {
+  font-size: 23px;
+  margin-bottom: 10px;
+}
+.guests p,
+.guests li {
+  font-size: 17px;
+}
+.previewNote {
+  border-block: 1px solid var(--ink);
+  font-size: 17px;
+  font-style: italic;
+  padding: 15px 0;
+}
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 12px;
+  font-size: 13px;
+}
+.footer a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  letter-spacing: -0.04em;
+}
+.footer > span {
+  font-style: italic;
+}
+.cardPreview {
+  container-type: inline-size;
+  position: absolute;
+  inset: 0;
+  padding: 14px;
+  overflow: hidden;
+  color: #e8e1d8;
+  background: #1c1412;
+  font-family: "Fall Cormorant", Georgia, serif;
+}
+.cardSpiral {
+  position: absolute;
+  overflow: hidden;
+  width: 110cqw;
+  height: 110cqw;
+  aspect-ratio: 1;
+  top: 34%;
+  right: -18%;
+  border-radius: 50%;
+  clip-path: circle(50% at 50% 50%);
+  isolation: isolate;
+}
+.cardCopy {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.cardCopy > span {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-top: 1px solid;
+  width: 100%;
+  padding-top: 5px;
+}
+.cardCopy h3 {
+  font-size: 67px;
+  font-weight: 500;
+  letter-spacing: -0.075em;
+  line-height: 0.76;
+  margin-top: 15px;
+}
+.cardCopy h3 i {
+  font-weight: 400;
+  font-size: 0.6em;
+}
+.cardCopy time {
+  margin-top: auto;
+  font-size: 18px;
+  font-weight: 600;
+}
+@media (max-width: 480px) {
+  .stage {
+    padding: 16px 12px;
+  }
+  .imprint {
+    font-size: 10px;
+    letter-spacing: 0.04em;
+  }
+  .title {
+    margin-top: 4px;
+  }
+  .caption {
+    text-shadow:
+      0 1px 4px #1c1412,
+      0 0 12px #1c141280;
+    bottom: 25px;
+  }
+  .information {
+    gap: 18px;
+    padding: 18px 0;
+  }
+  .date {
+    font-size: 22px;
+  }
+  .time {
+    font-size: 17px;
+  }
+  .description {
+    font-size: 16px;
+  }
+  .location {
+    font-size: 16px;
+  }
+  .responseHeading {
+    gap: 12px;
+    font-size: 16px;
+  }
+  .form button {
+    min-height: 44px;
+  }
+}
+@media (max-width: 350px) {
+  .imprint {
+    font-size: 9px;
+  }
+  .information {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+}

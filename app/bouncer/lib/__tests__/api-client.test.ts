@@ -71,6 +71,27 @@ describe("api-client", () => {
     process.env = originalEnv;
   });
 
+  it("preserves database edits for Time to Fall in both list and detail responses", async () => {
+    const edited = {
+      ...mockParty,
+      slug: "time-to-fall-2026",
+      name: "Updated in Neon",
+      time: "2026-11-15T00:30:00Z",
+      location: "New address",
+      description: "My updated description\nSecond paragraph",
+    };
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => [edited],
+    } as Response);
+    expect(await fetchParties()).toEqual([edited]);
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => edited,
+    } as Response);
+    expect(await fetchPartyById(edited.party_id)).toEqual(edited);
+  });
+
   describe("fetchParties", () => {
     it("fetches parties successfully", async () => {
       mockFetch.mockResolvedValueOnce({
